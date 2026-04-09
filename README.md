@@ -11,3 +11,17 @@ docker compose up -d
 docker compose logs -f api
 # Остановить контейнеры:
 docker compose down
+```
+
+## Frontend (Vite)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Сборка frontend:
+```bash
+npm run build
+```
