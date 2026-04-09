@@ -1,0 +1,2 @@
+class UserBaseSchema:
+    pass

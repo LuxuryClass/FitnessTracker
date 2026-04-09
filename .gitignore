@@ -1,0 +1,46 @@
+# Python: кэш, артефакты сборки и пакеты
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+pip-wheel-metadata/
+
+# Виртуальные окружения
+.venv/
+venv/
+env/
+ENV/
+
+# Кэш и отчёты инструментов
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+
+# Переменные окружения и локальные секреты
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+
+# Логи
+*.log
+
+# IDE и ОС
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+.github/
