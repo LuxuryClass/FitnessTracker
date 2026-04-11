@@ -1,7 +1,6 @@
 import { resolve } from 'node:path';
-
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite';  // ← Вот этот импорт важен
 
 export default defineConfig({
   plugins: [react()],
@@ -19,7 +18,10 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: '@use "@styles/mixins.scss" as *;',
+        additionalData: `
+          @import "@styles/variables.scss";
+          @import "@styles/mixins.scss";
+        `,
       },
     },
   },

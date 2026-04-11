@@ -1,10 +1,15 @@
+import { Header } from './components/Header/header';
+import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
+
+let name = "Иван";
+let avatar = "src"
 
 function HomePage() {
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}></h1>
-      <p className={styles.text}></p>
+      <Header className={styles.header} userName={name} userAvatar={avatar}/>
+      <TodayWorkout></TodayWorkout>
     </main>
   );
 }

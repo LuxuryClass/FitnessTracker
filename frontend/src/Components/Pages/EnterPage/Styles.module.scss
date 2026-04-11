@@ -1,0 +1,32 @@
+.enter_page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    a {
+    text-decoration: none;
+    color: inherit;
+    }
+}
+
+.logo {
+    margin: 84px 0 0;
+    width: 218px;
+}
+
+.title {
+    @include text_h1();
+    margin-block: 4px 12px; 
+}
+
+.subtitle {
+    @include text_subtitle();
+}
+
+.buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    margin-top: 64px;
+}

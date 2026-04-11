@@ -26,7 +26,8 @@
       "@styles/*": ["src/Styles/*"],
       "@assets/*": ["src/Assets/*"],
       "@utils/*": ["src/Utils/*"]
-    }
+    },
+    "ignoreDeprecations": "6.0"  // ← добавить эту строку
   },
   "include": ["src"]
 }

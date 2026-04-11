@@ -1,0 +1,124 @@
+
+.card {
+  background: 
+    linear-gradient(134.69deg, rgba(255, 255, 255, 0) 5.31%, rgba(255, 255, 255, 0.12) 48.43%, rgba(255, 255, 255, 0) 95.61%),
+    #1A1A1A;  // ← тёмно-серый фон под градиентом
+  border-radius: 24px;
+  padding: 24px;
+    width:100%;
+    height: 353px;
+    padding: 10px 24px 12px;
+    border: 1px solid var(--Primary-color);
+    border-radius: 20px;
+    box-shadow: 0px 0px 25px 0px #9FDA1640;
+
+    &__empty {
+        
+    }
+
+    &__notEmpty {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+.header {
+    justify-self: start;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--Accent-grey-color);
+
+    &__title {
+        font-weight: 700;
+        font-style: Bold;
+        font-size: 16px;
+        line-height: 27px;
+        letter-spacing: 0%;
+        color: var(--Primary-color);
+    }
+
+    &__workoutName {
+        @include text_h1();
+        text-align: start;
+        font-weight: 700;
+        text-align: start;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.meta {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--Accent-grey-color);
+    font-size: 12px;
+    margin-block: 12px;
+
+    &__item_1_2{
+        display: flex;
+        gap: 10px;
+    }
+}
+
+.exercises {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.exercise {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.exerciseInfo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.exerciseName {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 24px;
+    letter-spacing: 0%;
+
+}
+
+.exerciseDetails {
+  font-size: 12px;
+  color: var(--Accent-grey-color);
+  
+  &::before {
+    content: '';
+  }
+}
+
+.moreExercises {
+    margin-top: 16px;
+    color: var(--Accent-grey-color);
+}
+
+.start_button{
+    height: 44px;
+    box-shadow: 0px 0px 10px 0px #9FDA16;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    &__text {
+        font-weight: 700;
+        font-style: Bold;
+        font-size: 20px;
+        line-height: 34px;
+        letter-spacing: 0%;
+
+    }
+}

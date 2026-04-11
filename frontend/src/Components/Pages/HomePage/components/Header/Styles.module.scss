@@ -1,0 +1,48 @@
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.greeting {
+    @include text_subtitle();
+    font-size: 16px;
+}
+
+.userName {
+  @include text_h1();
+  font-weight: 700;
+  color: #fff;
+  text-align: start;
+}
+
+.buttons {
+    display: flex;
+    gap: 16px;
+}
+
+button.avatar_button {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: var(--Accent-2-color);
+
+}
+
+.userAvatar {
+    width: inherit;
+    height: inherit;
+    border-radius: inherit;
+    border: 2px solid var(--Primary-color);
+    box-shadow: 0px 0px 4px 0px #9FDA16;
+}
+
+button.bell_button {
+    width: 42px;
+    height: 42px;
+    background-color: var(--Accent-2-color);
+    box-shadow: 0px 4px 4px 0px #00000040 inset;
+    border-radius: 50%;
+    border: 1px solid var(--Primary-color);
+}

@@ -1,0 +1,79 @@
+.input {
+  position: relative;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  border: none;
+  overflow: hidden;
+  background-color: transparent;
+
+  &_error {
+    border-color: var(--red-color);
+  }
+
+  &_check {
+    border-color: var(--green-color);
+  }
+
+  &__check {
+    margin-left: 5px;
+  }
+
+  &__labelBlock {
+    display: flex;
+  }
+
+  &__required {
+    color: var(--red-color);
+    margin-left: 2px;
+  }
+
+  &__label {
+    display: block;
+    color: var(--label-color);
+    margin-bottom: 10px;
+  }
+
+  &__input {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 13px 8px; // ← базовый padding
+    
+    &_with_icon {
+      padding-left: 45px !important; // ← отступ для иконки
+    }
+    
+    &::placeholder {
+      color: #9b9b9e;
+    }
+  }
+
+  // Иконка позиционируется абсолютно, не влияет на поток
+  &__icon {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  &__eye {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%); // ← добавить центрирование
+  }
+}
+
+input[type='number'] {
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  appearance: textfield;
+}
