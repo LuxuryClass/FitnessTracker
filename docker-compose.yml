@@ -41,6 +41,7 @@ services:
       API_PREFIX: "/api"
       DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fitness_tracker"
       REDIS_URL: "redis://redis:6379/0"
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     depends_on:
       db:
         condition: service_healthy

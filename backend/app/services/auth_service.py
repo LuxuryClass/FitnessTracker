@@ -1,14 +1,39 @@
+from uuid import UUID
+
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AlreadyExistsException, UnauthorizedException
-from app.core.security import hash_password, verify_password
+from app.core.redis import add_token_to_blacklist
+from app.core.security import (
+    ACCESS_TOKEN_TYPE,
+    REFRESH_TOKEN_TYPE,
+    create_token_pair,
+    decode_jwt_token,
+    ensure_token_type,
+    get_token_exp,
+    get_token_jti,
+    get_token_subject,
+    hash_password,
+    verify_password,
+)
+from app.models.user import User
 from app.repositories import user_repository
-from app.schemas.auth import LoginRequest, RegisterRequest
-from app.schemas.user import UserResponse
+from app.schemas.auth import AuthResponse, LoginRequest, LogoutResponse, RefreshRequest, RegisterRequest, TokenPairResponse
 
 
 class AuthService:
-    async def register(self, db: AsyncSession, payload: RegisterRequest) -> UserResponse:
+    @staticmethod
+    def _build_auth_response(user: User) -> AuthResponse:
+        access_token, refresh_token = create_token_pair(user.id)
+        return AuthResponse(
+            user=user,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+        )
+
+    async def register(self, db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
         email = payload.email.strip().lower()
         username = payload.username.strip()
 
@@ -24,9 +49,9 @@ class AuthService:
         user = await user_repository.create(db=db, email=email, username=username, password_hash=password_hash)
         await db.commit()
         await db.refresh(user)
-        return UserResponse.model_validate(user)
+        return self._build_auth_response(user)
 
-    async def login(self, db: AsyncSession, payload: LoginRequest) -> UserResponse:
+    async def login(self, db: AsyncSession, payload: LoginRequest) -> AuthResponse:
         email = payload.email.strip().lower()
 
         user = await user_repository.get_by_email(db, email)
@@ -36,7 +61,37 @@ class AuthService:
         if not user.is_active:
             raise UnauthorizedException("Пользователь деактивирован.")
 
-        return UserResponse.model_validate(user)
+        return self._build_auth_response(user)
+
+    async def refresh(self, db: AsyncSession, payload: RefreshRequest) -> TokenPairResponse:
+        token_payload = decode_jwt_token(payload.refresh_token)
+        ensure_token_type(token_payload, REFRESH_TOKEN_TYPE)
+
+        subject = get_token_subject(token_payload)
+        try:
+            user_id = UUID(subject)
+        except ValueError as exc:
+            raise UnauthorizedException("Некорректный payload refresh токена: sub должен быть UUID.") from exc
+
+        user = await user_repository.get_by_id(db, user_id)
+        if user is None:
+            raise UnauthorizedException("Пользователь по refresh токену не найден.")
+
+        if not user.is_active:
+            raise UnauthorizedException("Пользователь деактивирован.")
+
+        access_token, refresh_token = create_token_pair(user.id)
+        return TokenPairResponse(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+
+    async def logout(self, redis: Redis, access_token: str) -> LogoutResponse:
+        token_payload = decode_jwt_token(access_token)
+        ensure_token_type(token_payload, ACCESS_TOKEN_TYPE)
+
+        token_jti = get_token_jti(token_payload)
+        token_exp = get_token_exp(token_payload)
+        await add_token_to_blacklist(redis, token_jti, token_exp)
+
+        return LogoutResponse(detail="Вы успешно вышли из системы.")
 
 
 auth_service = AuthService()
