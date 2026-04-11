@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.database import close_database_connection
+from app.core.exceptions import AppException
 from app.core.redis import close_redis_connection
 from app.routers import api_router
 
@@ -17,6 +19,11 @@ async def lifespan(_: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(title=settings.app_name, lifespan=lifespan)
+
+    @app.exception_handler(AppException)
+    async def app_exception_handler(_: Request, exc: AppException) -> JSONResponse:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
     app.include_router(api_router)
     return app
 
