@@ -1,0 +1,114 @@
+.card {
+  width: 112px;
+  height: 112px;
+  border-radius: 16px;
+  background-color: var(--Dark-grey-color);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  animation: cardAppear 0.5s ease-out forwards;
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.value {
+  align-self: end;
+  margin-bottom: 34px;
+  animation: valueAppear 0.4s ease-out 0.15s forwards;
+  opacity: 0;
+  
+
+  &__streak {
+    font-weight: 700;
+    font-size: 48px;
+    line-height: 60.48px;
+    color: var(--Primary-color);
+  }
+
+  &__totalWeight {
+    font-weight: 700;
+    font-style: Bold;
+    font-size: 36px;
+    line-height: 60.48px;
+    letter-spacing: 0%;
+    color: #fff;
+  }
+}
+
+@keyframes valueAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.progressWrapper {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: end;
+  margin-bottom: 34px;
+  animation: circleAppear 0.5s ease-out 0.15s forwards;
+  opacity: 0;
+  font-size: 20px;
+
+  svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+}
+
+.progressFill {
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes circleAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.label {
+  position: absolute;
+  bottom: 10px;
+  left: 19px;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 16.8px;
+  color: #fff;
+  animation: labelAppear 0.4s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+@keyframes labelAppear {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
