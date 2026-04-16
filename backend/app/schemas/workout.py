@@ -4,11 +4,21 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+class WorkoutExerciseCreateItem(BaseModel):
+    exercise_id: UUID
+
+
+class WorkoutExerciseResponse(BaseModel):
+    exercise_id: UUID
+    order_index: int = Field(ge=1)
+
+
 class WorkoutCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     is_planned: bool
     planned_for: datetime | None = None
     description: str | None = Field(default=None, max_length=2000)
+    exercises: list[WorkoutExerciseCreateItem] = Field(min_length=1, max_length=100)
 
     @field_validator("title")
     @classmethod
@@ -26,6 +36,16 @@ class WorkoutCreateRequest(BaseModel):
         normalized = value.strip()
         return normalized or None
 
+    @field_validator("exercises")
+    @classmethod
+    def validate_exercises(cls, value: list[WorkoutExerciseCreateItem]) -> list[WorkoutExerciseCreateItem]:
+        seen: set[UUID] = set()
+        for item in value:
+            if item.exercise_id in seen:
+                raise ValueError("Упражнения в тренировке не должны повторяться.")
+            seen.add(item.exercise_id)
+        return value
+
     @model_validator(mode="after")
     def validate_planning_fields(self) -> "WorkoutCreateRequest":
         if self.is_planned and self.planned_for is None:
@@ -42,6 +62,7 @@ class WorkoutResponse(BaseModel):
     is_planned: bool
     planned_for: datetime | None
     description: str | None
+    exercises: list[WorkoutExerciseResponse]
     created_at: datetime
     updated_at: datetime
 
