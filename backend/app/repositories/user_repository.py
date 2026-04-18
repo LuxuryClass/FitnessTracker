@@ -28,5 +28,20 @@ class UserRepository:
         await db.flush()
         return user
 
+    async def update(
+        self,
+        db: AsyncSession,
+        user: User,
+        *,
+        email: str | None = None,
+        username: str | None = None,
+    ) -> User:
+        if email is not None:
+            user.email = email
+        if username is not None:
+            user.username = username
+        await db.flush()
+        return user
+
 
 user_repository = UserRepository()

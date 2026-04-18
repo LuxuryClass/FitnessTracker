@@ -4,10 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.redis import get_redis
-from app.core.security import get_bearer_token, get_current_user
-from app.models.user import User
+from app.core.security import get_bearer_token
 from app.schemas.auth import AuthResponse, LoginRequest, LogoutResponse, RefreshRequest, RegisterRequest, TokenPairResponse
-from app.schemas.user import UserResponse
 from app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["Авторизация"])
@@ -34,8 +32,3 @@ async def logout(
     redis: Redis = Depends(get_redis),
 ) -> LogoutResponse:
     return await auth_service.logout(redis=redis, access_token=access_token)
-
-
-@router.get("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
-    return UserResponse.model_validate(current_user)

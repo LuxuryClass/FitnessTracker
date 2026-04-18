@@ -1,9 +1,15 @@
 """Пакет Pydantic-схем."""
 
 from app.schemas.auth import AuthResponse, LoginRequest, LogoutResponse, RefreshRequest, RegisterRequest, TokenPairResponse
-from app.schemas.exercise import ExerciseCreateRequest, ExerciseResponse
-from app.schemas.user import UserResponse
-from app.schemas.workout import WorkoutCreateRequest, WorkoutExerciseCreateItem, WorkoutExerciseResponse, WorkoutResponse
+from app.schemas.exercise import ExerciseCreateRequest, ExerciseResponse, ExerciseUpdateRequest
+from app.schemas.user import UserResponse, UserUpdateRequest
+from app.schemas.workout import (
+    WorkoutCreateRequest,
+    WorkoutExerciseCreateItem,
+    WorkoutExerciseResponse,
+    WorkoutResponse,
+    WorkoutUpdateRequest,
+)
 
 __all__ = [
     "LoginRequest",
@@ -13,9 +19,12 @@ __all__ = [
     "AuthResponse",
     "LogoutResponse",
     "UserResponse",
+    "UserUpdateRequest",
     "ExerciseCreateRequest",
+    "ExerciseUpdateRequest",
     "ExerciseResponse",
     "WorkoutCreateRequest",
+    "WorkoutUpdateRequest",
     "WorkoutExerciseCreateItem",
     "WorkoutExerciseResponse",
     "WorkoutResponse",
