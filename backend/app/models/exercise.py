@@ -24,7 +24,7 @@ class Exercise(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     muscle_groups: Mapped[list[str]] = mapped_column(ARRAY(String(100)), nullable=False)
-    equipment: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    equipment: Mapped[str] = mapped_column(String(120), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
