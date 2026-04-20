@@ -28,6 +28,15 @@ class ExerciseRepository:
         result = await db.execute(statement)
         return list(result.scalars().all())
 
+    async def list_system(self, db: AsyncSession) -> list[Exercise]:
+        statement = (
+            select(Exercise)
+            .where(Exercise.created_by_user_id.is_(None))
+            .order_by(Exercise.created_at.desc(), Exercise.id.desc())
+        )
+        result = await db.execute(statement)
+        return list(result.scalars().all())
+
     async def get_user_exercise_by_name(self, db: AsyncSession, user_id: UUID, name: str) -> Exercise | None:
         statement = select(Exercise).where(
             Exercise.created_by_user_id == user_id,

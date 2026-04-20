@@ -27,6 +27,10 @@ class ExerciseService:
         exercises = await exercise_repository.list_by_owner(db, current_user.id)
         return [ExerciseResponse.model_validate(exercise) for exercise in exercises]
 
+    async def list_system_exercises(self, db: AsyncSession) -> list[ExerciseResponse]:
+        exercises = await exercise_repository.list_system(db)
+        return [ExerciseResponse.model_validate(exercise) for exercise in exercises]
+
     async def get_exercise(
         self,
         db: AsyncSession,

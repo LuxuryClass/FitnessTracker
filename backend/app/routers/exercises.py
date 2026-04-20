@@ -20,6 +20,14 @@ async def list_exercises(
     return await exercise_service.list_exercises(db=db, current_user=current_user)
 
 
+@router.get("/system", response_model=list[ExerciseResponse], status_code=status.HTTP_200_OK)
+async def list_system_exercises(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[ExerciseResponse]:
+    return await exercise_service.list_system_exercises(db=db)
+
+
 @router.get("/{exercise_id}", response_model=ExerciseResponse, status_code=status.HTTP_200_OK)
 async def get_exercise(
     exercise_id: UUID,

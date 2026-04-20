@@ -248,9 +248,44 @@
 
 ## 3) Упражнения
 
-Все endpoint-ы раздела возвращают **пользовательские упражнения текущего пользователя**.
+В разделе есть два типа упражнений:
+- системные (`GET /api/exercises/system`);
+- пользовательские (`/api/exercises*`).
 
-### 3.1 `GET /api/exercises`
+### 3.1 `GET /api/exercises/system`
+
+Список системных упражнений.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Response 200**
+
+```json
+[
+  {
+    "id": "2f4bc4c2-2df2-4c3e-ab64-1f0d2c137fee",
+    "created_by_user_id": null,
+    "name": "Приседания со штангой",
+    "description": "Базовое упражнение на ноги и ягодицы.",
+    "muscle_groups": ["квадрицепсы", "ягодицы", "бицепс бедра"],
+    "equipment": "штанга",
+    "created_at": "2026-04-20T10:00:00+00:00",
+    "updated_at": "2026-04-20T10:00:00+00:00"
+  }
+]
+```
+
+Если системных упражнений пока нет, возвращается `[]`.
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+
+---
+
+### 3.2 `GET /api/exercises`
 
 Список упражнений текущего пользователя.
 
@@ -281,7 +316,7 @@
 
 ---
 
-### 3.2 `GET /api/exercises/{exercise_id}`
+### 3.3 `GET /api/exercises/{exercise_id}`
 
 Получение упражнения текущего пользователя по id.
 
@@ -312,7 +347,7 @@
 
 ---
 
-### 3.3 `POST /api/exercises`
+### 3.4 `POST /api/exercises`
 
 Создание пользовательского упражнения.
 
@@ -361,7 +396,7 @@
 
 ---
 
-### 3.4 `PATCH /api/exercises/{exercise_id}`
+### 3.5 `PATCH /api/exercises/{exercise_id}`
 
 Частичное обновление упражнения текущего пользователя.
 
@@ -414,7 +449,7 @@
 
 ---
 
-### 3.5 `DELETE /api/exercises/{exercise_id}`
+### 3.6 `DELETE /api/exercises/{exercise_id}`
 
 Удаление упражнения текущего пользователя.
 
@@ -634,3 +669,5 @@
 4. Frontend получает профиль через `GET /api/users/me`.
 5. Frontend работает с упражнениями пользователя через `/api/exercises`.
 6. Frontend создает и редактирует тренировки через `/api/workouts`, передавая массив `exercises` c элементами формата `{ "exercise_id": "UUID" }`.
+
+Дополнительно: seed-команды backend описаны в `docs/backend/SEEDS.md`.
