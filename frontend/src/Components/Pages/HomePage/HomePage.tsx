@@ -1,10 +1,17 @@
+import { NavigationPanel } from '@/Components/Common/Navigation/Navigation';
 import { Header } from './components/Header/header';
+import { CardData, RecentCardsList } from './components/RecentProgress/RecentProgress';
 import { StatCard } from './components/StatsCards/StatsCards';
 import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
 
 let name = "Иван";
 let avatar = "src"
+let graphicsArr: CardData[] = [
+  {id: 1, title: "Жим лёжа", muscleGroup: "Грудь", difference: "+5кг"},
+  {id: 2, title: "Присядания", muscleGroup: "Ноги", difference: "+50кг"},
+  {id: 3, title: "жим над головой", muscleGroup: "Дельты", difference: "+3кг"},
+]
 
 function HomePage() {
   return (
@@ -31,6 +38,8 @@ function HomePage() {
         <StatCard isVisible={true} type="totalWeight" value={8.5}></StatCard>
       </div>
 
+      <RecentCardsList className={styles.recent_list} cards={graphicsArr} />
+      <NavigationPanel></NavigationPanel>
     </main>
   );
 }

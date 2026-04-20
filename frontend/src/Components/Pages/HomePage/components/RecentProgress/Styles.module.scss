@@ -1,0 +1,37 @@
+.title {
+  @include text_h2();
+  color: var(--Accent-grey-color);
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.cards_list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
+  overflow-x: auto; // ← включаем горизонтальную прокрутку
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  width: 100%;
+  margin-left: -20px; // ← компенсируем padding родителя
+  margin-right: -20px;
+  padding-left: 20px; // ← возвращаем отступ для контента
+  padding-right: 20px;
+  -webkit-overflow-scrolling: touch;
+    
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  width: calc(100% + 40px);
+  > * {
+    flex-shrink: 0;
+    width: 140px;
+  }
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -29,6 +29,20 @@
   text-align: center;
 }
 
+@mixin text_h2 {
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 27px;
+    letter-spacing: 0%;
+}
+
+@mixin text_h3 {
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 20px;
+    letter-spacing: 0%;
+}
+
 @mixin text_subtitle {
   font-weight: 400;
   font-size: 14px;

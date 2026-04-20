@@ -37,7 +37,6 @@ const StatCardComponent = ({ isVisible, type, value, total, className }: StatCar
 
   useEffect(() => {
     if (type === 'week' && total) {
-      // Запускаем анимацию после монтирования
       const timer = setTimeout(() => {
         const percentage = (value / total) * 100;
         const radius = 31;
@@ -53,7 +52,6 @@ const StatCardComponent = ({ isVisible, type, value, total, className }: StatCar
   if (type === 'week' && total) {
     const radius = 31;
     const circumference = 2 * Math.PI * radius;
-    // Начальное значение — полный круг (не видно)
     const currentOffset = animatedOffset !== null ? animatedOffset : circumference;
     
     return (

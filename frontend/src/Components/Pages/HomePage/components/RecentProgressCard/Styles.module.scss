@@ -1,0 +1,42 @@
+.card {
+    width: 261px;
+    height: 135px;
+    background-color: var(--Dark-grey-color);
+    border-radius: 16px;
+    padding: 10px 16px;
+    position: relative;
+}
+
+.title {
+    @include text_h2();
+    margin: 0;
+}
+
+.muscle_group {
+    display: inline-block;
+    background-color: var(--grey-color);
+    padding-inline: 16px;
+
+    @include text-h3();
+    border-radius: 12px;
+    box-shadow: 0px 4px 4px 0px #00000040 inset;
+}
+
+.difference {
+    position: absolute;
+    bottom: 25px;
+    right: 16px;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 34px;
+    letter-spacing: 0%;
+    color: var(--Primary-color);
+}
+
+.days_count {
+    position: absolute;
+    bottom: 10px;
+    right: 16px;
+    @include text-h3();
+    color: var(--Accent-grey-color);
+}

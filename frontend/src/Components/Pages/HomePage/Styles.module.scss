@@ -1,15 +1,12 @@
 .page {
   padding-top: 69px;
-}
-
-.header {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .minicards {
   display: flex;
   flex-wrap: wrap;
   gap: 8.5px;
-  
-  margin-block: 20px;
 }
