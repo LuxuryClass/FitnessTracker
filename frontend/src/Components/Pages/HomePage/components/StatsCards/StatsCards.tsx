@@ -1,5 +1,5 @@
 import cn from "classnames";
-import styles from "./styles.module.scss";
+import styles from "./Styles.module.scss";
 import { memo, useEffect, useState } from "react";
 
 type StatCardType = 'streak' | 'week' | 'totalWeight';

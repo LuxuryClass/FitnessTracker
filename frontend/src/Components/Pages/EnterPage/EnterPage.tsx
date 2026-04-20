@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import styles from "./styles.module.scss";
+import styles from "./Styles.module.scss";
 import { Button } from "@/Components/UI/Button/Button";
 import { memo } from "react";
 import logoImage from "/Public/masscot-main.png";

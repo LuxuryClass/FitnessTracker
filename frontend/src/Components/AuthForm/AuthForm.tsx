@@ -4,7 +4,7 @@ import { Button } from '@/Components/UI/Button/Button';
 import { Input } from '@/Components/UI/Input/Input';
 import messageIcon from '/Public/Message_light.svg';
 import lockIcon from '/Public/Lock_alt_light.svg';
-import userIcon from '/Public/User_light.svg';
+//import userIcon from '/Public/User_light.svg';
 import styles from './Styles.module.scss';
 import { validateLoginForm, validateRegisterForm, isFormValid, type LoginErrors, type RegisterErrors } from '@/Utils/validation/validation';
 import { clearFieldError } from '@/Utils/validation/helpers';
@@ -17,7 +17,7 @@ interface AuthFormProps {
 export const AuthForm = ({ type, onSubmit }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [name] = useState('');
   const [errors, setErrors] = useState<LoginErrors | RegisterErrors>({ 
     email: '', 
     password: '', 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "./styles.module.scss";
+import styles from "./Styles.module.scss";
 import logoImage from "/Public/masscot-main.png";
 import classNames from "classnames";
 

@@ -17,17 +17,15 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"],
-      "@app/*": ["src/App/*"],
-      "@components/*": ["src/Components/*"],
-      "@pages/*": ["src/Components/Pages/*"],
-      "@styles/*": ["src/Styles/*"],
-      "@assets/*": ["src/Assets/*"],
-      "@utils/*": ["src/Utils/*"]
-    },
-    "ignoreDeprecations": "6.0"  // ← добавить эту строку
+      "@/*": ["./src/*"],
+      "@app/*": ["./src/App/*"],
+      "@components/*": ["./src/Components/*"],
+      "@pages/*": ["./src/Components/Pages/*"],
+      "@styles/*": ["./src/Styles/*"],
+      "@assets/*": ["./src/Assets/*"],
+      "@utils/*": ["./src/Utils/*"]
+    }
   },
   "include": ["src"]
 }

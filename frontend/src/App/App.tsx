@@ -1,6 +1,5 @@
 import HomePage from '@pages/HomePage';
 import '../Styles/index.scss';
-import styles from './Styles.module.scss';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import StartPage from '@/Components/Pages/StartPage/StartPage';
 import { EnterPage } from '@/Components/Pages/EnterPage/EnterPage';

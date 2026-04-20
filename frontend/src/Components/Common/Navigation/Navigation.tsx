@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import styles from "./styles.module.scss";
+import styles from "./Styles.module.scss";
 import { memo } from "react";
 
 // Импортируем иконки
