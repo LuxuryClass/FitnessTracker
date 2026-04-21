@@ -2,11 +2,11 @@ import { Link, useLocation } from "react-router-dom";
 import styles from "./Styles.module.scss";
 import { memo } from "react";
 
-import homeIcon from "/Public/NavigationImage/Home.svg";
-import bookIcon from "/Public/NavigationImage/Book.svg";
-import plusIcon from "/Public/NavigationImage/Plus.svg";
-import chartIcon from "/Public/NavigationImage/Graphic.svg";
-import settingsIcon from "/Public/NavigationImage/Settings.svg";
+import homeIcon from "/NavigationImage/Home.svg";
+import bookIcon from "/NavigationImage/Book.svg";
+import plusIcon from "/NavigationImage/Plus.svg";
+import chartIcon from "/NavigationImage/Graphic.svg";
+import settingsIcon from "/NavigationImage/Settings.svg";
 
 const NavigationComponent = () => {
   const location = useLocation();

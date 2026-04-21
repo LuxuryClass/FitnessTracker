@@ -1,7 +1,7 @@
 import { Button } from "@/Components/UI/Button/Button";
 import styles from "./Styles.module.scss";
 import cn from "classnames";
-import startImage from '/Public/start-button.svg';
+import startImage from '/start-button.svg';
 
 interface Exercise {
   name: string;

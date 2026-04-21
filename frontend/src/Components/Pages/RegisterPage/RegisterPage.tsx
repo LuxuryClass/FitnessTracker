@@ -1,7 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Styles.module.scss';
-import logo from '/Public/masscot-main.png';
-import arrowBack from '/Public/ArrowBack.svg';
+import logo from '/masscot-main.png';
+import arrowBack from '/ArrowBack.svg';
 import { Button } from '@/Components/UI/Button/Button';
 import { AuthForm } from '@/Components/AuthForm/AuthForm';
 

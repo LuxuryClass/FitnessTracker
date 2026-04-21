@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import styles from "./Styles.module.scss";
 import { Button } from "@/Components/UI/Button/Button";
 import { memo } from "react";
-import logoImage from "/Public/masscot-main.png";
+import logoImage from "/masscot-main.png";
 
 const EnterPageComponent = () => {
     return (

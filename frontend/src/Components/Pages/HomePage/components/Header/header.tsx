@@ -1,8 +1,8 @@
 import { memo } from "react";
 import styles from "./Styles.module.scss";
 import { Button } from "@/Components/UI/Button/Button";
-import activBell from "/Public/Bell_Active.svg";
-import basicBell from "/Public/Bell.svg";
+import activBell from "/Bell_Active.svg";
+import basicBell from "/Bell.svg";
 import cn from "classnames";
 
 interface HeaderProps {

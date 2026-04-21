@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Styles.module.scss";
-import logoImage from "/Public/masscot-main.png";
+import logoImage from "/masscot-main.png";
 import classNames from "classnames";
 
 const StartPage = () => {
