@@ -2,11 +2,11 @@ import { Link, useLocation } from "react-router-dom";
 import styles from "./Styles.module.scss";
 import { memo } from "react";
 
-import homeIcon from "/Public/NavigationImage/Home.svg?url";
-import bookIcon from "/Public/NavigationImage/Book.svg?url";
-import plusIcon from "/Public/NavigationImage/Plus.svg?url";
-import chartIcon from "/Public/NavigationImage/Graphic.svg?url";
-import settingsIcon from "/Public/NavigationImage/Settings.svg?url";
+import homeIcon from "/Public/NavigationImage/Home.svg";
+import bookIcon from "/Public/NavigationImage/Book.svg";
+import plusIcon from "/Public/NavigationImage/Plus.svg";
+import chartIcon from "/Public/NavigationImage/Graphic.svg";
+import settingsIcon from "/Public/NavigationImage/Settings.svg";
 
 const NavigationComponent = () => {
   const location = useLocation();
@@ -30,7 +30,7 @@ const NavigationComponent = () => {
       </Link>
 
       {/* Тренировка (специальная кнопка) */}
-      <Link to="/add" className={styles.link_special}>
+      <Link to="/add" className={`${styles.link_special} ${isActive("/add") ? styles.link_special_active : ""}`}>
         <div className={styles.wrapper}>
             <div className={styles.icon_special} style={{ '--icon-url': `url("${plusIcon}")` } as React.CSSProperties} />
         </div>

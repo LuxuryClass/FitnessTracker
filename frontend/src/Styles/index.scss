@@ -15,6 +15,7 @@ html,
 body,
 #root {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -25,7 +26,7 @@ body {
 #root {
   width: 100%;
   max-width: 393px;
-  height: 852px;
+  height: 100vh;
   background: linear-gradient(360deg, rgba(8, 10, 0, 0.95) 69.71%, rgba(90, 112, 0, 0.95) 100%);
   overflow-y: auto; // ← вертикальная прокрутка для всего приложения
   overflow-x: hidden; // ← горизонтальную скрываем на уровне root
@@ -36,9 +37,9 @@ body {
   scrollbar-gutter: stable; // резервирует место под скроллбар
   overflow-y: auto;
   padding-bottom: 85px;
+  scrollbar-width: none;
   
   &::-webkit-scrollbar {
     width: 0;
   }
-  scrollbar-width: none;
 }
