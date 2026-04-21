@@ -5,6 +5,8 @@
   margin: 0;
   padding: 0;
   font-family: sans-serif;
+  -webkit-tap-highlight-color: transparent; // убирает синюю подсветку при тапе
+  -webkit-touch-callout: none; // убирает меню при долгом нажатии (опционально)
 }
 
 button:hover {

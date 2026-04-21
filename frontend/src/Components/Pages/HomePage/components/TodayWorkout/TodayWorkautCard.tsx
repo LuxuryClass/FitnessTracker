@@ -91,7 +91,7 @@ export const TodayWorkout = ({
         onClick={onStart}
       >
         <span className={styles.start_button__text}>Перейти</span>
-        <img src="./Public/start-button.svg" />
+        <img src="/Public/start-button.svg" />
       </Button>
     </div>
   );

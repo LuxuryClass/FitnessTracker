@@ -11,7 +11,7 @@ import { NavigationPanel } from '@/Components/Common/Navigation/Navigation';
 export function App() {
   return (
     <>
-      <BrowserRouter>
+      <BrowserRouter basename="/">
         <Routes>
           <Route path="/" element={<StartPage />} />
           <Route path="/enter" element={<EnterPage />} />
