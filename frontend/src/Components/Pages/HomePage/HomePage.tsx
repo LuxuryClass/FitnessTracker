@@ -1,4 +1,3 @@
-import { NavigationPanel } from '@/Components/Common/Navigation/Navigation';
 import { Header } from './components/Header/header';
 import { CardData, RecentCardsList } from './components/RecentProgress/RecentProgress';
 import { StatCard } from './components/StatsCards/StatsCards';
@@ -39,7 +38,6 @@ function HomePage() {
       </div>
 
       <RecentCardsList className={styles.recent_list} cards={graphicsArr} />
-      <NavigationPanel></NavigationPanel>
     </main>
   );
 }

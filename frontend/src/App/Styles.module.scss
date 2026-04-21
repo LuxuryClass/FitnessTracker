@@ -3,3 +3,16 @@
   // background: $background-color;
   // color: $text-color;
 }
+
+.top_padding {
+  height: 69px;
+  width: auto;
+  flex-shrink: 0;
+  position: fixed;
+  display: block;
+  z-index: 100;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+
+}
