@@ -1,6 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Styles.module.scss';
 import logo from '/Public/masscot-main.png';
+import arrowBack from '/Public/ArrowBack.svg';
 import { Button } from '@/Components/UI/Button/Button';
 import { AuthForm } from '@/Components/AuthForm/AuthForm';
 
@@ -16,7 +17,7 @@ const LoginPage = () => {
     <div className={styles.page}>
       <Link to="/enter">
         <Button className={styles.back__button} size="back" color="accent-2" type="button">
-          <img src="/Public/ArrowBack.svg" alt="Назад" />
+          <img src={arrowBack} alt="Назад" />
         </Button>
       </Link>
       

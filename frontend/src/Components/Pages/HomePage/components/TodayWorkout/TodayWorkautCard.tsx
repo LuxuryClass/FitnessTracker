@@ -1,6 +1,7 @@
 import { Button } from "@/Components/UI/Button/Button";
 import styles from "./Styles.module.scss";
 import cn from "classnames";
+import startImage from '/Public/start-button.svg';
 
 interface Exercise {
   name: string;
@@ -91,7 +92,7 @@ export const TodayWorkout = ({
         onClick={onStart}
       >
         <span className={styles.start_button__text}>Перейти</span>
-        <img src="/Public/start-button.svg" />
+        <img src={startImage} />
       </Button>
     </div>
   );
