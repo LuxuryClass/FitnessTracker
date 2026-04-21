@@ -1,0 +1,84 @@
+.calendar {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  background-color: var(--Dark-grey-color);
+  border-radius: 16px;
+  height: 96px;
+  padding: 9px 16px;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 44px;
+  padding-block: 4px 7px;
+  border-radius: 10px;
+  transition: background-color 0.2s ease;
+}
+
+.day_today {
+  background: var(--Primary-color, #9FDA16);
+}
+
+.date_wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.dayName {
+  @include text_h3();
+  color: var(--Accent-grey-color, #888);
+  text-transform: uppercase;
+}
+
+.dayName_today {
+  color: #080A00;
+}
+
+.date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  @include text_h2();
+}
+
+.date_today {
+  color: #080A00;
+}
+
+.indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 12px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 9px;
+}
+
+.dot_planned {
+  border: 1px solid var(--Primary-color, #9FDA16);
+  background: transparent;
+}
+
+.dot_planned_today {
+  border-color: #080A00;
+}
+
+.dot_completed {
+  background: var(--Primary-color, #9FDA16);
+}
+
+.dot_completed_today {
+  background: #080A00;
+}

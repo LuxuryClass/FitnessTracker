@@ -1,17 +1,4 @@
-.page {
-  padding-top: 50px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.minicards {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 8.5px;
-}
-
-.calendar_wrapper {
+.wrapper {
   width: 100%;
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -24,22 +11,21 @@
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 12px;
 }
 
-.shedule_title {
+.title {
   font-weight: 700;
   font-size: 20px;
   line-height: 34px;
-  letter-spacing: 0%;
   color: var(--Primary-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .arrow {
   font-size: 28px;
   font-weight: 300;
-  color: var(--Primary-color);
   line-height: 1;
-  margin-right: 4px;
 }
