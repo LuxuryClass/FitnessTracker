@@ -24,7 +24,7 @@ type InputProps = (
   disabled?: boolean;
   error?: string;
   isRequired?: boolean;
-  icon?: string; // ← новый пропс для картинки
+  icon?: string;
 };
 
 function InputComponent({

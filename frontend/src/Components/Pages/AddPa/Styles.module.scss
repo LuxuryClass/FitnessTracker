@@ -1,0 +1,64 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--padding-top);
+  gap: 20px;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  @include text_h1();
+  color: #fff;
+  text-align: start;
+}
+
+.tabs {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  background-color: #9FDA1666;
+  border-radius: 32px;
+  border: 2px solid var(--Primary-color);
+  padding: 3px;
+}
+
+.tab {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  padding-block: 5px;
+  background: transparent;
+  border: none;
+  border-radius: 32px;
+  @include text_subtitle();
+  color: #fff;
+  transition: color 0.3s ease;
+  cursor: pointer;
+  
+  &_active {
+    color: #000;
+  }
+}
+
+.indicator {
+  position: absolute;
+  z-index: 1;
+  top: 3px;
+  bottom: 3px;
+  background: var(--Primary-color, #9FDA16);
+  border-radius: 32px;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.create_button {
+  @include text_h1();
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+}

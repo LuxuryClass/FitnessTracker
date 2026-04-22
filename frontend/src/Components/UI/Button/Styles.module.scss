@@ -32,8 +32,11 @@
   }
 
   &_m {
-    padding: 25px 72px;
+    @include text_h2();
+    height: 44px;
     border-radius: var(--medium-radius);
+
+
   }
 
   &_s {
