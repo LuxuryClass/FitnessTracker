@@ -1,16 +1,45 @@
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Styles.module.scss';
 import logo from '/masscot-main.png';
 import arrowBack from '/ArrowBack.svg';
 import { Button } from '@/Components/UI/Button/Button';
 import { AuthForm } from '@/Components/AuthForm/AuthForm';
+import { ApiError, useAuth } from '@/Auth';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
-  const handleLogin = (data: { email: string; password: string; name?: string }) => {
-    console.log('Login:', data);
-    navigate('/home');
+  const handleRegister = async (data: { email: string; password: string; name?: string }) => {
+    setSubmitError('');
+
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const emailLocalPart = normalizedEmail.split('@')[0]?.replace(/\s+/g, '') ?? '';
+    const username = data.name?.trim() || (emailLocalPart.length >= 3 ? emailLocalPart : `${emailLocalPart}user`);
+
+    setIsSubmitting(true);
+
+    try {
+      await register({
+        email: normalizedEmail,
+        password: data.password,
+        username,
+      });
+      navigate('/home', { replace: true });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setSubmitError(error.message);
+      } else if (error instanceof Error) {
+        setSubmitError(error.message);
+      } else {
+        setSubmitError('Не удалось выполнить регистрацию.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -27,7 +56,7 @@ const RegisterPage = () => {
         Тренируйтесь по персональному плану и <br/>достигайте целей      
       </p>
 
-      <AuthForm type="register" onSubmit={handleLogin} />
+      <AuthForm type="register" onSubmit={handleRegister} isSubmitting={isSubmitting} serverError={submitError} />
 
       <div className={styles.footer}>
         Уже есть аккаунт?{' '}

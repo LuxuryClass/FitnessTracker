@@ -11,6 +11,7 @@ interface ButtonProps {
   type?: 'button' | 'submit' | 'reset';
   radius?: number;
   className?: string;
+  disabled?: boolean;
 }
 
 function ButtonComponent({
@@ -22,9 +23,11 @@ function ButtonComponent({
   type = 'button',
   radius,
   className,
+  disabled = false,
 }: ButtonProps): JSX.Element {
   return (
     <button
+      disabled={disabled}
       style={{ borderRadius: radius  ? `${radius}px` : '' }}
       onClick={onClick}
       type={type}

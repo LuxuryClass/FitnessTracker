@@ -49,6 +49,13 @@
 
     }
 
+    &__server_error {
+        margin-top: 12px;
+        color: var(--red-color);
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
 }
 
 

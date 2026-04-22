@@ -11,13 +11,24 @@ import { clearFieldError } from '@/Utils/validation/helpers';
 
 interface AuthFormProps {
   type: 'login' | 'register';
-  onSubmit: (data: { email: string; password: string; name?: string }) => void;
+  onSubmit: (data: { email: string; password: string; name?: string }) => Promise<void> | void;
+  isSubmitting?: boolean;
+  serverError?: string;
 }
 
-export const AuthForm = ({ type, onSubmit }: AuthFormProps) => {
+const buildDerivedName = (emailValue: string): string => {
+  const emailLocalPart = emailValue.trim().split('@')[0]?.replace(/\s+/g, '') ?? '';
+  if (emailLocalPart.length >= 3) {
+    return emailLocalPart;
+  }
+
+  const fallback = `${emailLocalPart}user`;
+  return fallback.length >= 3 ? fallback : 'user123';
+};
+
+export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '' }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name] = useState('');
   const [errors, setErrors] = useState<LoginErrors | RegisterErrors>({ 
     email: '', 
     password: '', 
@@ -34,30 +45,30 @@ export const AuthForm = ({ type, onSubmit }: AuthFormProps) => {
     clearFieldError(errors, 'password', setErrors);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const derivedName = buildDerivedName(email);
     
     const newErrors = type === 'login' 
       ? validateLoginForm(email, password)
-      : validateRegisterForm(email, password, name);
+      : validateRegisterForm(email, password, derivedName);
     
     setErrors(newErrors);
     
     if (!isFormValid(newErrors)) return;
     
-    onSubmit({ email, password, ...(type === 'register' && { name }) });
+    await onSubmit({ email, password, ...(type === 'register' && { name: derivedName }) });
   };
 
   const config = {
     login: {
       buttonText: 'Войти',
-      showForgotLink: true,
-      showNameField: false
+      showForgotLink: true
     },
     register: {
       buttonText: 'Зарегистрироваться',
-      showForgotLink: false,
-      showNameField: true
+      showForgotLink: false
     }
   }[type];
 
@@ -70,6 +81,7 @@ export const AuthForm = ({ type, onSubmit }: AuthFormProps) => {
           value={email}
           onChange={handleEmailChange}
           error={errors.email}
+          disabled={isSubmitting}
           className={styles.form__inputs__input_wrapper}
           inputStyles={styles.form__inputs__input}
           icon={messageIcon}
@@ -81,6 +93,7 @@ export const AuthForm = ({ type, onSubmit }: AuthFormProps) => {
           value={password}
           onChange={handlePasswordChange}
           error={errors.password}
+          disabled={isSubmitting}
           className={styles.form__inputs__input_wrapper}
           inputStyles={styles.form__inputs__input}
           icon={lockIcon}
@@ -96,10 +109,13 @@ export const AuthForm = ({ type, onSubmit }: AuthFormProps) => {
         size="l"
         color="primary"
         fullWidth
+        disabled={isSubmitting}
         className={styles.form__submit_button}
       >
-        {config.buttonText}
+        {isSubmitting ? 'Подождите...' : config.buttonText}
       </Button>
+
+      {serverError && <p className={styles.form__server_error}>{serverError}</p>}
     </form>
   );
 };

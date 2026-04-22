@@ -4,9 +4,9 @@ import { StatCard } from './components/StatsCards/StatsCards';
 import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
 import { WeekCalendarSection } from './components/WeekCalendarSection/WeekCalendarSection';
+import { useAuth } from '@/Auth';
 
-let name = "Иван";
-let avatar = "src"
+const avatar = "src";
 
 let graphicsArr: CardData[] = [
   {id: 1, title: "Жим лёжа", muscleGroup: "Грудь", difference: "+5кг"},
@@ -25,9 +25,12 @@ const completedDates = [
 ];
 
 const HomePage = () => {
+  const { user } = useAuth();
+  const userName = user?.username ?? "Пользователь";
+
   return (
     <main className={styles.page}>
-      <Header className={styles.header} userName={name} userAvatar={avatar}/>
+      <Header className={styles.header} userName={userName} userAvatar={avatar}/>
       
       <TodayWorkout  title = "День жимов"
         duration = "75 мин"

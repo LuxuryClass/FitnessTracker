@@ -13,6 +13,11 @@
     opacity: 1;
   }
 
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
   &_default {
 
   }
