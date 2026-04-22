@@ -7,6 +7,7 @@ import { EnterPage } from '@/Components/Pages/EnterPage/EnterPage';
 import LoginPage from '@/Components/Pages/LoginPage/LoginPage';
 import SigninPage from '@/Components/Pages/RegisterPage/RegisterPage';
 import { NavigationPanel } from '@/Components/Common/Navigation/Navigation';
+import CreateWorkoutPage from '@/Components/Pages/AddPa/CreateWorkoutPage';
 
 export function App() {
   return (
@@ -20,7 +21,7 @@ export function App() {
           <Route path="/" element={<OutletWrapper />}>
             <Route path="/home" element={<HomePage />} />
             <Route path="/almanah" />
-            <Route path="/add" />
+            <Route path="/add" element={<CreateWorkoutPage />} />
             <Route path="/progress" />
             <Route path="/settings" />
 
