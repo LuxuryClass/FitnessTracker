@@ -2,7 +2,6 @@ import HomePage from '@pages/HomePage';
 import '../Styles/index.scss';
 import styles from './Styles.module.scss';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom';
-import StartPage from '@/Components/Pages/StartPage/StartPage';
 import { EnterPage } from '@/Components/Pages/EnterPage/EnterPage';
 import LoginPage from '@/Components/Pages/LoginPage/LoginPage';
 import SigninPage from '@/Components/Pages/RegisterPage/RegisterPage';

@@ -84,7 +84,6 @@
   font-size: 11px;
   font-weight: 400;
   color: var(--nav-color);
-
   white-space: nowrap;
   margin-top: 4px;
 }
@@ -98,8 +97,90 @@
 
   box-shadow:
     0 0 30px 0 #9fda16,
-    // свечение (снаружи)
     0 0 0 8px var(--Dark-grey-color),
-    // "outline"
-    0 4px 12px rgba(0, 0, 0, 0.2); // тень
+    0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+// Экраны меньше 393px
+@media (max-width: 392px) {
+  .navigation {
+    height: calc(70 / 393 * 100vw);
+    padding: calc(8 / 393 * 100vw) calc(24 / 393 * 100vw) calc(12 / 393 * 100vw) calc(22 / 393 * 100vw);
+    gap: calc(22 / 393 * 100vw);
+  }
+
+  .link {
+    gap: calc(4 / 393 * 100vw);
+  }
+
+  .icon {
+    width: calc(33 / 393 * 100vw);
+    height: calc(33 / 393 * 100vw);
+  }
+
+  .text {
+    font-size: calc(11 / 393 * 100vw);
+  }
+
+  .link_special {
+    gap: calc(4 / 393 * 100vw);
+  }
+
+  .icon_special {
+    width: calc(40 / 393 * 100vw);
+    height: calc(40 / 393 * 100vw);
+  }
+
+  .text_special {
+    font-size: calc(11 / 393 * 100vw);
+    margin-top: calc(4 / 393 * 100vw);
+  }
+
+  .wrapper {
+    width: calc(52 / 393 * 100vw);
+    height: calc(52 / 393 * 100vw);
+    box-shadow:
+      0 0 calc(30 / 393 * 100vw) 0 #9fda16,
+      0 0 0 calc(8 / 393 * 100vw) var(--Dark-grey-color),
+      0 calc(4 / 393 * 100vw) calc(12 / 393 * 100vw) rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Экраны больше 393px
+@media (min-width: 394px) {
+  .navigation {
+    height: min(calc(70 / 393 * 100vw), 84px);
+    gap: min(calc(22 / 393 * 100vw), 32px);
+    padding: min(calc(8 / 393 * 100vw), 12px) 
+             min(calc(24 / 393 * 100vw), 36px) 
+             min(calc(12 / 393 * 100vw), 16px) 
+             min(calc(22 / 393 * 100vw), 30px);
+  }
+
+  .icon {
+    width: min(calc(33 / 393 * 100vw), 40px);
+    height: min(calc(33 / 393 * 100vw), 40px);
+  }
+
+  .text {
+    font-size: min(calc(11 / 393 * 100vw), 13px);
+  }
+
+  .icon_special {
+    width: min(calc(40 / 393 * 100vw), 48px);
+    height: min(calc(40 / 393 * 100vw), 48px);
+  }
+
+  .text_special {
+    font-size: min(calc(11 / 393 * 100vw), 13px);
+  }
+
+  .wrapper {
+    width: min(calc(52 / 393 * 100vw), 64px);
+    height: min(calc(52 / 393 * 100vw), 64px);
+    box-shadow:
+      0 0 min(calc(30 / 393 * 100vw), 40px) 0 #9fda16,
+      0 0 0 min(calc(8 / 393 * 100vw), 10px) var(--Dark-grey-color),
+      0 min(calc(4 / 393 * 100vw), 6px) min(calc(12 / 393 * 100vw), 16px) rgba(0, 0, 0, 0.2);
+  }
 }

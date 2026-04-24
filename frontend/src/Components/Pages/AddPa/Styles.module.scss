@@ -4,6 +4,8 @@
   padding-top: var(--padding-top);
   gap: 20px;
   position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .header {
@@ -56,9 +58,14 @@
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.content {
+  flex: 1;
+  padding-bottom: 60px; // место под кнопку
+}
+
 .create_button {
   @include text_h1();
   position: sticky;
-  bottom: 0;
-  z-index: 100;
+  bottom: 20px; // ровно над отступом для навигации
+  z-index: 99;
 }

@@ -40,8 +40,9 @@ services:
       APP_NAME: "API планировщика тренировок"
       API_PREFIX: "/api"
       DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fitness_tracker"
-      REDIS_URL: "redis://redis:6379/0"
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      REDIS_URL: "redis://redis:6379/0"      
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-qwertyuiop1234567890}
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
     depends_on:
       db:
         condition: service_healthy
