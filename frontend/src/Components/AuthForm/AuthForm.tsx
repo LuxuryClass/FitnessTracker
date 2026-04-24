@@ -4,7 +4,6 @@ import { Button } from '@/Components/UI/Button/Button';
 import { Input } from '@/Components/UI/Input/Input';
 import messageIcon from '/Message_light.svg';
 import lockIcon from '/Lock_alt_light.svg';
-//import userIcon from '/User_light.svg';
 import styles from './Styles.module.scss';
 import { validateLoginForm, validateRegisterForm, isFormValid, type LoginErrors, type RegisterErrors } from '@/Utils/validation/validation';
 import { clearFieldError } from '@/Utils/validation/helpers';

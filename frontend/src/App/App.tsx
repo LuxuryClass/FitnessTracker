@@ -15,7 +15,6 @@ export function App() {
     <>
       <BrowserRouter basename="/">
         <Routes>
-          <Route path="/" element={<StartPage />} />
           <Route element={<GuestOnlyRoute />}>
             <Route path="/enter" element={<EnterPage />} />
             <Route path="/login" element={<LoginPage />} />

@@ -1,11 +1,12 @@
-.page{
+.page {
     @include flex-center();
     flex-direction: column;
     padding-top: 84px;
     justify-content: start;
     position: relative;
     height: 100%;
-    
+    min-height: 100vh;
+    min-height: 100dvh;
 }
 
 .back__button {
@@ -22,10 +23,12 @@
 .title {
     @include text_h1();
     margin-block: 4px 12px;
+    text-align: center;
 }
 
 .subtitle {
     @include text_subtitle();
+    text-align: center;
 }
 
 .form {
@@ -34,15 +37,15 @@
     gap: 20px;
     justify-self: end;
 
-    &__inputs{
+    &__inputs {
         display: flex;
         flex-direction: column;
         gap: 20px;
         margin-bottom: 12px;
 
         &__input_wrapper {
-        width: 100%;
-        height: 50px;
+            width: 100%;
+            height: 50px;
         }
     
         &__input {
@@ -57,6 +60,8 @@
             font-size: 16px;
             line-height: 27px;
             letter-spacing: 0%;
+            width: 100%;
+            box-sizing: border-box;
     
             &:focus, &:hover {
                 background-color: var(--Accent-2-color);
@@ -64,27 +69,27 @@
         }
     }
 
-    &__forgot{
+    &__forgot {
         @include text_subtitle();
         color: var(--Accent-grey-color);
         text-decoration: none;
 
-        &:hover{
+        &:hover {
             text-decoration: underline;
         }
     }
 
     &__login_button {
         margin-top: 28px;
-
     }
-
 }
-
 
 .footer {
     position: absolute;
     bottom: 32px;
+    text-align: center;
+    width: 100%;
+    left: 0;
 
     &__signin_link {
         color: var(--Primary-color);
@@ -96,4 +101,139 @@
     }
 }
 
+// Экраны меньше 393px
+@media (max-width: 392px) {
+    .page {
+        padding-top: calc(84 / 393 * 100vw);
+    }
 
+    .back__button {
+        top: calc(58 / 393 * 100vw);
+        padding: calc(14 / 393 * 100vw);
+    }
+
+    .logo {
+        width: calc(218 / 393 * 100vw);
+    }
+
+    .title {
+        margin-block: calc(4 / 393 * 100vw) calc(12 / 393 * 100vw);
+    }
+
+    .form {
+        margin-top: calc(28 / 393 * 100vw);
+        gap: calc(20 / 393 * 100vw);
+
+        &__inputs {
+            gap: calc(20 / 393 * 100vw);
+            margin-bottom: calc(12 / 393 * 100vw);
+
+            &__input_wrapper {
+                height: calc(50 / 393 * 100vw);
+            }
+
+            &__input {
+                padding: calc(13 / 393 * 100vw) calc(8 / 393 * 100vw);
+                font-size: calc(16 / 393 * 100vw);
+                line-height: calc(27 / 393 * 100vw);
+            }
+        }
+
+        &__login_button {
+            margin-top: calc(28 / 393 * 100vw);
+        }
+    }
+
+    .footer {
+        bottom: calc(32 / 393 * 100vw);
+    }
+}
+
+// Экраны больше 393px
+@media (min-width: 394px) {
+    .page {
+        padding-top: min(calc(84 / 393 * 100vw), 120px);
+    }
+
+    .back__button {
+        top: min(calc(58 / 393 * 100vw), 80px);
+    }
+
+    .logo {
+        width: min(calc(218 / 393 * 100vw), 300px);
+    }
+
+    .title {
+        margin-block: min(calc(4 / 393 * 100vw), 8px) min(calc(12 / 393 * 100vw), 20px);
+    }
+
+    .form {
+        margin-top: min(calc(28 / 393 * 100vw), 48px);
+        max-width: 500px;
+
+        &__inputs {
+            &__input_wrapper {
+                height: min(calc(50 / 393 * 100vw), 60px);
+            }
+        }
+
+        &__login_button {
+            margin-top: min(calc(28 / 393 * 100vw), 48px);
+        }
+    }
+
+    .footer {
+        bottom: min(calc(32 / 393 * 100vw), 48px);
+    }
+}
+
+// Маленькая высота экрана
+@media (max-height: 700px) {
+    .page {
+        padding-top: 20px;
+    }
+
+    .back__button {
+        top: 20px;
+    }
+
+    .logo {
+        width: 140px;
+    }
+
+    .title {
+        margin-block: 2px 6px;
+    }
+
+    .form {
+        margin-top: 16px;
+    }
+
+    .footer {
+        bottom: 16px;
+    }
+
+    .form__inputs__input_wrapper {
+        height: 42px;
+    }
+}
+
+// Очень маленькая высота
+@media (max-height: 600px) {
+    .logo {
+        width: 100px;
+    }
+
+    .subtitle {
+        display: none;
+    }
+
+    .form__inputs {
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .form__login_button {
+        margin-top: 12px;
+    }
+}

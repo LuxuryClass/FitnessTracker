@@ -21,6 +21,8 @@
 
 .subtitle {
     @include text_subtitle();
+    text-align: center;
+    padding: 0 20px;
 }
 
 .buttons {
@@ -29,4 +31,50 @@
     gap: 20px;
     width: 100%;
     margin-top: 64px;
+}
+
+// Экраны меньше 393px — сжимаем пропорционально
+@media (max-width: 392px) {
+    .logo {
+        margin-top: calc(84 / 393 * 100vw);
+        width: calc(218 / 393 * 100vw);
+    }
+
+    .title {
+        margin-block: calc(4 / 393 * 100vw) calc(12 / 393 * 100vw);
+    }
+
+    .buttons {
+        gap: calc(20 / 393 * 100vw);
+    }
+}
+
+// Экраны больше 393px — растягиваем пропорционально, но с ограничением
+@media (min-width: 394px) {
+    .logo {
+        margin-top: calc(84 / 393 * 100vw);
+        width: min(calc(218 / 393 * 100vw), 300px);
+    }
+
+    .title {
+        margin-block: calc(4 / 393 * 100vw) calc(12 / 393 * 100vw);
+    }
+
+    .buttons {
+        gap: calc(20 / 393 * 100vw);
+        max-width: 500px;
+    }
+}
+
+// Очень маленькая высота (ландшафтная ориентация)
+@media (max-height: 700px) {
+    .logo {
+        margin-top: 20px;
+        width: 160px;
+    }
+
+    .buttons {
+        margin-top: 30px;
+        gap: 14px;
+    }
 }

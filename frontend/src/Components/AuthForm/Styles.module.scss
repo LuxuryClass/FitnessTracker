@@ -31,12 +31,20 @@
             &:focus, &:hover {
                 background-color: var(--Accent-2-color);
             }
+
+            &:-webkit-autofill,
+            &:-webkit-autofill:hover,
+            &:-webkit-autofill:focus,
+            &:-webkit-autofill:active {
+                -webkit-box-shadow: 0 0 0 30px var(--Accent-2-color) inset !important;
+                -webkit-text-fill-color: #fff !important;
+            }
         }
     }
 
     &__forgot{
         @include text_subtitle();
-        color: var(--Accent-grey-color);
+        color: var(--Primary-color);
         text-decoration: none;
 
         &:hover{
