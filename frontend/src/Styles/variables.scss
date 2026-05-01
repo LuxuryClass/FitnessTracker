@@ -3,7 +3,7 @@ $text-color: #151515;
 $muted-text-color: #5f6368;
 
 :root {
-    --padding-top: 30px;
+    --padding-top: 10px;
 
     --large-radius: 30px;
     --medium-radius: 28px;
@@ -26,4 +26,41 @@ $muted-text-color: #5f6368;
     --Focus-Accent-2-color: ;
 
     --Acccent-grey-color: #26281E;
+}
+
+// Брейкпоинты
+$breakpoint-mobile-min: 320px;   // минимальная ширина телефона
+$breakpoint-mobile: 393px;       // базовая ширина (дизайн)
+$breakpoint-tablet: 768px;       // планшеты
+$breakpoint-desktop: 1024px;     // десктоп
+
+// Миксины для медиа-запросов
+@mixin mobile-small {
+  @media (max-width: 359px) {
+    @content;
+  }
+}
+
+@mixin mobile {
+  @media (max-width: 767px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 768px) and (max-width: 1023px) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media (min-width: 768px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1024px) {
+    @content;
+  }
 }

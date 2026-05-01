@@ -1,0 +1,259 @@
+.page {
+  @include scrollable();
+  padding-top: var(--padding-top);
+  padding-bottom: 85px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 6.1vw, 24px);
+}
+
+// Профиль
+.profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 4.3vw, 17px);
+  animation: profileFadeIn 0.6s ease-out;
+}
+
+@keyframes profileFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.avatar {
+  position: relative;
+  width: clamp(90px, 29.3vw, 130px);
+  height: clamp(90px, 29.3vw, 130px);
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(48px, 17vw, 67px);
+  font-weight: 700;
+  color: var(--Primary-color);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  border: clamp(5px, 2vw, 8px) solid transparent;
+  background-clip: padding-box;
+  
+  outline: 2px solid var(--Primary-color, #9FDA16);
+  outline-offset: -4px;
+  
+  animation: avatarPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+  
+  &:hover {
+    transform: scale(1.03);
+    
+    .avatarIcon_wrapper {
+      transform: scale(1.15);
+    }
+  }
+  
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+@keyframes avatarPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatarIcon_wrapper {
+  position: absolute;
+  width: clamp(26px, 8.1vw, 32px);
+  height: clamp(26px, 8.1vw, 32px);
+  background-color: var(--Primary-color, #9FDA16);
+  border-radius: 50%;
+  @include flex-center();
+  bottom: -2px;
+  right: -4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  animation: editIconPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+}
+
+@keyframes editIconPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.avatarIcon {
+  width: clamp(10px, 3.1vw, 12px);
+  height: clamp(14px, 4.6vw, 18px);
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 2vw, 8px);
+  align-items: center;
+  animation: profileInfoFadeIn 0.5s ease-out 0.3s both;
+}
+
+@keyframes profileInfoFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.name {
+  font-weight: 400;
+  font-size: clamp(17px, 5.1vw, 20px);
+  line-height: 1;
+  letter-spacing: 0%;
+  color: #fff;
+}
+
+.nickname {
+  @include text_h2();
+  color: var(--Accent-grey-color);
+  font-weight: 400;
+  font-size: clamp(14px, 4.6vw, 18px);
+}
+
+// Меню
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 3.1vw, 12px);
+  overflow: hidden;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(12px, 4.1vw, 16px);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  background-color: var(--Dark-grey-color);
+  
+  opacity: 0;
+  animation: menuItemSlideIn 0.4s ease-out forwards;
+  
+  &:nth-child(1) { animation-delay: 0.45s; }
+  &:nth-child(2) { animation-delay: 0.55s; }
+  &:nth-child(3) { animation-delay: 0.65s; }
+  &:nth-child(4) { animation-delay: 0.75s; }
+  
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: var(--Accent-2-color);
+  }
+  
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+@keyframes menuItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.menuItemLeft {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 3.1vw, 12px);
+}
+
+.menuIcon {
+  width: clamp(28px, 8.7vw, 34px);
+  height: clamp(28px, 8.7vw, 34px);
+  padding: 5px;
+  background-color: var(--Primary-color);
+  border-radius: 50%;
+  animation: iconPopIn 0.3s ease-out backwards;
+  animation-delay: inherit;
+}
+
+@keyframes iconPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.menuLabel {
+  font-size: clamp(14px, 4.1vw, 16px);
+  font-weight: 400;
+  color: #fff;
+}
+
+.chevron {
+  width: clamp(18px, 5.1vw, 20px);
+  height: clamp(18px, 5.1vw, 20px);
+  color: var(--Accent-grey-color, #888);
+  flex-shrink: 0;
+}
+
+.fileInput {
+  display: none;
+}
+
+// Планшеты — чуть крупнее
+@include tablet-up {
+  .avatar {
+    width: 140px;
+    height: 140px;
+    font-size: 72px;
+  }
+  
+  .menuItem {
+    padding: 20px;
+  }
+  
+  .menuLabel {
+    font-size: 18px;
+  }
+}

@@ -8,7 +8,7 @@ export const validateEmail = (email: string): string => {
 
 export const validatePassword = (password: string): string => {
   if (!password) return 'Введите пароль';
-  if (password.length < 6) return 'Пароль должен быть не менее 6 символов';
+  if (password.length < 6) return 'Не менее 6 символов';
   return '';
 };
 

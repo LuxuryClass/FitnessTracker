@@ -1,0 +1,124 @@
+@import '@styles/mixins.scss';
+
+.page {
+  @include scrollable();
+  padding-top: var(--padding-top);
+  padding-bottom: 85px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 4.1vw, 16px);
+  animation: fadeInDown 0.25s ease-out;
+  margin-bottom: clamp(20px, 7.6vw, 30px);
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.title {
+  font-size: clamp(18px, 5.1vw, 20px);
+  font-weight: 700;
+  color: #fff;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2.5vw, 10px);
+}
+
+.blockTitle {
+  font-size: clamp(12px, 3.6vw, 14px);
+  font-weight: 500;
+  color: var(--Accent-grey-color, #888);
+  padding: clamp(24px, 8.7vw, 34px) 0 clamp(6px, 2vw, 8px);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(8px, 2.5vw, 10px) clamp(14px, 4.3vw, 17px) clamp(8px, 2.5vw, 10px) clamp(16px, 5.1vw, 20px);
+  height: clamp(44px, 12.2vw, 48px);
+  background-color: var(--Dark-grey-color);
+  border-radius: 8px;
+  
+  opacity: 0;
+  animation: itemSlideIn 0.2s ease-out forwards;
+  
+  &_show {
+    animation: itemSlideIn 0.2s ease-out forwards;
+    max-height: 48px;
+    overflow: hidden;
+  }
+  
+  &_hide {
+    animation: itemSlideOut 0.2s ease-out forwards;
+    max-height: 48px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  
+  .list:first-of-type & {
+    &:nth-child(1) { animation-delay: 0s; }
+  }
+  
+  .list:last-of-type & {
+    &:nth-child(1) { animation-delay: 0.05s; }
+    &:nth-child(2) { animation-delay: 0.10s; }
+    &:nth-child(3) { animation-delay: 0.15s; }
+    &:nth-child(4) { animation-delay: 0.20s; }
+    &:nth-child(5) { animation-delay: 0.25s; }
+  }
+}
+
+@keyframes itemSlideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes itemSlideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-10px); }
+}
+
+.itemLabel {
+  font-size: clamp(14px, 4.1vw, 16px);
+  font-weight: 400;
+  color: #fff;
+}
+
+.timeWrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.timeText {
+  padding-right: 5px;
+  font-size: clamp(14px, 4.1vw, 16px);
+  font-weight: 400;
+  color: #fff;
+}
+
+.timeInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+// Планшеты
+@include tablet-up {
+  .list {
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}

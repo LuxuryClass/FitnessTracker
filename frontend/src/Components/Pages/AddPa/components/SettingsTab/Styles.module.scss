@@ -54,55 +54,6 @@
   }
 }
 
-
-.startTabsWrapper {
-  width: 100%;
-}
-
-.startTabs {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  background-color: #9FDA1666;
-  border-radius: 32px;
-  border: 2px solid var(--Primary-color);
-  padding: 3px;
-}
-
-.startTab {
-  position: relative;
-  z-index: 2;
-  flex: 1;
-  padding-block: 5px;
-  background: transparent;
-  border: none;
-  border-radius: 32px;
-  @include text_subtitle();
-  color: #fff;
-  transition: color 0.3s ease;
-  cursor: pointer;
-  
-  &_active {
-    color: #000;
-  }
-}
-
-.indicator {
-  position: absolute;
-  z-index: 1;
-  top: 3px;
-  bottom: 3px;
-  background: var(--Primary-color, #9FDA16);
-  border-radius: 32px;
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.startHint {
-  font-size: 14px;
-  color: var(--Accent-grey-color, #888);
-  margin-top: 8px;
-}
-
 // Выпадающий блок
 .scheduleDropdown {
   max-height: 0;
@@ -216,8 +167,4 @@
 .templatePlaceholder {
   color: var(--Accent-grey-color);
   font-size: 14px;
-}
-
-.add_template_button {
-
 }

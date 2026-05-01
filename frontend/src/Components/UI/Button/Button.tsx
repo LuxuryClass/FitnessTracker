@@ -1,4 +1,5 @@
 import { JSX, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 
@@ -15,8 +16,8 @@ interface ButtonProps {
 }
 
 function ButtonComponent({
-  size='default',
-  color='primary',
+  size = 'default',
+  color,
   children,
   fullWidth,
   onClick,
@@ -25,15 +26,37 @@ function ButtonComponent({
   className,
   disabled = false,
 }: ButtonProps): JSX.Element {
+  const navigate = useNavigate();
+  const resolvedColor = color || (size === 'back' ? 'accent-2' : 'primary');
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else if (size === 'back') {
+      navigate(-1);
+    }
+  };
+
   return (
     <button
       disabled={disabled}
-      style={{ borderRadius: radius  ? `${radius}px` : '' }}
-      onClick={onClick}
+      style={{ borderRadius: radius ? `${radius}px` : '' }}
+      onClick={handleClick}
       type={type}
-      className={cn(styles.button, styles[`button_${color}`], styles[`button_${size}`], fullWidth && styles.button_fullWidth, className)}
+      className={cn(
+        styles.button,
+        styles[`button_${resolvedColor}`],
+        size !== 'back' && styles[`button_${size}`],
+        fullWidth && styles.button_fullWidth,
+        size === 'back' && styles.button_back,
+        className
+      )}
     >
-      {children}
+      {size === 'back' ? (
+        <img src="/ArrowBack.svg" alt="Назад" />
+      ) : (
+        children
+      )}
     </button>
   );
 }

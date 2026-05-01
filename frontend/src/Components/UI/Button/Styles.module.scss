@@ -1,4 +1,3 @@
-
 .button {
   cursor: pointer;
   display: flex;
@@ -18,7 +17,14 @@
     cursor: not-allowed;
   }
 
-  &_default {
+  &_back {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--Primary-color);
+    background-color: var(--Accent-2-color);
+    padding: 0;
+    flex-shrink: 0;
 
   }
   
@@ -26,31 +32,19 @@
     @include button_text_h1();
     padding-block: 8px;
     width: 100%;
-    height:50px;
+    height: 50px;
     border-radius: var(--large-radius);
-
   }
 
   &_m {
     @include text_h2();
     height: 44px;
     border-radius: var(--medium-radius);
-
-
   }
 
   &_s {
     @include button_text_h3();
     border-radius: var(--small-radius);
-  }
-
-  &_back {
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--Primary-color);
-    background-color: var(--Accent-2-color);
-    padding: 14px 14px;
   }
 
   &_primary {

@@ -1,7 +1,10 @@
 .page {
-  padding-top: 20px;
+  @include  scrollable();
+  padding-top: var(--padding-top);
   display: flex;
   flex-direction: column;
+  height: 100vh; // ← ограничиваем высоту
+  padding-bottom: 90px;
   gap: 20px;
 }
 

@@ -1,0 +1,73 @@
+@import '@styles/variables.scss';
+
+.tabs {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding: clamp(2px, 0.8vw, 3px);
+  width: 100%;
+  color: #fff;
+  
+  &_primary {
+    background-color: #9FDA1666;
+    border-radius: 32px;
+    border: 2px solid var(--Primary-color);
+  }
+  
+  &_dark {
+    background-color: var(--Dark-grey-color);
+    border-radius: 12px;
+    border: 1px solid transparent;
+  }
+}
+
+.tab {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  transition: color 0.3s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  
+  &_primary {
+    padding-block: clamp(4px, 1.3vw, 5px);
+    border-radius: 32px;
+    font-size: clamp(13px, 4.1vw, 16px);
+    font-weight: 400;
+    line-height: 1.4;
+  }
+  
+  &_dark {
+    padding: clamp(10px, 3.6vw, 14px);
+    border-radius: 12px;
+    font-size: clamp(14px, 4.1vw, 16px);
+    font-weight: 500;
+  }
+  
+  &_active {
+    color: #080A00;
+  }
+}
+
+.indicator {
+  position: absolute;
+  z-index: 1;
+  background: var(--Primary-color, #9FDA16);
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &_primary {
+    top: clamp(2px, 0.8vw, 3px);
+    bottom: clamp(2px, 0.8vw, 3px);
+    border-radius: 32px;
+  }
+  
+  &_dark {
+    top: clamp(2px, 0.8vw, 3px);
+    bottom: clamp(2px, 0.8vw, 3px);
+    border-radius: 10px;
+  }
+}

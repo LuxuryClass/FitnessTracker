@@ -20,6 +20,19 @@
   color: $text-color;
 }
 
+
+@mixin scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
 @mixin text_h1 {
   font-weight: 700;
   font-style: Regular;
@@ -69,3 +82,4 @@
 @mixin basic-hover {
   opacity: 0.8;
 }
+

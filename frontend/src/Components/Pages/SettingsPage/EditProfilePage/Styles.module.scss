@@ -1,0 +1,126 @@
+@import '@styles/mixins.scss';
+
+.page {
+  padding-top: var(--padding-top);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 7.6vw, 30px);
+  height: 100vh;
+  height: 100dvh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 4.1vw, 16px);
+  animation: fadeInDown 0.25s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.title {
+  font-size: clamp(18px, 5.1vw, 20px);
+  font-weight: 700;
+  color: #fff;
+}
+
+.form {
+  @include scrollable();
+  padding-bottom: clamp(80px, 25vh, 100px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 5.1vw, 20px);
+  border-radius: 8px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 2vw, 8px);
+  
+  opacity: 0;
+  animation: sectionSlideIn 0.25s ease-out forwards;
+  
+  &:nth-child(1) { animation-delay: 0.1s; }
+  &:nth-child(2) { animation-delay: 0.15s; }
+  &:nth-child(3) { animation-delay: 0.2s; }
+  &:nth-child(4) { animation-delay: 0.25s; }
+  &:nth-child(5) { animation-delay: 0.3s; }
+}
+
+@keyframes sectionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sectionTitle {
+  @include text_h2();
+  color: #fff;
+  font-size: clamp(14px, 4.6vw, 18px);
+}
+
+.input {
+  width: 100%;
+  padding: clamp(10px, 3.6vw, 14px) clamp(12px, 4.1vw, 16px);
+  background: var(--Dark-grey-color, #1a1a1a);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-size: clamp(14px, 4.1vw, 16px);
+  color: #fff;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+  
+  &::placeholder {
+    color: var(--Accent-grey-color, #666);
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: var(--Primary-color, #9FDA16);
+  }
+}
+
+.buttonWrapper {
+  margin-top: clamp(8px, 3.1vw, 12px);
+  opacity: 0;
+  animation: fadeInUp 0.25s ease-out 0.35s forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Планшеты
+@include tablet-up {
+  .form {
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  .input {
+    padding: 16px 18px;
+  }
+}

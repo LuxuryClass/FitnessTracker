@@ -1,32 +1,24 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Styles.module.scss';
 import { Button } from '@/Components/UI/Button/Button';
+import { TabsGroup } from '@/Components/UI/TabsGroup/TabsGroup';
 import cn from 'classnames';
+
+type StartType = 'now' | 'schedule';
+
+const startTabs = [
+  { id: 'now' as StartType, label: 'Сейчас' },
+  { id: 'schedule' as StartType, label: 'Запланировать' },
+];
 
 export const SettingsTab = () => {
   const [workoutName, setWorkoutName] = useState('');
-  const [startType, setStartType] = useState<'now' | 'schedule'>('now');
+  const [startType, setStartType] = useState<StartType>('now');
   const [notes, setNotes] = useState('');
-  const [selectedTemplate, _] = useState<string | null>(null); //setSelectedTemplate
+  const [selectedTemplate, _] = useState<string | null>(null);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
-  
-  // Для плавающего индикатора
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
-  const tabsRef = useRef<Record<'now' | 'schedule', HTMLButtonElement | null>>({
-    now: null,
-    schedule: null,
-  });
 
-  useEffect(() => {
-    const activeElement = tabsRef.current[startType];
-    if (activeElement) {
-      const { offsetLeft, offsetWidth } = activeElement;
-      setIndicatorStyle({ left: offsetLeft, width: offsetWidth });
-    }
-  }, [startType]);
-
-  // Установка даты по умолчанию (сегодня)
   useEffect(() => {
     const today = new Date();
     const year = today.getFullYear();
@@ -69,48 +61,11 @@ export const SettingsTab = () => {
         />
       </div>
 
-      {/* Шаблон */}
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Из шаблона</h3>
-        <div className={styles.templateSelector}>
-          <span className={styles.templatePlaceholder}>
-            {selectedTemplate || 'Нет выбранного шаблона'}
-          </span>
-          <Button className={styles.add_template_button} size="m" color="accent" fullWidth onClick={() => {}}>
-            Выбрать шаблон
-          </Button>
-        </div>
-      </div>
-
       {/* Начать сейчас или запланировать */}
       <div className={cn(styles.section, styles.scheduleSection)}>
         <h3 className={styles.sectionTitle}>Начать сейчас или запланировать</h3>
         
-        <div className={styles.startTabsWrapper}>
-          <div className={styles.startTabs}>
-            <button
-              ref={(el) => { tabsRef.current.now = el; }}
-              className={cn(styles.startTab, startType === 'now' && styles.startTab_active)}
-              onClick={() => setStartType('now')}
-            >
-              Сейчас
-            </button>
-            <button
-              ref={(el) => { tabsRef.current.schedule = el; }}
-              className={cn(styles.startTab, startType === 'schedule' && styles.startTab_active)}
-              onClick={() => setStartType('schedule')}
-            >
-              Запланировать
-            </button>
-            <div 
-              className={styles.indicator} 
-              style={{ 
-                left: `${indicatorStyle.left}px`, 
-                width: `${indicatorStyle.width}px` 
-              }} 
-            />
-          </div>
-        </div>
+        <TabsGroup tabs={startTabs} activeTab={startType} onChange={setStartType} />
 
         {/* Выпадающий блок с датой */}
         <div className={cn(styles.scheduleDropdown, startType === 'schedule' && styles.scheduleDropdown_open)}>
@@ -144,7 +99,18 @@ export const SettingsTab = () => {
         </div>
       </div>
 
-
+      {/* Шаблон */}
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>Из шаблона</h3>
+        <div className={styles.templateSelector}>
+          <span className={styles.templatePlaceholder}>
+            {selectedTemplate || 'Нет выбранного шаблона'}
+          </span>
+          <Button className={styles.add_template_button} size="m" color="accent" fullWidth onClick={() => {}}>
+            Выбрать шаблон
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

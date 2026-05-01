@@ -27,21 +27,19 @@ body {
 
 #root {
   width: 100%;
-  // max-width: 393px;
+  max-width: 420px;
   height: 100vh;
   background: linear-gradient(360deg, rgba(8, 10, 0, 0.95) 69.71%, rgba(90, 112, 0, 0.95) 100%);
-  overflow-y: auto; // ← вертикальная прокрутка для всего приложения
-  overflow-x: hidden; // ← горизонтальную скрываем на уровне root
   margin: auto;
   color: #fff;
   position: relative;
   padding-inline: 20px;
-  scrollbar-gutter: stable; // резервирует место под скроллбар
-  overflow-y: auto;
-  padding-bottom: 85px;
-  scrollbar-width: none;
-  
-  &::-webkit-scrollbar {
-    width: 0;
+}
+
+
+input[type="date"] {
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
   }
 }

@@ -8,6 +8,7 @@
 .greeting {
     @include text_subtitle();
     font-size: 16px;
+    text-align: start;
 }
 
 .userName {
