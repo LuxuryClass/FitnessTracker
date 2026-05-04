@@ -74,6 +74,8 @@ export interface AuthUser {
   email: string;
   username: string;
   is_active: boolean;
+  streak_weeks: number;
+  weekly_volume_tons: number | string;
   created_at: string;
   updated_at: string;
 }

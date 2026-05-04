@@ -27,6 +27,8 @@ const completedDates = [
 const HomePage = () => {
   const { user } = useAuth();
   const userName = user?.username ?? "Пользователь";
+  const streakWeeks = user?.streak_weeks ?? 0;
+  const weeklyVolumeTons = Number(user?.weekly_volume_tons ?? 0) || 0;
 
   return (
     <main className={styles.page}>
@@ -47,9 +49,9 @@ const HomePage = () => {
       />
       
       <div className={styles.minicards}>
-        <StatCard isVisible={true} type="streak" value={8}></StatCard>
+        <StatCard isVisible={true} type="streak" value={streakWeeks}></StatCard>
         <StatCard isVisible={true} type="week" value={2} total={3}></StatCard>
-        <StatCard isVisible={true} type="totalWeight" value={8.5}></StatCard>
+        <StatCard isVisible={true} type="totalWeight" value={weeklyVolumeTons}></StatCard>
       </div>
       
       <WeekCalendarSection plannedDates={plannedDates} completedDates={completedDates}/>

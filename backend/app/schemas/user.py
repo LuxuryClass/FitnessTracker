@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -9,6 +10,8 @@ class UserResponse(BaseModel):
     email: str
     username: str
     is_active: bool
+    streak_weeks: int
+    weekly_volume_tons: Decimal
     created_at: datetime
     updated_at: datetime
 

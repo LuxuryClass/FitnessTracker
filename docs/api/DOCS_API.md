@@ -70,6 +70,8 @@
     "email": "user@example.com",
     "username": "my_name",
     "is_active": true,
+    "streak_weeks": 0,
+    "weekly_volume_tons": 0.0,
     "created_at": "2026-04-16T12:00:00+00:00",
     "updated_at": "2026-04-16T12:00:00+00:00"
   }
@@ -108,6 +110,8 @@
     "email": "user@example.com",
     "username": "my_name",
     "is_active": true,
+    "streak_weeks": 0,
+    "weekly_volume_tons": 0.0,
     "created_at": "2026-04-16T12:00:00+00:00",
     "updated_at": "2026-04-16T12:00:00+00:00"
   }
@@ -190,6 +194,8 @@
   "email": "user@example.com",
   "username": "my_name",
   "is_active": true,
+  "streak_weeks": 3,
+  "weekly_volume_tons": 1.4,
   "created_at": "2026-04-16T12:00:00+00:00",
   "updated_at": "2026-04-16T12:00:00+00:00"
 }
@@ -233,6 +239,8 @@
   "email": "new_email@example.com",
   "username": "new_name",
   "is_active": true,
+  "streak_weeks": 3,
+  "weekly_volume_tons": 1.4,
   "created_at": "2026-04-16T12:00:00+00:00",
   "updated_at": "2026-04-18T10:00:00+00:00"
 }
