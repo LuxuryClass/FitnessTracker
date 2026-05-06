@@ -31,25 +31,27 @@ const StatCardComponent = ({ isVisible, type, value, total, className }: StatCar
   if (!isVisible)
     return;
   
-    const { label, formatValue } = config[type];
-  const displayValue = type === 'week' ? formatValue(value, total) : formatValue(value);
+  const { label, formatValue } = config[type];
+  const weekTotal = total ?? 0;
+  const displayValue = type === 'week' ? formatValue(value, weekTotal) : formatValue(value);
   const [animatedOffset, setAnimatedOffset] = useState<number | null>(null);
 
   useEffect(() => {
-    if (type === 'week' && total) {
+    if (type === 'week') {
       const timer = setTimeout(() => {
-        const percentage = (value / total) * 100;
+        const percentage = weekTotal > 0 ? (value / weekTotal) * 100 : 0;
+        const normalizedPercentage = Math.max(0, Math.min(percentage, 100));
         const radius = 31;
         const circumference = 2 * Math.PI * radius;
-        const offset = circumference - (percentage / 100) * circumference;
+        const offset = circumference - (normalizedPercentage / 100) * circumference;
         setAnimatedOffset(offset);
       }, 100);
       
       return () => clearTimeout(timer);
     }
-  }, [type, value, total]);
+  }, [type, value, weekTotal]);
 
-  if (type === 'week' && total) {
+  if (type === 'week') {
     const radius = 31;
     const circumference = 2 * Math.PI * radius;
     const currentOffset = animatedOffset !== null ? animatedOffset : circumference;

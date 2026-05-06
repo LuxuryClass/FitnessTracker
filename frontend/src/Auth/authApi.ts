@@ -76,6 +76,10 @@ export interface AuthUser {
   is_active: boolean;
   streak_weeks: number;
   weekly_volume_tons: number | string;
+  weekly_sessions_progress: {
+    completed: number;
+    total: number;
+  };
   created_at: string;
   updated_at: string;
 }

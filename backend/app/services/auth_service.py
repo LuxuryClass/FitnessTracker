@@ -20,14 +20,14 @@ from app.core.security import (
 from app.models.user import User
 from app.repositories import user_repository
 from app.schemas.auth import AuthResponse, LoginRequest, LogoutResponse, RefreshRequest, RegisterRequest, TokenPairResponse
+from app.services.user_metrics_service import build_user_response
 
 
 class AuthService:
-    @staticmethod
-    def _build_auth_response(user: User) -> AuthResponse:
+    async def _build_auth_response(self, db: AsyncSession, user: User) -> AuthResponse:
         access_token, refresh_token = create_token_pair(user.id)
         return AuthResponse(
-            user=user,
+            user=await build_user_response(db=db, user=user),
             access_token=access_token,
             refresh_token=refresh_token,
             token_type="bearer",
@@ -49,7 +49,7 @@ class AuthService:
         user = await user_repository.create(db=db, email=email, username=username, password_hash=password_hash)
         await db.commit()
         await db.refresh(user)
-        return self._build_auth_response(user)
+        return await self._build_auth_response(db=db, user=user)
 
     async def login(self, db: AsyncSession, payload: LoginRequest) -> AuthResponse:
         email = payload.email.strip().lower()
@@ -61,7 +61,7 @@ class AuthService:
         if not user.is_active:
             raise UnauthorizedException("Пользователь деактивирован.")
 
-        return self._build_auth_response(user)
+        return await self._build_auth_response(db=db, user=user)
 
     async def refresh(self, db: AsyncSession, payload: RefreshRequest) -> TokenPairResponse:
         token_payload = decode_jwt_token(payload.refresh_token)

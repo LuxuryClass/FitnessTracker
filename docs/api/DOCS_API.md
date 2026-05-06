@@ -72,6 +72,10 @@
     "is_active": true,
     "streak_weeks": 0,
     "weekly_volume_tons": 0.0,
+    "weekly_sessions_progress": {
+      "completed": 0,
+      "total": 0
+    },
     "created_at": "2026-04-16T12:00:00+00:00",
     "updated_at": "2026-04-16T12:00:00+00:00"
   }
@@ -112,6 +116,10 @@
     "is_active": true,
     "streak_weeks": 0,
     "weekly_volume_tons": 0.0,
+    "weekly_sessions_progress": {
+      "completed": 0,
+      "total": 0
+    },
     "created_at": "2026-04-16T12:00:00+00:00",
     "updated_at": "2026-04-16T12:00:00+00:00"
   }
@@ -196,10 +204,19 @@
   "is_active": true,
   "streak_weeks": 3,
   "weekly_volume_tons": 1.4,
+  "weekly_sessions_progress": {
+    "completed": 2,
+    "total": 4
+  },
   "created_at": "2026-04-16T12:00:00+00:00",
   "updated_at": "2026-04-16T12:00:00+00:00"
 }
 ```
+
+`weekly_sessions_progress` считается так:
+
+- `completed` — сколько сессий завершено в текущей неделе;
+- `total` — `completed + сколько сессий запланировано на оставшиеся дни текущей недели`.
 
 **Ошибки**
 
@@ -241,6 +258,10 @@
   "is_active": true,
   "streak_weeks": 3,
   "weekly_volume_tons": 1.4,
+  "weekly_sessions_progress": {
+    "completed": 2,
+    "total": 4
+  },
   "created_at": "2026-04-16T12:00:00+00:00",
   "updated_at": "2026-04-18T10:00:00+00:00"
 }

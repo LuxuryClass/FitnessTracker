@@ -11,8 +11,11 @@ router = APIRouter(prefix="/users", tags=["Пользователи"])
 
 
 @router.get("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
-    return await user_service.get_me(current_user)
+async def get_me(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserResponse:
+    return await user_service.get_me(db=db, current_user=current_user)
 
 
 @router.patch("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)

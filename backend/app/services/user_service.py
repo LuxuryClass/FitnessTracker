@@ -4,11 +4,12 @@ from app.core.exceptions import AlreadyExistsException
 from app.models.user import User
 from app.repositories import user_repository
 from app.schemas.user import UserResponse, UserUpdateRequest
+from app.services.user_metrics_service import build_user_response
 
 
 class UserService:
-    async def get_me(self, current_user: User) -> UserResponse:
-        return UserResponse.model_validate(current_user)
+    async def get_me(self, db: AsyncSession, current_user: User) -> UserResponse:
+        return await build_user_response(db=db, user=current_user)
 
     async def update_me(
         self,
@@ -36,7 +37,7 @@ class UserService:
         )
         await db.commit()
         await db.refresh(user)
-        return UserResponse.model_validate(user)
+        return await build_user_response(db=db, user=user)
 
 
 user_service = UserService()

@@ -47,5 +47,22 @@ class WorkoutSessionRepository:
         result = await db.execute(statement)
         return list(result.scalars().all())
 
+    async def count_completed_in_range(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        range_start: datetime,
+        range_end: datetime,
+    ) -> int:
+        statement = select(func.count(WorkoutSession.id)).where(
+            WorkoutSession.user_id == user_id,
+            WorkoutSession.status == "completed",
+            WorkoutSession.completed_at.is_not(None),
+            WorkoutSession.completed_at >= range_start,
+            WorkoutSession.completed_at < range_end,
+        )
+        result = await db.execute(statement)
+        return int(result.scalar_one())
+
 
 workout_session_repository = WorkoutSessionRepository()

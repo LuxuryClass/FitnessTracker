@@ -5,6 +5,11 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+class WeeklySessionsProgress(BaseModel):
+    completed: int
+    total: int
+
+
 class UserResponse(BaseModel):
     id: UUID
     email: str
@@ -12,6 +17,7 @@ class UserResponse(BaseModel):
     is_active: bool
     streak_weeks: int
     weekly_volume_tons: Decimal
+    weekly_sessions_progress: WeeklySessionsProgress
     created_at: datetime
     updated_at: datetime
 

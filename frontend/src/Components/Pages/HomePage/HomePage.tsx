@@ -29,6 +29,8 @@ const HomePage = () => {
   const userName = user?.username ?? "Пользователь";
   const streakWeeks = user?.streak_weeks ?? 0;
   const weeklyVolumeTons = Number(user?.weekly_volume_tons ?? 0) || 0;
+  const weeklyCompletedSessions = user?.weekly_sessions_progress?.completed ?? 0;
+  const weeklyTotalSessions = user?.weekly_sessions_progress?.total ?? 0;
 
   return (
     <main className={styles.page}>
@@ -50,7 +52,7 @@ const HomePage = () => {
       
       <div className={styles.minicards}>
         <StatCard isVisible={true} type="streak" value={streakWeeks}></StatCard>
-        <StatCard isVisible={true} type="week" value={2} total={3}></StatCard>
+        <StatCard isVisible={true} type="week" value={weeklyCompletedSessions} total={weeklyTotalSessions}></StatCard>
         <StatCard isVisible={true} type="totalWeight" value={weeklyVolumeTons}></StatCard>
       </div>
       

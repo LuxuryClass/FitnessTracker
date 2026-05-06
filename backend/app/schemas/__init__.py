@@ -2,7 +2,7 @@
 
 from app.schemas.auth import AuthResponse, LoginRequest, LogoutResponse, RefreshRequest, RegisterRequest, TokenPairResponse
 from app.schemas.exercise import ExerciseCreateRequest, ExerciseResponse, ExerciseUpdateRequest
-from app.schemas.user import UserResponse, UserUpdateRequest
+from app.schemas.user import UserResponse, UserUpdateRequest, WeeklySessionsProgress
 from app.schemas.workout import (
     WorkoutCreateRequest,
     WorkoutExerciseCreateItem,
@@ -26,6 +26,7 @@ __all__ = [
     "LogoutResponse",
     "UserResponse",
     "UserUpdateRequest",
+    "WeeklySessionsProgress",
     "ExerciseCreateRequest",
     "ExerciseUpdateRequest",
     "ExerciseResponse",

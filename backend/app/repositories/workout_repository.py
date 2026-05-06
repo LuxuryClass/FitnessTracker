@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.workout import Workout
@@ -22,6 +22,23 @@ class WorkoutRepository:
         statement = select(Workout).where(Workout.user_id == user_id).order_by(Workout.created_at.desc(), Workout.id.desc())
         result = await db.execute(statement)
         return list(result.scalars().all())
+
+    async def count_planned_in_range(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        range_start: datetime,
+        range_end: datetime,
+    ) -> int:
+        statement = select(func.count(Workout.id)).where(
+            Workout.user_id == user_id,
+            Workout.is_planned.is_(True),
+            Workout.planned_for.is_not(None),
+            Workout.planned_for >= range_start,
+            Workout.planned_for < range_end,
+        )
+        result = await db.execute(statement)
+        return int(result.scalar_one())
 
     async def create(
         self,
