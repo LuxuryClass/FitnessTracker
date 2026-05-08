@@ -56,5 +56,15 @@ class UserRepository:
         await db.flush()
         return user
 
+    async def update_avatar_url(
+        self,
+        db: AsyncSession,
+        user: User,
+        avatar_url: str | None,
+    ) -> User:
+        user.avatar_url = avatar_url
+        await db.flush()
+        return user
+
 
 user_repository = UserRepository()

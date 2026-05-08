@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/Auth';
+import { ApiError, authApi } from '@/Auth/authApi';
 import styles from './Styles.module.scss';
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LogoutModal } from '@/Components/Modals/LogoutModal/LogoutModal';
 
 import avatarIcon from '/SettingsIcons/AvatarEdit.svg';
@@ -20,11 +21,16 @@ interface MenuItem {
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, tokens, logout, updateUser } = useAuth();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [avatarSrc, setAvatarSrc] = useState(defaultAvatar);
+  const [avatarSrc, setAvatarSrc] = useState(user?.avatar_url ?? defaultAvatar);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setAvatarSrc(user?.avatar_url ?? defaultAvatar);
+  }, [user?.avatar_url]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -41,32 +47,43 @@ const SettingsPage = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Проверяем тип файла
     if (!file.type.startsWith('image/')) {
       alert('Пожалуйста, выберите изображение');
+      e.target.value = '';
       return;
     }
 
-    // Проверяем размер (макс 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert('Изображение должно быть меньше 5MB');
+      e.target.value = '';
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setAvatarSrc(result);
-      // Здесь можно отправить на сервер
-      // uploadAvatar(file);
-    };
-    reader.readAsDataURL(file);
+    if (!tokens?.accessToken) {
+      alert('Сессия истекла. Войдите заново.');
+      e.target.value = '';
+      return;
+    }
 
-    // Сбрасываем input, чтобы можно было выбрать тот же файл повторно
+    setIsUploadingAvatar(true);
+    try {
+      const updatedUser = await authApi.uploadAvatar(tokens.accessToken, file);
+      updateUser(updatedUser);
+      setAvatarSrc(updatedUser.avatar_url ?? defaultAvatar);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        alert(error.message);
+      } else {
+        alert('Не удалось загрузить аватар. Попробуйте позже.');
+      }
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+
     e.target.value = '';
   };
 
@@ -102,10 +119,11 @@ const SettingsPage = () => {
       {/* Профиль */}
       <div className={styles.profile}>
         <div className={styles.avatar} onClick={handleAvatarClick}>
-          <img 
-            src={avatarSrc} 
+          <img
+            src={avatarSrc}
             alt="Аватар"
             className={styles.avatarImage}
+            onError={() => setAvatarSrc(defaultAvatar)}
           />
           <div className={styles.avatarIcon_wrapper}>
             <img src={avatarIcon} alt="редактировать" className={styles.avatarIcon} />
@@ -119,6 +137,7 @@ const SettingsPage = () => {
           accept="image/*"
           onChange={handleFileChange}
           className={styles.fileInput}
+          disabled={isUploadingAvatar}
         />
         
         <div className={styles.profileInfo}>

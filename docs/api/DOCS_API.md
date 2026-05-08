@@ -69,6 +69,7 @@
     "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
     "email": "user@example.com",
     "username": "my_name",
+    "avatar_url": null,
     "is_active": true,
     "streak_weeks": 0,
     "weekly_volume_tons": 0.0,
@@ -113,6 +114,7 @@
     "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
     "email": "user@example.com",
     "username": "my_name",
+    "avatar_url": null,
     "is_active": true,
     "streak_weeks": 0,
     "weekly_volume_tons": 0.0,
@@ -201,6 +203,7 @@
   "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "email": "user@example.com",
   "username": "my_name",
+  "avatar_url": "https://<bucket>.<endpoint>/avatars/<user_id>/<file>.jpg",
   "is_active": true,
   "streak_weeks": 3,
   "weekly_volume_tons": 1.4,
@@ -255,6 +258,7 @@
   "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "email": "new_email@example.com",
   "username": "new_name",
+  "avatar_url": "https://<bucket>.<endpoint>/avatars/<user_id>/<file>.jpg",
   "is_active": true,
   "streak_weeks": 3,
   "weekly_volume_tons": 1.4,
@@ -272,6 +276,46 @@
 - `401` — нет/невалидный access-токен
 - `409` — email или username уже заняты
 - `422` — ошибка валидации
+
+---
+
+### 2.3 `POST /api/users/me/avatar`
+
+Загрузка новой аватарки текущего пользователя в bucket.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+- `Content-Type: multipart/form-data`
+
+**Form-data**
+
+- `avatar` — файл изображения (`image/*`), максимум `5 MB`.
+
+**Response 200**
+
+```json
+{
+  "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
+  "email": "user@example.com",
+  "username": "my_name",
+  "avatar_url": "https://<bucket>.<endpoint>/avatars/<user_id>/<file>.jpg",
+  "is_active": true,
+  "streak_weeks": 3,
+  "weekly_volume_tons": 1.4,
+  "weekly_sessions_progress": {
+    "completed": 2,
+    "total": 4
+  },
+  "created_at": "2026-04-16T12:00:00+00:00",
+  "updated_at": "2026-04-18T10:00:00+00:00"
+}
+```
+
+**Ошибки**
+
+- `400` — файл не изображение, пустой файл, файл больше 5 MB, storage не настроен
+- `401` — нет/невалидный access-токен
 
 ---
 

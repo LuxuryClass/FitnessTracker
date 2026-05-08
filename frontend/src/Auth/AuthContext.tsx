@@ -10,6 +10,7 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (nextUser: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -131,6 +132,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const updateUser = (nextUser: AuthUser) => {
+    setUser(nextUser);
+  };
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -140,6 +145,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       login,
       register,
       logout,
+      updateUser,
     }),
     [user, tokens, isLoading]
   );

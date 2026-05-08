@@ -1,10 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import UploadFile
 
 from app.core.exceptions import AlreadyExistsException
 from app.models.user import User
 from app.repositories import user_repository
 from app.schemas.user import UserResponse, UserUpdateRequest
 from app.services.user_metrics_service import build_user_response
+from app.services.storage_service import storage_service
 
 
 class UserService:
@@ -35,6 +37,13 @@ class UserService:
             email=update_data.get("email"),
             username=update_data.get("username"),
         )
+        await db.commit()
+        await db.refresh(user)
+        return await build_user_response(db=db, user=user)
+
+    async def upload_avatar(self, db: AsyncSession, current_user: User, file: UploadFile) -> UserResponse:
+        avatar_url = await storage_service.upload_user_avatar(user_id=current_user.id, file=file)
+        user = await user_repository.update_avatar_url(db=db, user=current_user, avatar_url=avatar_url)
         await db.commit()
         await db.refresh(user)
         return await build_user_response(db=db, user=user)

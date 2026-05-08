@@ -14,6 +14,7 @@ class UserResponse(BaseModel):
     id: UUID
     email: str
     username: str
+    avatar_url: str | None
     is_active: bool
     streak_weeks: int
     weekly_volume_tons: Decimal

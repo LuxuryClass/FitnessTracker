@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
 
+    aws_endpoint_url: str | None = None
+    aws_default_region: str | None = None
+    aws_s3_bucket_name: str | None = None
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
+
     backend_cors_origins: List[str] = []
 
     model_config = SettingsConfigDict(

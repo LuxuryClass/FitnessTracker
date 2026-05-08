@@ -23,6 +23,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     username: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    avatar_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default=text("true"))
     streak_weeks: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
     weekly_volume_tons: Mapped[Decimal] = mapped_column(

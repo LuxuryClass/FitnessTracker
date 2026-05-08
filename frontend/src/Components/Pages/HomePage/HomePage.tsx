@@ -5,8 +5,7 @@ import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
 import { WeekCalendarSection } from './components/WeekCalendarSection/WeekCalendarSection';
 import { useAuth } from '@/Auth';
-
-const avatar = "src";
+import defaultAvatar from '/masscot-main.png';
 
 let graphicsArr: CardData[] = [
   {id: 1, title: "Жим лёжа", muscleGroup: "Грудь", difference: "+5кг"},
@@ -27,6 +26,7 @@ const completedDates = [
 const HomePage = () => {
   const { user } = useAuth();
   const userName = user?.username ?? "Пользователь";
+  const userAvatar = user?.avatar_url ?? defaultAvatar;
   const streakWeeks = user?.streak_weeks ?? 0;
   const weeklyVolumeTons = Number(user?.weekly_volume_tons ?? 0) || 0;
   const weeklyCompletedSessions = user?.weekly_sessions_progress?.completed ?? 0;
@@ -34,7 +34,7 @@ const HomePage = () => {
 
   return (
     <main className={styles.page}>
-      <Header className={styles.header} userName={userName} userAvatar={avatar}/>
+      <Header className={styles.header} userName={userName} userAvatar={userAvatar}/>
       
       <TodayWorkout  title = "День жимов"
         duration = "75 мин"

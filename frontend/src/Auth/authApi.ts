@@ -27,21 +27,22 @@ export class ApiError extends Error {
   }
 }
 
-interface RequestOptions<TBody> {
+interface RequestOptions {
   method?: RequestMethod;
-  body?: TBody;
+  body?: unknown;
   accessToken?: string;
 }
 
-const request = async <TResponse, TBody = undefined>(
+const request = async <TResponse>(
   path: string,
-  options: RequestOptions<TBody> = {}
+  options: RequestOptions = {}
 ): Promise<TResponse> => {
+  const isFormData = options.body instanceof FormData;
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
 
-  if (options.body !== undefined) {
+  if (options.body !== undefined && !isFormData) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -49,10 +50,13 @@ const request = async <TResponse, TBody = undefined>(
     headers.Authorization = `Bearer ${options.accessToken}`;
   }
 
+  const requestBody: BodyInit | undefined =
+    options.body === undefined ? undefined : isFormData ? (options.body as FormData) : JSON.stringify(options.body);
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: options.method ?? "GET",
     headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    body: requestBody,
   });
 
   if (response.status === 204) {
@@ -73,6 +77,7 @@ export interface AuthUser {
   id: string;
   email: string;
   username: string;
+  avatar_url: string | null;
   is_active: boolean;
   streak_weeks: number;
   weekly_volume_tons: number | string;
@@ -127,7 +132,7 @@ const mapAuthResult = (response: AuthResponse): AuthResult => ({
 
 export const authApi = {
   async login(payload: LoginPayload): Promise<AuthResult> {
-    const response = await request<AuthResponse, LoginPayload>("/auth/login", {
+    const response = await request<AuthResponse>("/auth/login", {
       method: "POST",
       body: payload,
     });
@@ -135,7 +140,7 @@ export const authApi = {
   },
 
   async register(payload: RegisterPayload): Promise<AuthResult> {
-    const response = await request<AuthResponse, RegisterPayload>("/auth/register", {
+    const response = await request<AuthResponse>("/auth/register", {
       method: "POST",
       body: payload,
     });
@@ -143,7 +148,7 @@ export const authApi = {
   },
 
   async refresh(refreshToken: string): Promise<StoredTokens> {
-    const response = await request<TokenPairResponse, { refresh_token: string }>("/auth/refresh", {
+    const response = await request<TokenPairResponse>("/auth/refresh", {
       method: "POST",
       body: { refresh_token: refreshToken },
     });
@@ -152,16 +157,26 @@ export const authApi = {
   },
 
   async logout(accessToken: string): Promise<void> {
-    await request<{ detail: string }, undefined>("/auth/logout", {
+    await request<{ detail: string }>("/auth/logout", {
       method: "POST",
       accessToken,
     });
   },
 
   async getMe(accessToken: string): Promise<AuthUser> {
-    return request<AuthUser, undefined>("/users/me", {
+    return request<AuthUser>("/users/me", {
       method: "GET",
       accessToken,
+    });
+  },
+
+  async uploadAvatar(accessToken: string, file: File): Promise<AuthUser> {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    return request<AuthUser>("/users/me/avatar", {
+      method: "POST",
+      accessToken,
+      body: formData,
     });
   },
 };
