@@ -55,12 +55,14 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}'],
         navigateFallback: 'index.html',
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|webp|woff|woff2|css|js)$/i,
-            handler: 'StaleWhileRevalidate',
+            urlPattern: /\.(?:png|jpg|jpeg|svg|webp|woff|woff2)$/i,
+            handler: 'CacheFirst',
             options: {
-              cacheName: 'static-resources-v1',
+              cacheName: 'static-assets-v2',
               expiration: {
                 maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24 * 30,
