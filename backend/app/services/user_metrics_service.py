@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.repositories import workout_repository, workout_session_repository
 from app.schemas.user import UserResponse, WeeklySessionsProgress
+from app.services.storage_service import storage_service
 
 
 def _get_week_bounds(now_utc: datetime) -> tuple[datetime, datetime]:
@@ -39,11 +40,12 @@ async def build_weekly_sessions_progress(db: AsyncSession, user_id: UUID) -> Wee
 
 async def build_user_response(db: AsyncSession, user: User) -> UserResponse:
     weekly_sessions_progress = await build_weekly_sessions_progress(db=db, user_id=user.id)
+    avatar_url = await storage_service.build_avatar_access_url(user.avatar_url)
     return UserResponse(
         id=user.id,
         email=user.email,
         username=user.username,
-        avatar_url=user.avatar_url,
+        avatar_url=avatar_url,
         is_active=user.is_active,
         streak_weeks=user.streak_weeks,
         weekly_volume_tons=user.weekly_volume_tons,

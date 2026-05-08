@@ -203,7 +203,7 @@
   "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "email": "user@example.com",
   "username": "my_name",
-  "avatar_url": "https://<bucket>.<endpoint>/avatars/<user_id>/<file>.jpg",
+  "avatar_url": "https://t3.storageapi.dev/...X-Amz-Signature=...",
   "is_active": true,
   "streak_weeks": 3,
   "weekly_volume_tons": 1.4,
@@ -258,7 +258,7 @@
   "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "email": "new_email@example.com",
   "username": "new_name",
-  "avatar_url": "https://<bucket>.<endpoint>/avatars/<user_id>/<file>.jpg",
+  "avatar_url": "https://t3.storageapi.dev/...X-Amz-Signature=...",
   "is_active": true,
   "streak_weeks": 3,
   "weekly_volume_tons": 1.4,
@@ -282,6 +282,7 @@
 ### 2.3 `POST /api/users/me/avatar`
 
 Загрузка новой аватарки текущего пользователя в bucket.
+При успешной замене новая аватарка становится текущей, а предыдущий файл удаляется из bucket.
 
 **Headers**
 
@@ -299,7 +300,7 @@
   "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "email": "user@example.com",
   "username": "my_name",
-  "avatar_url": "https://<bucket>.<endpoint>/avatars/<user_id>/<file>.jpg",
+  "avatar_url": "https://t3.storageapi.dev/...X-Amz-Signature=...",
   "is_active": true,
   "streak_weeks": 3,
   "weekly_volume_tons": 1.4,
@@ -314,6 +315,7 @@
 
 **Ошибки**
 
+- `avatar_url` в ответе — это presigned GET URL (временная ссылка, генерируется backend-ом).
 - `400` — файл не изображение, пустой файл, файл больше 5 MB, storage не настроен
 - `401` — нет/невалидный access-токен
 

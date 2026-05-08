@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import SQLAlchemyError
 from fastapi import UploadFile
 
-from app.core.exceptions import AlreadyExistsException
+from app.core.exceptions import AlreadyExistsException, BadRequestException
 from app.models.user import User
 from app.repositories import user_repository
 from app.schemas.user import UserResponse, UserUpdateRequest
@@ -42,11 +43,20 @@ class UserService:
         return await build_user_response(db=db, user=user)
 
     async def upload_avatar(self, db: AsyncSession, current_user: User, file: UploadFile) -> UserResponse:
-        avatar_url = await storage_service.upload_user_avatar(user_id=current_user.id, file=file)
-        user = await user_repository.update_avatar_url(db=db, user=current_user, avatar_url=avatar_url)
-        await db.commit()
-        await db.refresh(user)
-        return await build_user_response(db=db, user=user)
+        old_avatar_value = current_user.avatar_url
+        avatar_key = await storage_service.upload_user_avatar(user_id=current_user.id, file=file)
+        try:
+            if old_avatar_value and old_avatar_value != avatar_key:
+                await storage_service.delete_avatar(old_avatar_value, ignore_missing=True)
+
+            user = await user_repository.update_avatar_url(db=db, user=current_user, avatar_url=avatar_key)
+            await db.commit()
+            await db.refresh(user)
+            return await build_user_response(db=db, user=user)
+        except (BadRequestException, SQLAlchemyError):
+            await db.rollback()
+            await storage_service.delete_avatar(avatar_key, ignore_missing=True)
+            raise
 
 
 user_service = UserService()
