@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import DBAPIError, SQLAlchemyError
 from fastapi import UploadFile
 
 from app.core.exceptions import AlreadyExistsException, BadRequestException
@@ -32,19 +32,23 @@ class UserService:
             if existing_user_by_name is not None and existing_user_by_name.id != current_user.id:
                 raise AlreadyExistsException("Пользователь с таким name уже существует.")
 
-        user = await user_repository.update(
-            db=db,
-            user=current_user,
-            email=update_data.get("email"),
-            name=update_data.get("name"),
-            gender=update_data.get("gender"),
-            birth_date=update_data.get("birth_date"),
-            height=update_data.get("height"),
-            weight=update_data.get("weight"),
-        )
-        await db.commit()
-        await db.refresh(user)
-        return await build_user_response(db=db, user=user)
+        try:
+            user = await user_repository.update(
+                db=db,
+                user=current_user,
+                email=update_data.get("email"),
+                name=update_data.get("name"),
+                gender=update_data.get("gender"),
+                birth_date=update_data.get("birth_date"),
+                height=update_data.get("height"),
+                weight=update_data.get("weight"),
+            )
+            await db.commit()
+            await db.refresh(user)
+            return await build_user_response(db=db, user=user)
+        except DBAPIError as exc:
+            await db.rollback()
+            raise BadRequestException("Рост и вес должны быть в допустимом диапазоне.") from exc
 
     async def upload_avatar(self, db: AsyncSession, current_user: User, file: UploadFile) -> UserResponse:
         old_avatar_value = current_user.avatar_url

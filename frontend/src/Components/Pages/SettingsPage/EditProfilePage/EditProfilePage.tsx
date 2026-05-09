@@ -24,7 +24,7 @@ interface ProfileFormData {
 
 const EditProfilePage = () => {
   const navigate = useNavigate();
-  const { user, tokens, updateUser } = useAuth();
+  const { user, tokens, updateUser, refreshSession } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState<ProfileFormData>({
@@ -73,18 +73,35 @@ const EditProfilePage = () => {
     return payload;
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  const saveProfile = async (payload: UpdateProfilePayload) => {
+    if (!tokens?.accessToken) {
+      throw new Error('Сессия истекла. Войдите заново.');
+    }
+
     try {
-      if (!tokens?.accessToken) {
+      return await authApi.updateProfile(tokens.accessToken, payload);
+    } catch (error) {
+      if (!(error instanceof ApiError) || (error.status !== 401 && error.status !== 403)) {
+        throw error;
+      }
+
+      const refreshedTokens = await refreshSession();
+      if (!refreshedTokens?.accessToken) {
         throw new Error('Сессия истекла. Войдите заново.');
       }
 
+      return authApi.updateProfile(refreshedTokens.accessToken, payload);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
       if (!formData.name.trim()) {
         throw new Error('Имя не может быть пустым.');
       }
 
-      const updatedUser = await authApi.updateProfile(tokens.accessToken, buildProfilePayload());
+      const updatedUser = await saveProfile(buildProfilePayload());
       updateUser(updatedUser);
       navigate(-1);
     } catch (error) {
@@ -148,7 +165,11 @@ const EditProfilePage = () => {
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Рост</h3>
           <input
-            type="text"
+            type="number"
+            min="0"
+            max="999.99"
+            step="0.01"
+            inputMode="decimal"
             value={formData.height}
             onChange={(e) => handleChange('height', e.target.value)}
             placeholder="Актуальный рост"
@@ -160,7 +181,11 @@ const EditProfilePage = () => {
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Вес</h3>
           <input
-            type="text"
+            type="number"
+            min="0"
+            max="999.99"
+            step="0.01"
+            inputMode="decimal"
             value={formData.weight}
             onChange={(e) => handleChange('weight', e.target.value)}
             placeholder="Актуальный вес"

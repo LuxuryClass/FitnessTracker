@@ -21,7 +21,7 @@ interface MenuItem {
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { user, tokens, logout, updateUser } = useAuth();
+  const { user, tokens, logout, updateUser, refreshSession } = useAuth();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState(user?.avatar_url ?? defaultAvatar);
@@ -45,6 +45,27 @@ const SettingsPage = () => {
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const uploadAvatar = async (file: File) => {
+    if (!tokens?.accessToken) {
+      throw new Error('Сессия истекла. Войдите заново.');
+    }
+
+    try {
+      return await authApi.uploadAvatar(tokens.accessToken, file);
+    } catch (error) {
+      if (!(error instanceof ApiError) || (error.status !== 401 && error.status !== 403)) {
+        throw error;
+      }
+
+      const refreshedTokens = await refreshSession();
+      if (!refreshedTokens?.accessToken) {
+        throw new Error('Сессия истекла. Войдите заново.');
+      }
+
+      return authApi.uploadAvatar(refreshedTokens.accessToken, file);
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,7 +92,7 @@ const SettingsPage = () => {
 
     setIsUploadingAvatar(true);
     try {
-      const updatedUser = await authApi.uploadAvatar(tokens.accessToken, file);
+      const updatedUser = await uploadAvatar(file);
       updateUser(updatedUser);
       setAvatarSrc(updatedUser.avatar_url ?? defaultAvatar);
     } catch (error) {
@@ -142,7 +163,7 @@ const SettingsPage = () => {
         
         <div className={styles.profileInfo}>
           <h2 className={styles.name}>{user?.name || 'Пользователь'}</h2>
-          <p className={styles.nickname}>{user?.name}@gmail.com</p>
+          <p className={styles.nickname}>{user?.email || 'Email не указан'}</p>
         </div>
       </div>
 

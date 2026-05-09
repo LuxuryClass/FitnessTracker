@@ -10,6 +10,7 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
+  refreshSession: () => Promise<StoredTokens | null>;
   updateUser: (nextUser: AuthUser) => void;
 }
 
@@ -132,6 +133,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const refreshSession = async (): Promise<StoredTokens | null> => {
+    const activeTokens = tokenStorage.get();
+    if (!activeTokens?.refreshToken) {
+      return null;
+    }
+
+    try {
+      const refreshedTokens = await authApi.refresh(activeTokens.refreshToken);
+      tokenStorage.set(refreshedTokens);
+      setTokens(refreshedTokens);
+      return refreshedTokens;
+    } catch {
+      clearAuthState();
+      return null;
+    }
+  };
+
   const updateUser = (nextUser: AuthUser) => {
     setUser(nextUser);
   };
@@ -145,6 +163,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       login,
       register,
       logout,
+      refreshSession,
       updateUser,
     }),
     [user, tokens, isLoading]

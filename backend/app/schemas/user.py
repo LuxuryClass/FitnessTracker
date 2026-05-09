@@ -35,8 +35,8 @@ class UserUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=3, max_length=100)
     gender: Literal["male", "female"] | None = None
     birth_date: date | None = None
-    height: Decimal | None = Field(default=None, ge=0)
-    weight: Decimal | None = Field(default=None, ge=0)
+    height: Decimal | None = Field(default=None, ge=0, le=999.99)
+    weight: Decimal | None = Field(default=None, ge=0, le=999.99)
 
     @field_validator("email")
     @classmethod
