@@ -105,5 +105,108 @@ class WorkoutSessionSetRepository:
         total_kg = result.scalar_one()
         return Decimal(total_kg) / Decimal("1000")
 
+    async def get_exercise_frequency_stats(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        period_start: datetime,
+        period_end: datetime,
+    ) -> list[dict[str, UUID | int]]:
+        """
+        Возвращает статистику по упражнениям: exercise_id и количество подходов за период.
+        """
+        statement = (
+            select(
+                WorkoutSessionSet.exercise_id,
+                func.count(WorkoutSessionSet.id).label("total_sets"),
+            )
+            .select_from(WorkoutSessionSet)
+            .join(WorkoutSession, WorkoutSession.id == WorkoutSessionSet.session_id)
+            .where(
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.status == "completed",
+                WorkoutSession.completed_at >= period_start,
+                WorkoutSession.completed_at < period_end,
+            )
+            .group_by(WorkoutSessionSet.exercise_id)
+        )
+        result = await db.execute(statement)
+        rows = result.all()
+        return [{"exercise_id": row.exercise_id, "total_sets": row.total_sets} for row in rows]
+
+    async def get_max_weight_in_period(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        exercise_id: UUID,
+        period_start: datetime,
+        period_end: datetime,
+    ) -> Decimal | None:
+        """
+        Возвращает максимальный вес для упражнения в заданном периоде.
+        """
+        statement = (
+            select(func.max(WorkoutSessionSet.weight_kg))
+            .select_from(WorkoutSessionSet)
+            .join(WorkoutSession, WorkoutSession.id == WorkoutSessionSet.session_id)
+            .where(
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.status == "completed",
+                WorkoutSessionSet.exercise_id == exercise_id,
+                WorkoutSession.completed_at >= period_start,
+                WorkoutSession.completed_at < period_end,
+            )
+        )
+        result = await db.execute(statement)
+        max_weight = result.scalar_one_or_none()
+        return Decimal(max_weight) if max_weight is not None else None
+
+    async def get_first_weight_for_exercise(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        exercise_id: UUID,
+    ) -> Decimal | None:
+        """
+        Возвращает самый первый вес для упражнения (по дате завершения сессии).
+        """
+        statement = (
+            select(WorkoutSessionSet.weight_kg)
+            .select_from(WorkoutSessionSet)
+            .join(WorkoutSession, WorkoutSession.id == WorkoutSessionSet.session_id)
+            .where(
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.status == "completed",
+                WorkoutSessionSet.exercise_id == exercise_id,
+            )
+            .order_by(WorkoutSession.completed_at.asc(), WorkoutSessionSet.created_at.asc())
+            .limit(1)
+        )
+        result = await db.execute(statement)
+        first_weight = result.scalar_one_or_none()
+        return Decimal(first_weight) if first_weight is not None else None
+
+    async def count_exercise_executions(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        exercise_id: UUID,
+    ) -> int:
+        """
+        Возвращает количество уникальных завершённых сессий, в которых выполнялось упражнение.
+        """
+        statement = (
+            select(func.count(func.distinct(WorkoutSession.id)))
+            .select_from(WorkoutSessionSet)
+            .join(WorkoutSession, WorkoutSession.id == WorkoutSessionSet.session_id)
+            .where(
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.status == "completed",
+                WorkoutSessionSet.exercise_id == exercise_id,
+            )
+        )
+        result = await db.execute(statement)
+        return int(result.scalar_one())
+
 
 workout_session_set_repository = WorkoutSessionSetRepository()

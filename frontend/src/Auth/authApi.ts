@@ -132,6 +132,15 @@ export interface AuthResult {
   tokens: StoredTokens;
 }
 
+export interface RecentProgressItem {
+  exercise_id: string;
+  exercise_name: string;
+  muscle_group: string;
+  difference_kg: number | string;
+  recent_max_weight_kg: number | string;
+  previous_max_weight_kg: number | string | null;
+}
+
 const mapTokens = (pair: TokenPairResponse): StoredTokens => ({
   accessToken: pair.access_token,
   refreshToken: pair.refresh_token,
@@ -198,6 +207,13 @@ export const authApi = {
       method: "PATCH",
       accessToken,
       body: payload,
+    });
+  },
+
+  async getRecentProgress(accessToken: string): Promise<RecentProgressItem[]> {
+    return request<RecentProgressItem[]>("/users/me/recent-progress", {
+      method: "GET",
+      accessToken,
     });
   },
 };

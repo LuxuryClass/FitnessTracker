@@ -5,17 +5,13 @@ import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
 import { WeekCalendarSection } from './components/WeekCalendarSection/WeekCalendarSection';
 import { useAuth } from '@/Auth';
+import { authApi, RecentProgressItem } from '@/Auth/authApi';
 import defaultAvatar from '/masscot-main.png';
-
-let graphicsArr: CardData[] = [
-  {id: 1, title: "Жим лёжа", muscleGroup: "Грудь", difference: "+5кг"},
-  {id: 2, title: "Присядания", muscleGroup: "Ноги", difference: "+50кг"},
-  {id: 3, title: "жим над головой", muscleGroup: "Дельты", difference: "+3кг"},
-]
+import { useEffect, useState } from 'react';
 
 const plannedDates = [
   new Date(2026, 3, 21),
-  new Date(2026, 3, 23), 
+  new Date(2026, 3, 23),
   new Date(2026, 3, 25),
 ];
 
@@ -24,7 +20,9 @@ const completedDates = [
 ];
 
 const HomePage = () => {
-  const { user } = useAuth();
+  const { user, tokens } = useAuth();
+  const [recentProgress, setRecentProgress] = useState<CardData[]>([]);
+
   const userName = user?.name ?? "Пользователь";
   const userAvatar = user?.avatar_url ?? defaultAvatar;
   const streakWeeks = user?.streak_weeks ?? 0;
@@ -32,10 +30,38 @@ const HomePage = () => {
   const weeklyCompletedSessions = user?.weekly_sessions_progress?.completed ?? 0;
   const weeklyTotalSessions = user?.weekly_sessions_progress?.total ?? 0;
 
+  useEffect(() => {
+    const fetchRecentProgress = async () => {
+      if (!tokens?.accessToken) {
+        return;
+      }
+
+      try {
+        const data = await authApi.getRecentProgress(tokens.accessToken);
+        const mappedData: CardData[] = data.map((item: RecentProgressItem) => {
+          const differenceNum = Number(item.difference_kg);
+          const sign = differenceNum >= 0 ? '+' : '';
+          return {
+            id: item.exercise_id,
+            title: item.exercise_name,
+            muscleGroup: item.muscle_group,
+            difference: `${sign}${differenceNum}кг`,
+          };
+        });
+        setRecentProgress(mappedData);
+      } catch (error) {
+        console.error('Не удалось загрузить недавний прогресс:', error);
+        setRecentProgress([]);
+      }
+    };
+
+    fetchRecentProgress();
+  }, [tokens?.accessToken]);
+
   return (
     <main className={styles.page}>
       <Header className={styles.header} userName={userName} userAvatar={userAvatar}/>
-      
+
       <TodayWorkout  title = "День жимов"
         duration = "75 мин"
         exercisesCount = {6}
@@ -47,18 +73,20 @@ const HomePage = () => {
           { name: "Жим гантелей", sets: 3, reps: 12, muscleGroup: "Грудь" },
           { name: "Жим гантелей", sets: 3, reps: 12, muscleGroup: "Грудь" },
           { name: "Жим гантелей", sets: 3, reps: 12, muscleGroup: "Грудь" },
-        ]} 
+        ]}
       />
-      
+
       <div className={styles.minicards}>
         <StatCard isVisible={true} type="streak" value={streakWeeks}></StatCard>
         <StatCard isVisible={true} type="week" value={weeklyCompletedSessions} total={weeklyTotalSessions}></StatCard>
         <StatCard isVisible={true} type="totalWeight" value={weeklyVolumeTons}></StatCard>
       </div>
-      
+
       <WeekCalendarSection plannedDates={plannedDates} completedDates={completedDates}/>
 
-      <RecentCardsList className={styles.recent_list} cards={graphicsArr} />
+      {recentProgress.length > 0 && (
+        <RecentCardsList className={styles.recent_list} cards={recentProgress} />
+      )}
 
     </main>
   );

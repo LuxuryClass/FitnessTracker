@@ -95,3 +95,14 @@ class UserUpdateRequest(BaseModel):
             update_data["weight"] = self.weight
 
         return update_data
+
+
+class RecentProgressResponse(BaseModel):
+    exercise_id: UUID
+    exercise_name: str
+    muscle_group: str
+    difference_kg: Decimal
+    recent_max_weight_kg: Decimal
+    previous_max_weight_kg: Decimal | None
+
+    model_config = ConfigDict(from_attributes=True)

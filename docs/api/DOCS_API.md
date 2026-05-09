@@ -333,6 +333,80 @@
 
 ---
 
+### 2.4 `GET /api/users/me/recent-progress`
+
+Получение топ-3 упражнений по частоте выполнения за последние 30 дней с расчётом прогресса.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Response 200**
+
+```json
+[
+  {
+    "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
+    "exercise_name": "Жим лёжа",
+    "muscle_group": "грудь",
+    "difference_kg": 5.0,
+    "recent_max_weight_kg": 80.0,
+    "previous_max_weight_kg": 75.0
+  },
+  {
+    "exercise_id": "6f7dd56f-8188-4e93-aa62-5e2e453de0db",
+    "exercise_name": "Приседания",
+    "muscle_group": "ноги",
+    "difference_kg": -2.5,
+    "recent_max_weight_kg": 117.5,
+    "previous_max_weight_kg": 120.0
+  },
+  {
+    "exercise_id": "2f4bc4c2-2df2-4c3e-ab64-1f0d2c137fee",
+    "exercise_name": "Жим гантелей сидя",
+    "muscle_group": "плечи",
+    "difference_kg": 10.0,
+    "recent_max_weight_kg": 30.0,
+    "previous_max_weight_kg": 20.0
+  }
+]
+```
+
+Если пользователь не выполнял упражнения за последние 30 дней или выполнял каждое только 1 раз, возвращается пустой массив `[]`.
+
+**Поля ответа**
+
+- `exercise_id` — UUID упражнения
+- `exercise_name` — название упражнения
+- `muscle_group` — первая группа мышц из `muscle_groups` упражнения
+- `difference_kg` — разница в весе (может быть отрицательной)
+- `recent_max_weight_kg` — максимальный вес за последние 7 дней
+- `previous_max_weight_kg` — вес для сравнения (может быть `null` для новых упражнений)
+
+**Логика расчёта прогресса**
+
+1. **Выбор упражнений:**
+   - Берутся все упражнения, выполненные за последние 30 дней
+   - Сортируются по частоте выполнения (количество подходов)
+   - Возвращаются топ-3
+
+2. **Расчёт разницы (difference_kg):**
+   - Если есть данные за 30-37 дней назад:
+     ```
+     difference = max(вес за последние 7 дней) - max(вес за 30-37 дней назад)
+     ```
+   - Если данных за 30-37 дней нет (новое упражнение):
+     ```
+     difference = max(вес за последние 7 дней) - первый вес этого упражнения
+     ```
+   - Если упражнение выполнено только 1 раз: не показывается в прогрессе
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+
+---
+
 ## 3) Упражнения
 
 В разделе есть два типа упражнений:
@@ -978,8 +1052,11 @@ null
 2. Frontend сохраняет `access_token` и `refresh_token`.
 3. При истечении `access_token` вызывает `POST /api/auth/refresh`.
 4. Frontend получает профиль через `GET /api/users/me`.
-5. Frontend работает с упражнениями пользователя через `/api/exercises`.
-6. Frontend создает и редактирует тренировки через `/api/workouts`, передавая массив `exercises` c элементами формата `{ "exercise_id": "UUID" }`.
-7. При старте тренировки Frontend вызывает `POST /api/workout-sessions/start`, отправляет подходы через `POST /api/workout-sessions/{session_id}/sets` и завершает через `POST /api/workout-sessions/{session_id}/complete`.
+5. Frontend получает данные для главного экрана:
+   - Метрики пользователя из `GET /api/users/me` (`streak_weeks`, `weekly_volume_tons`, `weekly_sessions_progress`)
+   - Недавний прогресс через `GET /api/users/me/recent-progress`
+6. Frontend работает с упражнениями пользователя через `/api/exercises`.
+7. Frontend создает и редактирует тренировки через `/api/workouts`, передавая массив `exercises` c элементами формата `{ "exercise_id": "UUID" }`.
+8. При старте тренировки Frontend вызывает `POST /api/workout-sessions/start`, отправляет подходы через `POST /api/workout-sessions/{session_id}/sets` и завершает через `POST /api/workout-sessions/{session_id}/complete`.
 
 Дополнительно: seed-команды backend описаны в `docs/backend/SEEDS.md`.
