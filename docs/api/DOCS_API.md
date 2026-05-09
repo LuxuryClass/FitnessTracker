@@ -47,7 +47,7 @@
 ```json
 {
   "email": "user@example.com",
-  "username": "my_name",
+  "name": "my_name",
   "password": "strong_password_123"
 }
 ```
@@ -55,7 +55,7 @@
 **Поля**
 
 - `email` — строка, 5..255, приводится к lowercase
-- `username` — строка, 3..100
+- `name` — строка, 3..100
 - `password` — строка, 8..128
 
 **Response 201**
@@ -68,7 +68,11 @@
   "user": {
     "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
     "email": "user@example.com",
-    "username": "my_name",
+    "name": "my_name",
+    "gender": null,
+    "birth_date": null,
+    "height": null,
+    "weight": null,
     "avatar_url": null,
     "is_active": true,
     "streak_weeks": 0,
@@ -85,7 +89,7 @@
 
 **Ошибки**
 
-- `409` — email или username уже заняты
+- `409` — email или name уже заняты
 - `422` — ошибка валидации
 
 ---
@@ -113,7 +117,11 @@
   "user": {
     "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
     "email": "user@example.com",
-    "username": "my_name",
+    "name": "my_name",
+    "gender": null,
+    "birth_date": null,
+    "height": null,
+    "weight": null,
     "avatar_url": null,
     "is_active": true,
     "streak_weeks": 0,
@@ -202,7 +210,11 @@
 {
   "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "email": "user@example.com",
-  "username": "my_name",
+  "name": "my_name",
+  "gender": "male",
+  "birth_date": "1999-01-15",
+  "height": 180,
+  "weight": 80,
   "avatar_url": "https://t3.storageapi.dev/...X-Amz-Signature=...",
   "is_active": true,
   "streak_weeks": 3,
@@ -242,14 +254,14 @@
 ```json
 {
   "email": "new_email@example.com",
-  "username": "new_name"
+  "name": "new_name"
 }
 ```
 
 **Поля**
 
 - `email` — `string | optional`, 5..255, нормализуется в lowercase
-- `username` — `string | optional`, 3..100
+- `name` — `string | optional`, 3..100
 
 **Response 200**
 
@@ -257,7 +269,7 @@
 {
   "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "email": "new_email@example.com",
-  "username": "new_name",
+  "name": "new_name",
   "avatar_url": "https://t3.storageapi.dev/...X-Amz-Signature=...",
   "is_active": true,
   "streak_weeks": 3,
@@ -274,7 +286,7 @@
 **Ошибки**
 
 - `401` — нет/невалидный access-токен
-- `409` — email или username уже заняты
+- `409` — email или name уже заняты
 - `422` — ошибка валидации
 
 ---
@@ -299,7 +311,7 @@
 {
   "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "email": "user@example.com",
-  "username": "my_name",
+  "name": "my_name",
   "avatar_url": "https://t3.storageapi.dev/...X-Amz-Signature=...",
   "is_active": true,
   "streak_weeks": 3,

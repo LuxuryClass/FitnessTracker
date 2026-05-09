@@ -17,7 +17,7 @@ const RegisterPage = () => {
 
     const normalizedEmail = data.email.trim().toLowerCase();
     const emailLocalPart = normalizedEmail.split('@')[0]?.replace(/\s+/g, '') ?? '';
-    const username = data.name?.trim() || (emailLocalPart.length >= 3 ? emailLocalPart : `${emailLocalPart}user`);
+    const name = data.name?.trim() || (emailLocalPart.length >= 3 ? emailLocalPart : `${emailLocalPart}user`);
 
     setIsSubmitting(true);
 
@@ -25,7 +25,7 @@ const RegisterPage = () => {
       await register({
         email: normalizedEmail,
         password: data.password,
-        username,
+        name,
       });
       navigate('/home', { replace: true });
     } catch (error) {

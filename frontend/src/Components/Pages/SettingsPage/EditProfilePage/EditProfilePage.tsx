@@ -1,21 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/Auth';
+import { ApiError, authApi, type UpdateProfilePayload } from '@/Auth/authApi';
 import { Button } from '@/Components/UI/Button/Button';
 import { TabsGroup } from '@/Components/UI/TabsGroup/TabsGroup';
 import styles from './Styles.module.scss';
 
-type Gender = 'male' | 'female';
+type Gender = 'male' | 'female' | 'none';
 
 const genderTabs = [
+  { id: 'none' as Gender, label: 'Не указан' },
   { id: 'male' as Gender, label: 'Мужской' },
   { id: 'female' as Gender, label: 'Женский' },
 ];
 
 interface ProfileFormData {
   name: string;
-  nickname: string;
-  gender: Gender | '';
+  gender: Gender;
   birthDate: string;
   height: string;
   weight: string;
@@ -23,29 +24,77 @@ interface ProfileFormData {
 
 const EditProfilePage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, tokens, updateUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState<ProfileFormData>({
-    name: user?.username || '',
-    nickname: user?.username || '',
-    gender: '',
+    name: '',
+    gender: 'none',
     birthDate: '',
     height: '',
     weight: '',
   });
 
+  useEffect(() => {
+    setFormData({
+      name: user?.name || '',
+      gender: user?.gender || 'none',
+      birthDate: user?.birth_date || '',
+      height: user?.height?.toString() || '',
+      weight: user?.weight?.toString() || '',
+    });
+  }, [user]);
+
   const handleChange = (field: keyof ProfileFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const buildProfilePayload = (): UpdateProfilePayload => {
+    const payload: UpdateProfilePayload = {
+      name: formData.name.trim(),
+    };
+
+    if (formData.gender !== 'none') {
+      payload.gender = formData.gender;
+    }
+
+    if (formData.birthDate) {
+      payload.birth_date = formData.birthDate;
+    }
+
+    if (formData.height.trim()) {
+      payload.height = formData.height.trim();
+    }
+
+    if (formData.weight.trim()) {
+      payload.weight = formData.weight.trim();
+    }
+
+    return payload;
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!tokens?.accessToken) {
+        throw new Error('Сессия истекла. Войдите заново.');
+      }
+
+      if (!formData.name.trim()) {
+        throw new Error('Имя не может быть пустым.');
+      }
+
+      const updatedUser = await authApi.updateProfile(tokens.accessToken, buildProfilePayload());
+      updateUser(updatedUser);
       navigate(-1);
     } catch (error) {
-      console.error('Ошибка сохранения:', error);
+      if (error instanceof ApiError) {
+        alert(error.message);
+      } else if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert('Не удалось сохранить профиль.');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -87,9 +136,9 @@ const EditProfilePage = () => {
         {/* Пол */}
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Пол</h3>
-          <TabsGroup<'male' | 'female'>
+          <TabsGroup<Gender>
             tabs={genderTabs}
-            activeTab={(formData.gender || 'male') as 'male' | 'female'}
+            activeTab={formData.gender}
             onChange={(id) => handleChange('gender', id)}
             variant="dark"
             />

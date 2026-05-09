@@ -141,8 +141,8 @@ const SettingsPage = () => {
         />
         
         <div className={styles.profileInfo}>
-          <h2 className={styles.name}>{user?.username || 'Пользователь'}</h2>
-          <p className={styles.nickname}>{user?.username}@gmail.com</p>
+          <h2 className={styles.name}>{user?.name || 'Пользователь'}</h2>
+          <p className={styles.nickname}>{user?.name}@gmail.com</p>
         </div>
       </div>
 

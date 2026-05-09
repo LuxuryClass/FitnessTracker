@@ -25,7 +25,7 @@ const completedDates = [
 
 const HomePage = () => {
   const { user } = useAuth();
-  const userName = user?.username ?? "Пользователь";
+  const userName = user?.name ?? "Пользователь";
   const userAvatar = user?.avatar_url ?? defaultAvatar;
   const streakWeeks = user?.streak_weeks ?? 0;
   const weeklyVolumeTons = Number(user?.weekly_volume_tons ?? 0) || 0;

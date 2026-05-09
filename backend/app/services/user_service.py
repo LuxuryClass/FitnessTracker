@@ -27,16 +27,20 @@ class UserService:
             if existing_user_by_email is not None and existing_user_by_email.id != current_user.id:
                 raise AlreadyExistsException("Пользователь с таким email уже существует.")
 
-        if "username" in update_data and update_data["username"] != current_user.username:
-            existing_user_by_username = await user_repository.get_by_username(db, update_data["username"])
-            if existing_user_by_username is not None and existing_user_by_username.id != current_user.id:
-                raise AlreadyExistsException("Пользователь с таким username уже существует.")
+        if "name" in update_data and update_data["name"] != current_user.name:
+            existing_user_by_name = await user_repository.get_by_name(db, update_data["name"])
+            if existing_user_by_name is not None and existing_user_by_name.id != current_user.id:
+                raise AlreadyExistsException("Пользователь с таким name уже существует.")
 
         user = await user_repository.update(
             db=db,
             user=current_user,
             email=update_data.get("email"),
-            username=update_data.get("username"),
+            name=update_data.get("name"),
+            gender=update_data.get("gender"),
+            birth_date=update_data.get("birth_date"),
+            height=update_data.get("height"),
+            weight=update_data.get("weight"),
         )
         await db.commit()
         await db.refresh(user)

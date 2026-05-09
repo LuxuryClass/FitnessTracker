@@ -7,7 +7,7 @@ from app.schemas.user import UserResponse
 
 class RegisterRequest(BaseModel):
     email: str = Field(min_length=5, max_length=255)
-    username: str = Field(min_length=3, max_length=100)
+    name: str = Field(min_length=3, max_length=100)
     password: str = Field(min_length=8, max_length=128)
 
     @field_validator("email")
@@ -18,9 +18,9 @@ class RegisterRequest(BaseModel):
             raise ValueError("Некорректный email.")
         return normalized
 
-    @field_validator("username")
+    @field_validator("name")
     @classmethod
-    def validate_username(cls, value: str) -> str:
+    def validate_name(cls, value: str) -> str:
         normalized = value.strip()
         if not normalized:
             raise ValueError("Имя пользователя не может быть пустым.")

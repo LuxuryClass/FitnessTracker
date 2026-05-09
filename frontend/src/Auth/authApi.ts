@@ -76,7 +76,11 @@ const request = async <TResponse>(
 export interface AuthUser {
   id: string;
   email: string;
-  username: string;
+  name: string;
+  gender: "male" | "female" | null;
+  birth_date: string | null;
+  height: number | string | null;
+  weight: number | string | null;
   avatar_url: string | null;
   is_active: boolean;
   streak_weeks: number;
@@ -95,6 +99,15 @@ interface TokenPairResponse {
   token_type: "bearer";
 }
 
+export interface UpdateProfilePayload {
+  email?: string;
+  name?: string;
+  gender?: "male" | "female";
+  birth_date?: string;
+  height?: number | string;
+  weight?: number | string;
+}
+
 interface AuthResponse extends TokenPairResponse {
   user: AuthUser;
 }
@@ -105,7 +118,7 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload extends LoginPayload {
-  username: string;
+  name: string;
 }
 
 export interface StoredTokens {
@@ -177,6 +190,14 @@ export const authApi = {
       method: "POST",
       accessToken,
       body: formData,
+    });
+  },
+
+  async updateProfile(accessToken: string, payload: UpdateProfilePayload): Promise<AuthUser> {
+    return request<AuthUser>("/users/me", {
+      method: "PATCH",
+      accessToken,
+      body: payload,
     });
   },
 };

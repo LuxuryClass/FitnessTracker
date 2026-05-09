@@ -44,7 +44,11 @@ async def build_user_response(db: AsyncSession, user: User) -> UserResponse:
     return UserResponse(
         id=user.id,
         email=user.email,
-        username=user.username,
+        name=user.name,
+        gender=user.gender,
+        birth_date=user.birth_date,
+        height=user.height,
+        weight=user.weight,
         avatar_url=avatar_url,
         is_active=user.is_active,
         streak_weeks=user.streak_weeks,

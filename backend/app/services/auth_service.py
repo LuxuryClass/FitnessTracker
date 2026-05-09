@@ -35,18 +35,18 @@ class AuthService:
 
     async def register(self, db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
         email = payload.email.strip().lower()
-        username = payload.username.strip()
+        name = payload.name.strip()
 
         existing_by_email = await user_repository.get_by_email(db, email)
         if existing_by_email:
             raise AlreadyExistsException("Пользователь с таким email уже существует.")
 
-        existing_by_username = await user_repository.get_by_username(db, username)
-        if existing_by_username:
-            raise AlreadyExistsException("Пользователь с таким username уже существует.")
+        existing_by_name = await user_repository.get_by_name(db, name)
+        if existing_by_name:
+            raise AlreadyExistsException("Пользователь с таким name уже существует.")
 
         password_hash = hash_password(payload.password)
-        user = await user_repository.create(db=db, email=email, username=username, password_hash=password_hash)
+        user = await user_repository.create(db=db, email=email, name=name, password_hash=password_hash)
         await db.commit()
         await db.refresh(user)
         return await self._build_auth_response(db=db, user=user)
