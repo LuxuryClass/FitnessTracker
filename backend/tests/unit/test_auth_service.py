@@ -10,9 +10,10 @@ from uuid import uuid4
 from app.services.auth_service import auth_service
 from app.schemas.auth import RegisterRequest, LoginRequest, RefreshRequest
 from app.core.exceptions import AlreadyExistsException, UnauthorizedException
+from tests.conftest import create_mock_user_response
 
 
-# ====================== РЕГИСТРАЦИЯ ======================
+# ---------------------- РЕГИСТРАЦИЯ ----------------------
 
 @pytest.mark.asyncio
 async def test_register_success(mock_db_session, mock_user):
@@ -20,55 +21,61 @@ async def test_register_success(mock_db_session, mock_user):
     Успешная регистрация нового пользователя.
 
     Сценарий:
-        - Email и username свободны (репозиторий возвращает None).
-        - Хеширование пароля мокается, чтобы не вызывать реальный bcrypt.
-        - Репозиторий возвращает мок-пользователя.
-        - Генерация токенов возвращает фиктивные access/refresh.
+        - Email и name свободны (репозиторий возвращает None).
+        - Хеширование пароля возвращает фиктивный хеш.
+        - Репозиторий создаёт пользователя и возвращает его.
+        - build_user_response мокается, чтобы не обращаться к БД/Redis/S3.
+        - Генерируется пара токенов.
 
     Проверки:
-        - Возвращённый объект AuthResponse содержит непустые токены.
-        - Данные пользователя совпадают с переданными.
-        - Репозиторий вызван с правильными параметрами.
-        - Выполнен commit и refresh сессии.
+        - Возвращены access и refresh токены с типом bearer.
+        - Email пользователя в ответе совпадает с переданным.
+        - Репозиторий create вызван с правильными параметрами.
+        - Выполнен commit сессии.
     """
-    request = RegisterRequest(email="new@example.com", username="newuser", password="Secure123")
+    request = RegisterRequest(email="new@example.com", name="newuser", password="Secure123")
 
     with patch("app.services.auth_service.user_repository") as mock_repo:
         mock_repo.get_by_email = AsyncMock(return_value=None)
-        mock_repo.get_by_username = AsyncMock(return_value=None)
+        mock_repo.get_by_name = AsyncMock(return_value=None)
         mock_repo.create = AsyncMock(return_value=mock_user)
 
         with patch("app.services.auth_service.hash_password") as mock_hash:
             mock_hash.return_value = "hashed_password_placeholder"
-            with patch("app.services.auth_service.create_token_pair") as mock_tokens:
-                mock_tokens.return_value = ("access_token", "refresh_token")
-                result = await auth_service.register(db=mock_db_session, payload=request)
+
+            with patch("app.services.auth_service.build_user_response") as mock_build:
+                # Возвращаем валидный для UserResponse мок
+                mock_build.return_value = create_mock_user_response()
+
+                with patch("app.services.auth_service.create_token_pair") as mock_tokens:
+                    mock_tokens.return_value = ("access_token", "refresh_token")
+                    result = await auth_service.register(db=mock_db_session, payload=request)
 
     assert result.access_token == "access_token"
     assert result.refresh_token == "refresh_token"
     assert result.user.email == mock_user.email
-    mock_repo.create.assert_awaited_once()
+    mock_repo.create.assert_awaited_once_with(
+        db=mock_db_session,
+        email="new@example.com",
+        name="newuser",
+        password_hash="hashed_password_placeholder"
+    )
     mock_db_session.commit.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_register_duplicate_email(mock_db_session):
     """
-    Регистрация с уже существующим email – выбрасывается AlreadyExistsException.
+    Регистрация с уже существующим email → AlreadyExistsException.
 
     Сценарий:
-        - Репозиторий возвращает существующего пользователя при поиске по email.
-        - Поиск по username возвращает None.
-
-    Проверка:
-        - Исключение перехвачено.
+        - get_by_email возвращает существующего пользователя.
+        - get_by_name возвращает None (имя свободно).
     """
-    request = RegisterRequest(email="exist@example.com", username="newuser", password="Secure123")
-
+    request = RegisterRequest(email="exist@example.com", name="newuser", password="Secure123")
     with patch("app.services.auth_service.user_repository") as mock_repo:
         mock_repo.get_by_email = AsyncMock(return_value=MagicMock())
-        mock_repo.get_by_username = AsyncMock(return_value=None)
-
+        mock_repo.get_by_name = AsyncMock(return_value=None)
         with pytest.raises(AlreadyExistsException):
             await auth_service.register(db=mock_db_session, payload=request)
 
@@ -76,35 +83,29 @@ async def test_register_duplicate_email(mock_db_session):
 @pytest.mark.asyncio
 async def test_register_duplicate_username(mock_db_session):
     """
-    Регистрация с уже занятым username – выбрасывается AlreadyExistsException.
+    Регистрация с уже занятым name → AlreadyExistsException.
 
     Сценарий:
-        - Email свободен, но username уже используется.
+        - email свободен, но name уже используется.
     """
-    request = RegisterRequest(email="new@example.com", username="taken", password="Secure123")
-
+    request = RegisterRequest(email="new@example.com", name="taken", password="Secure123")
     with patch("app.services.auth_service.user_repository") as mock_repo:
         mock_repo.get_by_email = AsyncMock(return_value=None)
-        mock_repo.get_by_username = AsyncMock(return_value=MagicMock())
-
+        mock_repo.get_by_name = AsyncMock(return_value=MagicMock())
         with pytest.raises(AlreadyExistsException):
             await auth_service.register(db=mock_db_session, payload=request)
 
 
-# ====================== ЛОГИН ======================
+# ---------------------- ЛОГИН ----------------------
 
 @pytest.mark.asyncio
 async def test_login_success(mock_db_session, mock_user):
     """
-    Успешный вход с корректными email и паролем.
+    Успешный вход – возвращается пара токенов и данные пользователя.
 
     Сценарий:
-        - Пользователь найден по email.
-        - Проверка пароля мокается и возвращает True.
-        - Токены генерируются.
-
-    Проверка:
-        - Возвращён access_token.
+        - Пользователь найден по email, пароль корректен.
+        - build_user_response мокается (чтобы избежать лишних зависимостей).
     """
     request = LoginRequest(email="test@example.com", password="CorrectPass")
 
@@ -113,7 +114,9 @@ async def test_login_success(mock_db_session, mock_user):
         with patch("app.services.auth_service.verify_password", return_value=True):
             with patch("app.services.auth_service.create_token_pair") as mock_tokens:
                 mock_tokens.return_value = ("access_token", "refresh_token")
-                result = await auth_service.login(db=mock_db_session, payload=request)
+                with patch("app.services.auth_service.build_user_response") as mock_build:
+                    mock_build.return_value = create_mock_user_response()
+                    result = await auth_service.login(db=mock_db_session, payload=request)
 
     assert result.access_token == "access_token"
 
@@ -121,13 +124,9 @@ async def test_login_success(mock_db_session, mock_user):
 @pytest.mark.asyncio
 async def test_login_wrong_password(mock_db_session, mock_user):
     """
-    Вход с неправильным паролем – UnauthorizedException.
-
-    Сценарий:
-        - Пользователь найден, но verify_password возвращает False.
+    Вход с неправильным паролем → UnauthorizedException.
     """
     request = LoginRequest(email="test@example.com", password="WrongPass")
-
     with patch("app.services.auth_service.user_repository") as mock_repo:
         mock_repo.get_by_email = AsyncMock(return_value=mock_user)
         with patch("app.services.auth_service.verify_password", return_value=False):
@@ -138,13 +137,9 @@ async def test_login_wrong_password(mock_db_session, mock_user):
 @pytest.mark.asyncio
 async def test_login_user_not_found(mock_db_session):
     """
-    Вход с несуществующим email – UnauthorizedException.
-
-    Сценарий:
-        - Репозиторий возвращает None.
+    Вход с несуществующим email → UnauthorizedException.
     """
     request = LoginRequest(email="no@example.com", password="SomePass123")
-
     with patch("app.services.auth_service.user_repository") as mock_repo:
         mock_repo.get_by_email = AsyncMock(return_value=None)
         with pytest.raises(UnauthorizedException):
@@ -154,14 +149,10 @@ async def test_login_user_not_found(mock_db_session):
 @pytest.mark.asyncio
 async def test_login_inactive_user(mock_db_session, mock_user):
     """
-    Вход деактивированного пользователя – UnauthorizedException.
-
-    Сценарий:
-        - Пользователь найден, пароль правильный, но is_active = False.
+    Вход деактивированного пользователя → UnauthorizedException.
     """
     mock_user.is_active = False
     request = LoginRequest(email="test@example.com", password="ActivePass123")
-
     with patch("app.services.auth_service.user_repository") as mock_repo:
         mock_repo.get_by_email = AsyncMock(return_value=mock_user)
         with patch("app.services.auth_service.verify_password", return_value=True):
@@ -169,7 +160,7 @@ async def test_login_inactive_user(mock_db_session, mock_user):
                 await auth_service.login(db=mock_db_session, payload=request)
 
 
-# ====================== ОБНОВЛЕНИЕ ТОКЕНОВ ======================
+# ---------------------- ОБНОВЛЕНИЕ ТОКЕНОВ ----------------------
 
 @pytest.mark.asyncio
 async def test_refresh_success(mock_db_session, mock_user):
@@ -177,12 +168,9 @@ async def test_refresh_success(mock_db_session, mock_user):
     Успешное обновление токенов по валидному refresh-токену.
 
     Сценарий:
-        - Декодирование токена возвращает корректный payload (тип refresh, sub=user_id).
+        - Декодирование возвращает payload с типом refresh и корректным sub.
         - Пользователь существует и активен.
         - Генерируется новая пара токенов.
-
-    Проверка:
-        - Возвращены новые access и refresh токены.
     """
     refresh_token = "valid_refresh_token"
     request = RefreshRequest(refresh_token=refresh_token)
@@ -208,11 +196,7 @@ async def test_refresh_success(mock_db_session, mock_user):
 @pytest.mark.asyncio
 async def test_refresh_user_not_found(mock_db_session):
     """
-    Обновление токенов, когда пользователь, указанный в refresh-токене, не найден – UnauthorizedException.
-
-    Сценарий:
-        - Токен декодирован, тип верный, sub содержит UUID.
-        - Репозиторий возвращает None.
+    Обновление токенов, если пользователь не найден → UnauthorizedException.
     """
     refresh_token = "valid_token"
     request = RefreshRequest(refresh_token=refresh_token)
@@ -227,21 +211,16 @@ async def test_refresh_user_not_found(mock_db_session):
                     await auth_service.refresh(db=mock_db_session, payload=request)
 
 
-# ====================== ВЫХОД ======================
+# ---------------------- ВЫХОД ----------------------
 
 @pytest.mark.asyncio
 async def test_logout_success(mock_redis):
     """
-    Успешный выход – access-токен добавляется в чёрный список Redis.
+    Успешный выход – access-токен добавляется в чёрный список.
 
     Сценарий:
-        - Декодирование токена возвращает payload с jti и exp.
-        - ensure_token_type успешно проходит.
-        - Вызывается add_token_to_blacklist с правильными аргументами.
-
-    Проверки:
-        - Возвращён LogoutResponse с правильным сообщением.
-        - Функция добавления в чёрный список вызвана один раз с верными параметрами.
+        - Токен декодируется, извлекаются jti и exp.
+        - add_token_to_blacklist вызывается с правильными параметрами.
     """
     access_token = "some_access_token"
 
@@ -249,9 +228,8 @@ async def test_logout_success(mock_redis):
         mock_decode.return_value = {"type": "access", "jti": "unique-jti", "exp": 9999999999}
         with patch("app.services.auth_service.ensure_token_type"):
             with patch("app.services.auth_service.add_token_to_blacklist") as mock_blacklist:
-                mock_blacklist = AsyncMock()
-                with patch("app.services.auth_service.add_token_to_blacklist", mock_blacklist):
-                    result = await auth_service.logout(redis=mock_redis, access_token=access_token)
+                mock_blacklist.return_value = None   # AsyncMock
+                result = await auth_service.logout(redis=mock_redis, access_token=access_token)
 
     assert result.detail == "Вы успешно вышли из системы."
     mock_blacklist.assert_awaited_once_with(mock_redis, "unique-jti", 9999999999)
