@@ -22,10 +22,17 @@ interface ProfileFormData {
   weight: string;
 }
 
+// Константы ограничений, соответствующие серверной валидации
+const LIMITS = {
+  height: { min: 0, max: 999.99 },
+  weight: { min: 0, max: 999.99 },
+};
+
 const EditProfilePage = () => {
   const navigate = useNavigate();
   const { user, tokens, updateUser, refreshSession } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+  const [profileErrors, setProfileErrors] = useState<{ height?: string; weight?: string }>({});
 
   const [formData, setFormData] = useState<ProfileFormData>({
     name: '',
@@ -43,10 +50,41 @@ const EditProfilePage = () => {
       height: user?.height?.toString() || '',
       weight: user?.weight?.toString() || '',
     });
+    // сброс ошибок при новом пользователе
+    setProfileErrors({});
   }, [user]);
 
   const handleChange = (field: keyof ProfileFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // сброс ошибки при редактировании поля
+    setProfileErrors(prev => ({ ...prev, [field]: undefined }));
+  };
+
+  /**
+   * Проверяет, что рост и вес находятся в допустимых пределах.
+   * @returns true, если данные валидны, иначе false
+   */
+  const validateProfileMetrics = (): boolean => {
+    const errors: { height?: string; weight?: string } = {};
+    const heightValue = formData.height.trim();
+    const weightValue = formData.weight.trim();
+
+    if (heightValue !== '') {
+      const h = Number(heightValue);
+      if (isNaN(h) || h < LIMITS.height.min || h > LIMITS.height.max) {
+        errors.height = `Рост должен быть от ${LIMITS.height.min} до ${LIMITS.height.max} см`;
+      }
+    }
+
+    if (weightValue !== '') {
+      const w = Number(weightValue);
+      if (isNaN(w) || w < LIMITS.weight.min || w > LIMITS.weight.max) {
+        errors.weight = `Вес должен быть от ${LIMITS.weight.min} до ${LIMITS.weight.max} кг`;
+      }
+    }
+
+    setProfileErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const buildProfilePayload = (): UpdateProfilePayload => {
@@ -95,6 +133,9 @@ const EditProfilePage = () => {
   };
 
   const handleSave = async () => {
+    // 1. Валидация числовых полей
+    if (!validateProfileMetrics()) return;
+
     setIsSaving(true);
     try {
       if (!formData.name.trim()) {
@@ -158,7 +199,7 @@ const EditProfilePage = () => {
             activeTab={formData.gender}
             onChange={(id) => handleChange('gender', id)}
             variant="dark"
-            />
+          />
         </div>
 
         {/* Рост */}
@@ -166,8 +207,8 @@ const EditProfilePage = () => {
           <h3 className={styles.sectionTitle}>Рост</h3>
           <input
             type="number"
-            min="0"
-            max="999.99"
+            min={LIMITS.height.min}
+            max={LIMITS.height.max}
             step="0.01"
             inputMode="decimal"
             value={formData.height}
@@ -175,6 +216,7 @@ const EditProfilePage = () => {
             placeholder="Актуальный рост"
             className={styles.input}
           />
+          {profileErrors.height && <span className={styles.errorMessage}>{profileErrors.height}</span>}
         </div>
 
         {/* Вес */}
@@ -182,8 +224,8 @@ const EditProfilePage = () => {
           <h3 className={styles.sectionTitle}>Вес</h3>
           <input
             type="number"
-            min="0"
-            max="999.99"
+            min={LIMITS.weight.min}
+            max={LIMITS.weight.max}
             step="0.01"
             inputMode="decimal"
             value={formData.weight}
@@ -191,21 +233,22 @@ const EditProfilePage = () => {
             placeholder="Актуальный вес"
             className={styles.input}
           />
+          {profileErrors.weight && <span className={styles.errorMessage}>{profileErrors.weight}</span>}
         </div>
+
         {/* Кнопка сохранения */}
         <div className={styles.buttonWrapper}>
-            <Button
+          <Button
             size="l"
             color="primary"
             fullWidth
             onClick={handleSave}
             disabled={isSaving}
-            >
+          >
             {isSaving ? 'Сохранение...' : 'Сохранить'}
-            </Button>
+          </Button>
         </div>
       </div>
-
     </div>
   );
 };
