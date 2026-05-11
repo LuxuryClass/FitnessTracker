@@ -1,7 +1,7 @@
 import HomePage from '@pages/HomePage';
 import '../Styles/index.scss';
 // import styles from './Styles.module.scss';
-import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { EnterPage } from '@/Components/Pages/EnterPage/EnterPage';
 import LoginPage from '@/Components/Pages/LoginPage/LoginPage';
 import SigninPage from '@/Components/Pages/RegisterPage/RegisterPage';
@@ -25,6 +25,7 @@ export function App() {
           </Route>
           <Route element={<RequireAuthRoute />}>
             <Route path="/" element={<OutletWrapper />}>
+              <Route index element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/almanah" />
               <Route path="/add" element={<CreateWorkoutPage />} />
