@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/Auth';
 import { ApiError, authApi } from '@/Auth/authApi';
+import { isAccessTokenExpiredOrExpiring } from '@/Auth/security';
 import styles from './Styles.module.scss';
 import { useEffect, useRef, useState } from 'react';
 import { LogoutModal } from '@/Components/Modals/LogoutModal/LogoutModal';
@@ -19,6 +20,14 @@ interface MenuItem {
   onClick?: () => void;
 }
 
+const preloadImage = async (src: string): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve();
+    image.onerror = () => reject(new Error('Не удалось загрузить изображение.'));
+    image.src = src;
+  });
+
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { user, tokens, logout, updateUser, refreshSession } = useAuth();
@@ -27,10 +36,32 @@ const SettingsPage = () => {
   const [avatarSrc, setAvatarSrc] = useState(user?.avatar_url ?? defaultAvatar);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (previewUrlRef.current) {
+      return;
+    }
     setAvatarSrc(user?.avatar_url ?? defaultAvatar);
   }, [user?.avatar_url]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  const clearPreviewUrl = () => {
+    if (!previewUrlRef.current) {
+      return;
+    }
+
+    URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = null;
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -52,8 +83,17 @@ const SettingsPage = () => {
       throw new Error('Сессия истекла. Войдите заново.');
     }
 
+    let accessToken = tokens.accessToken;
+    if (isAccessTokenExpiredOrExpiring(accessToken)) {
+      const refreshedTokens = await refreshSession();
+      if (!refreshedTokens?.accessToken) {
+        throw new Error('Сессия истекла. Войдите заново.');
+      }
+      accessToken = refreshedTokens.accessToken;
+    }
+
     try {
-      return await authApi.uploadAvatar(tokens.accessToken, file);
+      return await authApi.uploadAvatar(accessToken, file);
     } catch (error) {
       if (!(error instanceof ApiError) || (error.status !== 401 && error.status !== 403)) {
         throw error;
@@ -90,12 +130,23 @@ const SettingsPage = () => {
       return;
     }
 
+    clearPreviewUrl();
+    const localPreviewUrl = URL.createObjectURL(file);
+    previewUrlRef.current = localPreviewUrl;
+    setAvatarSrc(localPreviewUrl);
+
     setIsUploadingAvatar(true);
     try {
       const updatedUser = await uploadAvatar(file);
+      if (updatedUser.avatar_url) {
+        await preloadImage(updatedUser.avatar_url);
+      }
       updateUser(updatedUser);
       setAvatarSrc(updatedUser.avatar_url ?? defaultAvatar);
+      clearPreviewUrl();
     } catch (error) {
+      clearPreviewUrl();
+      setAvatarSrc(user?.avatar_url ?? defaultAvatar);
       if (error instanceof ApiError) {
         alert(error.message);
       } else {
@@ -144,6 +195,8 @@ const SettingsPage = () => {
             src={avatarSrc}
             alt="Аватар"
             className={styles.avatarImage}
+            loading="eager"
+            decoding="async"
             onError={() => setAvatarSrc(defaultAvatar)}
           />
           <div className={styles.avatarIcon_wrapper}>

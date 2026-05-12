@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -7,6 +7,7 @@ from app.models.user import User
 from app.schemas.user import RecentProgressResponse, UserResponse, UserUpdateRequest
 from app.services import user_service
 from app.services.user_progress_service import user_progress_service
+from app.services.storage_service import storage_service
 
 router = APIRouter(prefix="/users", tags=["Пользователи"])
 
@@ -34,11 +35,15 @@ async def update_me(
 
 @router.post("/me/avatar", response_model=UserResponse, status_code=status.HTTP_200_OK)
 async def upload_avatar(
+    background_tasks: BackgroundTasks,
     avatar: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> UserResponse:
-    return await user_service.upload_avatar(db=db, current_user=current_user, file=avatar)
+    user_response, old_avatar_to_delete = await user_service.upload_avatar(db=db, current_user=current_user, file=avatar)
+    if old_avatar_to_delete:
+        background_tasks.add_task(storage_service.delete_avatar, old_avatar_to_delete, ignore_missing=True)
+    return user_response
 
 
 @router.get("/me/recent-progress", response_model=list[RecentProgressResponse], status_code=status.HTTP_200_OK)

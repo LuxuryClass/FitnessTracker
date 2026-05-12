@@ -55,7 +55,9 @@ async def test_upload_avatar_success(mock_db_session, mock_user):
                 result = await user_service.upload_avatar(
                     db=mock_db_session, current_user=mock_user, file=file
                 )
-    assert result is not None
+    user_response, old_avatar_to_delete = result
+    assert user_response is not None
+    assert old_avatar_to_delete is None
     storage.upload_user_avatar.assert_awaited_once()
     storage.delete_avatar.assert_not_called()
 

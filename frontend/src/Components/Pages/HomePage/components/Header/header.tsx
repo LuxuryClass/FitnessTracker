@@ -28,7 +28,7 @@ const HeaderComponent = ({ userName, userAvatar, isActivBell, className }: Heade
       </div>
       <div className={styles.buttons}>
         <Button color="accent-2" className={styles.avatar_button}>
-          <img className={styles.userAvatar} src={userAvatar} alt="avatar" /> 
+          <img className={styles.userAvatar} src={userAvatar} alt="avatar" loading="eager" decoding="async" />
         </Button>
         <Button color="accent-2" className={styles.bell_button}>
           <img className={styles.bell} src={isActivBell ? activBell : basicBell}/>

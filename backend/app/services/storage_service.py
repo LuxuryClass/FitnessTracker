@@ -15,9 +15,31 @@ from app.core.exceptions import BadRequestException
 
 MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024
 AVATAR_URL_EXPIRES_SECONDS = 60 * 60 * 24 * 7  # 7 дней
+AVATAR_CACHE_CONTROL = "public, max-age=31536000, immutable"
+S3_CLIENT_CONFIG = Config(
+    signature_version="s3v4",
+    s3={"addressing_style": "virtual"},
+    connect_timeout=5,
+    read_timeout=30,
+    retries={"max_attempts": 3, "mode": "standard"},
+    max_pool_connections=20,
+)
 
 
 class StorageService:
+    def __init__(self) -> None:
+        self._session = aioboto3.Session()
+
+    def _create_client(self):
+        return self._session.client(
+            "s3",
+            endpoint_url=settings.aws_endpoint_url,
+            region_name=settings.aws_default_region,
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key,
+            config=S3_CLIENT_CONFIG,
+        )
+
     @staticmethod
     def _is_configured() -> bool:
         required_values = (
@@ -72,21 +94,14 @@ class StorageService:
 
         object_key = self._build_avatar_object_key(user_id=user_id, filename=file.filename)
 
-        session = aioboto3.Session()
         try:
-            async with session.client(
-                "s3",
-                endpoint_url=settings.aws_endpoint_url,
-                region_name=settings.aws_default_region,
-                aws_access_key_id=settings.aws_access_key_id,
-                aws_secret_access_key=settings.aws_secret_access_key,
-                config=Config(signature_version="s3v4", s3={"addressing_style": "virtual"}),
-            ) as s3_client:
+            async with self._create_client() as s3_client:
                 await s3_client.put_object(
                     Bucket=settings.aws_s3_bucket_name,
                     Key=object_key,
                     Body=file_content,
                     ContentType=file.content_type,
+                    CacheControl=AVATAR_CACHE_CONTROL,
                 )
         except (ClientError, BotoCoreError) as exc:
             raise BadRequestException("Не удалось загрузить аватарку в хранилище.") from exc
@@ -102,16 +117,8 @@ class StorageService:
         if not object_key:
             return
 
-        session = aioboto3.Session()
         try:
-            async with session.client(
-                "s3",
-                endpoint_url=settings.aws_endpoint_url,
-                region_name=settings.aws_default_region,
-                aws_access_key_id=settings.aws_access_key_id,
-                aws_secret_access_key=settings.aws_secret_access_key,
-                config=Config(signature_version="s3v4", s3={"addressing_style": "virtual"}),
-            ) as s3_client:
+            async with self._create_client() as s3_client:
                 await s3_client.delete_object(
                     Bucket=settings.aws_s3_bucket_name,
                     Key=object_key,
@@ -134,16 +141,8 @@ class StorageService:
         if not object_key:
             return None
 
-        session = aioboto3.Session()
         try:
-            async with session.client(
-                "s3",
-                endpoint_url=settings.aws_endpoint_url,
-                region_name=settings.aws_default_region,
-                aws_access_key_id=settings.aws_access_key_id,
-                aws_secret_access_key=settings.aws_secret_access_key,
-                config=Config(signature_version="s3v4", s3={"addressing_style": "virtual"}),
-            ) as s3_client:
+            async with self._create_client() as s3_client:
                 presigned_url = s3_client.generate_presigned_url(
                     ClientMethod="get_object",
                     Params={

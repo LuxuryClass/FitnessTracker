@@ -59,12 +59,25 @@ export default defineConfig({
         clientsClaim: true,
         runtimeCaching: [
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|webp|woff|woff2)$/i,
-            handler: 'CacheFirst',
+            urlPattern: ({ request, url }) =>
+              request.destination === 'image' && /\.(?:png|jpg|jpeg|svg|webp)$/i.test(url.pathname),
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'static-assets-v2',
+              cacheName: 'image-assets-v3',
               expiration: {
                 maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+          {
+            urlPattern: ({ request, url }) =>
+              request.destination === 'font' && /\.(?:woff|woff2)$/i.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'font-assets-v1',
+              expiration: {
+                maxEntries: 30,
                 maxAgeSeconds: 60 * 60 * 24 * 30,
               },
             },

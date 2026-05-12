@@ -50,17 +50,21 @@ class UserService:
             await db.rollback()
             raise BadRequestException("Рост и вес должны быть в допустимом диапазоне.") from exc
 
-    async def upload_avatar(self, db: AsyncSession, current_user: User, file: UploadFile) -> UserResponse:
+    async def upload_avatar(
+        self,
+        db: AsyncSession,
+        current_user: User,
+        file: UploadFile,
+    ) -> tuple[UserResponse, str | None]:
         old_avatar_value = current_user.avatar_url
         avatar_key = await storage_service.upload_user_avatar(user_id=current_user.id, file=file)
         try:
-            if old_avatar_value and old_avatar_value != avatar_key:
-                await storage_service.delete_avatar(old_avatar_value, ignore_missing=True)
-
             user = await user_repository.update_avatar_url(db=db, user=current_user, avatar_url=avatar_key)
             await db.commit()
             await db.refresh(user)
-            return await build_user_response(db=db, user=user)
+            user_response = await build_user_response(db=db, user=user)
+            old_avatar_to_delete = old_avatar_value if old_avatar_value and old_avatar_value != avatar_key else None
+            return user_response, old_avatar_to_delete
         except (BadRequestException, SQLAlchemyError):
             await db.rollback()
             await storage_service.delete_avatar(avatar_key, ignore_missing=True)
