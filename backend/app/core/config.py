@@ -1,6 +1,6 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from typing import List, Literal
 import json
 
 
@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
+    auth_refresh_cookie_name: str = "refresh_token"
+    auth_refresh_cookie_secure: bool = True
+    auth_refresh_cookie_samesite: Literal["lax", "strict", "none"] = "none"
+    auth_refresh_cookie_domain: str | None = None
+    auth_refresh_cookie_path: str = "/api/auth"
 
     aws_endpoint_url: str | None = None
     aws_default_region: str | None = None
@@ -41,6 +46,10 @@ class Settings(BaseSettings):
         if isinstance(self.backend_cors_origins, str):
             return json.loads(self.backend_cors_origins)
         return self.backend_cors_origins
+
+    @property
+    def refresh_cookie_max_age_seconds(self) -> int:
+        return self.refresh_token_expire_days * 24 * 60 * 60
 
 
 settings = Settings()

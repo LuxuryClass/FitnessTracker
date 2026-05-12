@@ -19,21 +19,17 @@ from app.core.security import (
 )
 from app.models.user import User
 from app.repositories import user_repository
-from app.schemas.auth import AuthResponse, LoginRequest, LogoutResponse, RefreshRequest, RegisterRequest, TokenPairResponse
+from app.schemas.auth import AccessTokenResponse, AuthResponse, LoginRequest, LogoutResponse, RegisterRequest
 from app.services.user_metrics_service import build_user_response
 
 
 class AuthService:
-    async def _build_auth_response(self, db: AsyncSession, user: User) -> AuthResponse:
+    async def _build_auth_response(self, db: AsyncSession, user: User) -> tuple[AuthResponse, str]:
         access_token, refresh_token = create_token_pair(user.id)
-        return AuthResponse(
-            user=await build_user_response(db=db, user=user),
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_type="bearer",
-        )
+        response = AuthResponse(user=await build_user_response(db=db, user=user), access_token=access_token, token_type="bearer")
+        return response, refresh_token
 
-    async def register(self, db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
+    async def register(self, db: AsyncSession, payload: RegisterRequest) -> tuple[AuthResponse, str]:
         email = payload.email.strip().lower()
         name = payload.name.strip()
 
@@ -51,7 +47,7 @@ class AuthService:
         await db.refresh(user)
         return await self._build_auth_response(db=db, user=user)
 
-    async def login(self, db: AsyncSession, payload: LoginRequest) -> AuthResponse:
+    async def login(self, db: AsyncSession, payload: LoginRequest) -> tuple[AuthResponse, str]:
         email = payload.email.strip().lower()
 
         user = await user_repository.get_by_email(db, email)
@@ -63,8 +59,8 @@ class AuthService:
 
         return await self._build_auth_response(db=db, user=user)
 
-    async def refresh(self, db: AsyncSession, payload: RefreshRequest) -> TokenPairResponse:
-        token_payload = decode_jwt_token(payload.refresh_token)
+    async def refresh(self, db: AsyncSession, refresh_token: str) -> tuple[AccessTokenResponse, str]:
+        token_payload = decode_jwt_token(refresh_token)
         ensure_token_type(token_payload, REFRESH_TOKEN_TYPE)
 
         subject = get_token_subject(token_payload)
@@ -81,7 +77,8 @@ class AuthService:
             raise UnauthorizedException("Пользователь деактивирован.")
 
         access_token, refresh_token = create_token_pair(user.id)
-        return TokenPairResponse(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+        response = AccessTokenResponse(access_token=access_token, token_type="bearer")
+        return response, refresh_token
 
     async def logout(self, redis: Redis, access_token: str) -> LogoutResponse:
         token_payload = decode_jwt_token(access_token)

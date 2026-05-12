@@ -54,25 +54,12 @@ class LoginRequest(BaseModel):
         return value
 
 
-class RefreshRequest(BaseModel):
-    refresh_token: str = Field(min_length=1)
-
-    @field_validator("refresh_token")
-    @classmethod
-    def validate_refresh_token(cls, value: str) -> str:
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("Refresh токен не может быть пустым.")
-        return normalized
-
-
-class TokenPairResponse(BaseModel):
+class AccessTokenResponse(BaseModel):
     access_token: str = Field(min_length=1)
-    refresh_token: str = Field(min_length=1)
     token_type: Literal["bearer"] = "bearer"
 
 
-class AuthResponse(TokenPairResponse):
+class AuthResponse(AccessTokenResponse):
     user: UserResponse
 
 

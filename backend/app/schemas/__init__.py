@@ -1,6 +1,6 @@
 """Пакет Pydantic-схем."""
 
-from app.schemas.auth import AuthResponse, LoginRequest, LogoutResponse, RefreshRequest, RegisterRequest, TokenPairResponse
+from app.schemas.auth import AccessTokenResponse, AuthResponse, LoginRequest, LogoutResponse, RegisterRequest
 from app.schemas.exercise import ExerciseCreateRequest, ExerciseResponse, ExerciseUpdateRequest
 from app.schemas.user import UserResponse, UserUpdateRequest, WeeklySessionsProgress
 from app.schemas.workout import (
@@ -20,8 +20,7 @@ from app.schemas.workout_session import (
 __all__ = [
     "LoginRequest",
     "RegisterRequest",
-    "RefreshRequest",
-    "TokenPairResponse",
+    "AccessTokenResponse",
     "AuthResponse",
     "LogoutResponse",
     "UserResponse",

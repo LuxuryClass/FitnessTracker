@@ -31,6 +31,7 @@ interface RequestOptions {
   method?: RequestMethod;
   body?: unknown;
   accessToken?: string;
+  credentials?: RequestCredentials;
 }
 
 const request = async <TResponse>(
@@ -57,6 +58,7 @@ const request = async <TResponse>(
     method: options.method ?? "GET",
     headers,
     body: requestBody,
+    credentials: options.credentials,
   });
 
   if (response.status === 204) {
@@ -93,9 +95,8 @@ export interface AuthUser {
   updated_at: string;
 }
 
-interface TokenPairResponse {
+interface AccessTokenResponse {
   access_token: string;
-  refresh_token: string;
   token_type: "bearer";
 }
 
@@ -108,7 +109,7 @@ export interface UpdateProfilePayload {
   weight?: number | string;
 }
 
-interface AuthResponse extends TokenPairResponse {
+interface AuthResponse extends AccessTokenResponse {
   user: AuthUser;
 }
 
@@ -123,7 +124,6 @@ export interface RegisterPayload extends LoginPayload {
 
 export interface StoredTokens {
   accessToken: string;
-  refreshToken: string;
   tokenType: "bearer";
 }
 
@@ -141,9 +141,8 @@ export interface RecentProgressItem {
   previous_max_weight_kg: number | string | null;
 }
 
-const mapTokens = (pair: TokenPairResponse): StoredTokens => ({
+const mapTokens = (pair: AccessTokenResponse): StoredTokens => ({
   accessToken: pair.access_token,
-  refreshToken: pair.refresh_token,
   tokenType: pair.token_type,
 });
 
@@ -157,6 +156,7 @@ export const authApi = {
     const response = await request<AuthResponse>("/auth/login", {
       method: "POST",
       body: payload,
+      credentials: "include",
     });
     return mapAuthResult(response);
   },
@@ -165,14 +165,15 @@ export const authApi = {
     const response = await request<AuthResponse>("/auth/register", {
       method: "POST",
       body: payload,
+      credentials: "include",
     });
     return mapAuthResult(response);
   },
 
-  async refresh(refreshToken: string): Promise<StoredTokens> {
-    const response = await request<TokenPairResponse>("/auth/refresh", {
+  async refresh(): Promise<StoredTokens> {
+    const response = await request<AccessTokenResponse>("/auth/refresh", {
       method: "POST",
-      body: { refresh_token: refreshToken },
+      credentials: "include",
     });
 
     return mapTokens(response);
@@ -182,6 +183,7 @@ export const authApi = {
     await request<{ detail: string }>("/auth/logout", {
       method: "POST",
       accessToken,
+      credentials: "include",
     });
   },
 

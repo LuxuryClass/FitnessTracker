@@ -8,7 +8,7 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from uuid import uuid4
 
 from app.services.auth_service import auth_service
-from app.schemas.auth import RegisterRequest, LoginRequest, RefreshRequest
+from app.schemas.auth import RegisterRequest, LoginRequest
 from app.core.exceptions import AlreadyExistsException, UnauthorizedException
 from tests.conftest import create_mock_user_response
 
@@ -49,11 +49,11 @@ async def test_register_success(mock_db_session, mock_user):
 
                 with patch("app.services.auth_service.create_token_pair") as mock_tokens:
                     mock_tokens.return_value = ("access_token", "refresh_token")
-                    result = await auth_service.register(db=mock_db_session, payload=request)
+                    auth_response, refresh_token = await auth_service.register(db=mock_db_session, payload=request)
 
-    assert result.access_token == "access_token"
-    assert result.refresh_token == "refresh_token"
-    assert result.user.email == mock_user.email
+    assert auth_response.access_token == "access_token"
+    assert refresh_token == "refresh_token"
+    assert auth_response.user.email == mock_user.email
     mock_repo.create.assert_awaited_once_with(
         db=mock_db_session,
         email="new@example.com",
@@ -116,9 +116,10 @@ async def test_login_success(mock_db_session, mock_user):
                 mock_tokens.return_value = ("access_token", "refresh_token")
                 with patch("app.services.auth_service.build_user_response") as mock_build:
                     mock_build.return_value = create_mock_user_response()
-                    result = await auth_service.login(db=mock_db_session, payload=request)
+                    auth_response, refresh_token = await auth_service.login(db=mock_db_session, payload=request)
 
-    assert result.access_token == "access_token"
+    assert auth_response.access_token == "access_token"
+    assert refresh_token == "refresh_token"
 
 
 @pytest.mark.asyncio
@@ -173,8 +174,6 @@ async def test_refresh_success(mock_db_session, mock_user):
         - Генерируется новая пара токенов.
     """
     refresh_token = "valid_refresh_token"
-    request = RefreshRequest(refresh_token=refresh_token)
-
     with patch("app.services.auth_service.decode_jwt_token") as mock_decode:
         mock_decode.return_value = {
             "type": "refresh",
@@ -187,10 +186,13 @@ async def test_refresh_success(mock_db_session, mock_user):
                 mock_repo.get_by_id = AsyncMock(return_value=mock_user)
                 with patch("app.services.auth_service.create_token_pair") as mock_tokens:
                     mock_tokens.return_value = ("new_access", "new_refresh")
-                    result = await auth_service.refresh(db=mock_db_session, payload=request)
+                    token_response, new_refresh_token = await auth_service.refresh(
+                        db=mock_db_session,
+                        refresh_token=refresh_token,
+                    )
 
-    assert result.access_token == "new_access"
-    assert result.refresh_token == "new_refresh"
+    assert token_response.access_token == "new_access"
+    assert new_refresh_token == "new_refresh"
 
 
 @pytest.mark.asyncio
@@ -199,7 +201,6 @@ async def test_refresh_user_not_found(mock_db_session):
     Обновление токенов, если пользователь не найден → UnauthorizedException.
     """
     refresh_token = "valid_token"
-    request = RefreshRequest(refresh_token=refresh_token)
     user_id = uuid4()
 
     with patch("app.services.auth_service.decode_jwt_token") as mock_decode:
@@ -208,7 +209,7 @@ async def test_refresh_user_not_found(mock_db_session):
             with patch("app.services.auth_service.user_repository") as mock_repo:
                 mock_repo.get_by_id = AsyncMock(return_value=None)
                 with pytest.raises(UnauthorizedException):
-                    await auth_service.refresh(db=mock_db_session, payload=request)
+                    await auth_service.refresh(db=mock_db_session, refresh_token=refresh_token)
 
 
 # ---------------------- ВЫХОД ----------------------

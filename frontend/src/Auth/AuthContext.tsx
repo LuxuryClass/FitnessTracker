@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ApiError, authApi, type AuthUser, type LoginPayload, type RegisterPayload, type StoredTokens } from "./authApi";
-import { tokenStorage } from "./tokenStorage";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -20,22 +19,17 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const shouldTryRefresh = (error: unknown): boolean =>
-  error instanceof ApiError && (error.status === 401 || error.status === 403);
-
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [tokens, setTokens] = useState<StoredTokens | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const clearAuthState = () => {
-    tokenStorage.clear();
     setTokens(null);
     setUser(null);
   };
 
   const applySession = (nextUser: AuthUser, nextTokens: StoredTokens) => {
-    tokenStorage.set(nextTokens);
     setTokens(nextTokens);
     setUser(nextUser);
   };
@@ -44,38 +38,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     let isMounted = true;
 
     const bootstrap = async () => {
-      const savedTokens = tokenStorage.get();
-      if (!savedTokens) {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      if (isMounted) {
-        setTokens(savedTokens);
-      }
-
       try {
-        const currentUser = await authApi.getMe(savedTokens.accessToken);
-        if (!isMounted) {
-          return;
-        }
-        setUser(currentUser);
-        setIsLoading(false);
-        return;
-      } catch (error) {
-        if (!shouldTryRefresh(error)) {
-          if (isMounted) {
-            clearAuthState();
-            setIsLoading(false);
-          }
-          return;
-        }
-      }
-
-      try {
-        const refreshedTokens = await authApi.refresh(savedTokens.refreshToken);
+        const refreshedTokens = await authApi.refresh();
         const currentUser = await authApi.getMe(refreshedTokens.accessToken);
 
         if (!isMounted) {
@@ -113,7 +77,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = async () => {
-    const activeTokens = tokenStorage.get();
+    const activeTokens = tokens;
     let logoutError: unknown = null;
 
     if (activeTokens?.accessToken) {
@@ -134,14 +98,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const refreshSession = async (): Promise<StoredTokens | null> => {
-    const activeTokens = tokenStorage.get();
-    if (!activeTokens?.refreshToken) {
-      return null;
-    }
-
     try {
-      const refreshedTokens = await authApi.refresh(activeTokens.refreshToken);
-      tokenStorage.set(refreshedTokens);
+      const refreshedTokens = await authApi.refresh();
       setTokens(refreshedTokens);
       return refreshedTokens;
     } catch {
