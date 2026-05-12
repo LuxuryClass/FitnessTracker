@@ -1,22 +1,31 @@
 import styles from './Styles.module.scss';
 import { memo } from 'react';
+import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 
 interface RecentCardProps {
-    title: string;
-    muscleGroup: string;
-    difference: string;
+  title: string;
+  muscleGroup: string;
+  difference: string;
+  daysCount?: number;
 }
 
+const RecentCardComponent = ({ 
+  title, 
+  muscleGroup, 
+  difference, 
+  daysCount = 7,
+}: RecentCardProps) => {
+  // Разбиваем строку в массив для MuscleGroupBadge
+  const groups = muscleGroup.split(',').map(g => g.trim());
 
-const card = ({title, muscleGroup, difference}: RecentCardProps) => {
-    return (
-        <div className={styles.card}>
-            <h1 className={styles.title}>{title}</h1>
-            <p className={styles.muscle_group}>{muscleGroup}</p>
-            <span className={styles.difference}>{difference}</span>
-            <span className={styles.days_count}>за последние 30 дней</span>
-        </div>
-    )
-}
+  return (
+    <div className={styles.card}>
+      <h3 className={styles.title}>{title}</h3>
+      <MuscleGroupBadge groups={groups} />
+      <span className={styles.difference}>{difference}</span>
+      <span className={styles.days_count}>{daysCount} дней</span>
+    </div>
+  );
+};
 
-export const RecentCard = memo(card);
+export const RecentCard = memo(RecentCardComponent);

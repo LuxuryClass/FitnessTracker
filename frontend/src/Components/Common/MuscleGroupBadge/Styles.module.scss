@@ -1,0 +1,22 @@
+.badge {
+  display: inline-block;
+  background-color: var(--grey-color);
+  padding: 4px 16px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 4px 0px #00000040 inset;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.group {
+  @include text-h3();
+}
+
+.separator {
+  opacity: 1;
+  color: #fff;
+  font-size: 14px;
+  margin: 0 6px;
+}

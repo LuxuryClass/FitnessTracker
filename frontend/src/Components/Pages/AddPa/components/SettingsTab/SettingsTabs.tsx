@@ -11,7 +11,12 @@ const startTabs = [
   { id: 'schedule' as StartType, label: 'Запланировать' },
 ];
 
-export const SettingsTab = () => {
+interface SettingsTabProps {
+  initialStartType?: StartType;
+  initialDate?: Date;
+}
+
+export const SettingsTab = ({ initialStartType, initialDate }: SettingsTabProps) => {
   const [workoutName, setWorkoutName] = useState('');
   const [startType, setStartType] = useState<StartType>('now');
   const [notes, setNotes] = useState('');
@@ -20,13 +25,28 @@ export const SettingsTab = () => {
   const [scheduleTime, setScheduleTime] = useState('');
 
   useEffect(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    setScheduleDate(`${year}-${month}-${day}`);
-    setScheduleTime('19:30');
-  }, []);
+  const date = initialDate || new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  setScheduleTime(`${hours}:${minutes}`);
+  
+  setScheduleDate(`${year}-${month}-${day}`);
+  setScheduleTime(`${hours}:${minutes}`); 
+}, [initialDate]);
+
+  useEffect(() => {
+    if (initialStartType === 'schedule') {
+      const timer = setTimeout(() => {
+        setStartType('schedule');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [initialStartType]);
 
   const formatDateForDisplay = (dateStr: string) => {
     if (!dateStr) return '';

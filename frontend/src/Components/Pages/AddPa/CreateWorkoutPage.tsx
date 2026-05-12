@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom';
 import styles from './Styles.module.scss';
 import { useState } from 'react';
 import { SettingsTab } from './components/SettingsTab/SettingsTabs';
@@ -13,12 +14,21 @@ const tabs = [
 ];
 
 const CreateWorkoutPage = () => {
+  const location = useLocation();
+  const passedDate = (location.state as any)?.scheduleDate as Date | undefined;
+  const passedStartType = (location.state as any)?.startType as string | undefined;
+
   const [activeTab, setActiveTab] = useState<TabType>('settings');
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'settings':
-        return <SettingsTab />;
+        return (
+          <SettingsTab 
+            initialStartType={passedStartType === 'schedule' ? 'schedule' : 'now'}
+            initialDate={passedDate}
+          />
+        );
       case 'exercises':
         return <div className={styles.placeholder}>Упражнения</div>;
       case 'preview':

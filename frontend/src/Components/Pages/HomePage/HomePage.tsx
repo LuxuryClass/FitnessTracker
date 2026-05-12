@@ -94,6 +94,25 @@ const HomePage = () => {
         <MuscleAccentComponent className={styles.accentSection_component}/>
       </div>
 
+    {/* Тестовые карточки
+    <div className={styles.testCards}>
+      <RecentCard
+        title="Жим лёжа"
+        muscleGroup="Грудь"
+        difference="+5кг"
+      />
+      <RecentCard
+        title="Приседания"
+        muscleGroup="Ноги, Ягодицы"
+        difference="+10кг"
+      />
+      <RecentCard
+        title="Тяга штанги"
+        muscleGroup="Спина, Бицепс"
+        difference="+7.5кг"
+      />
+    </div> */}
+
       
     </main>
   );

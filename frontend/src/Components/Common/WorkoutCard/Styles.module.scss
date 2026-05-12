@@ -1,0 +1,76 @@
+.card {
+  background: var(--Dark-grey-color, #1a1a1a);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.cardContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.topRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px; 
+  margin-bottom: 4px;
+}
+
+.dateText {
+  font-size: 14px;
+  color: var(--Accent-grey-color, #888);
+}
+
+.time {
+  font-size: 14px;
+  color: var(--Accent-grey-color, #888);
+  flex-shrink: 0;
+}
+
+.title {
+  @include text_h1();
+  text-align: start;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bottomRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+  overflow: hidden;
+  flex-wrap: wrap;
+}
+
+.arrow {
+  flex-shrink: 0;
+  color: var(--Accent-grey-color, #888);
+  display: flex;
+  align-items: center;
+}
+
+.count {
+  font-size: 14px;
+  color: var(--Accent-grey-color, #888);
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.countIcon {
+  flex-shrink: 0;
+}

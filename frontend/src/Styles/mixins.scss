@@ -83,3 +83,10 @@
   opacity: 0.8;
 }
 
+@mixin staggerAnimation($delay: 0.07s, $count: 10) {
+  @for $i from 1 through $count {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * $delay - $delay};
+    }
+  }
+}

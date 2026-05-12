@@ -2,8 +2,9 @@
 
 .page {
   @include scrollable();
+  height: 100vh;
   padding-top: var(--padding-top);
-  padding-bottom: 85px;
+  padding-bottom: 20px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -13,11 +14,101 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 8px;
+  animation: fadeInDown 0.25s ease-out;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .title {
   font-size: 20px;
   font-weight: 700;
   color: #fff;
+}
+
+// Календарь — pop-in как аватарка
+.calendarWrapper {
+  opacity: 0;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.workoutsSection {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  @include text_h2();
+  color: var(--Primary-color);
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out 0.2s forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.workoutsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+// Карточки — по порядку
+.workoutCard {
+  opacity: 0;
+  animation: slideIn 0.3s ease-out forwards;
+  
+  &:nth-child(1) { animation-delay: 0.25s; }
+  &:nth-child(2) { animation-delay: 0.32s; }
+  &:nth-child(3) { animation-delay: 0.39s; }
+  &:nth-child(4) { animation-delay: 0.46s; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.emptyText {
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 34px;
+  letter-spacing: 0%;
+  text-align: center;
+  color: var(--Accent-grey-color, #888);
+  padding: 16px 0;
+  justify-self: center;
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out 0.3s forwards;
+}
+
+.planLink {
+  display: flex;
+  align-items: end;
+  justify-content: end;
+  gap: 6px;
+  color: var(--Primary-color, #9FDA16);
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out 0.5s forwards;
+  
+  &:hover { opacity: 0.8; }
+  &:active { opacity: 0.6; }
+}
+
+.planArrow {
+  flex-shrink: 0;
 }

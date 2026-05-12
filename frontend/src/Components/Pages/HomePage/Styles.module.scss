@@ -12,6 +12,12 @@
   flex-shrink: 0;
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .minicards {
   display: flex;
   justify-content: center;
@@ -29,13 +35,6 @@
   }
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
 .accentSection {
 
   &_title {
@@ -43,4 +42,12 @@
     color: var(--Accent-grey-color);
     padding-bottom: 8px;
   }
+}
+
+.testCards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  padding-bottom: 20px;
 }
