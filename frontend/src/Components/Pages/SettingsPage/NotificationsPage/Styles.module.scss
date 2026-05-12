@@ -1,5 +1,3 @@
-@import '@styles/mixins.scss';
-
 .page {
   @include scrollable();
   padding-top: var(--padding-top);
