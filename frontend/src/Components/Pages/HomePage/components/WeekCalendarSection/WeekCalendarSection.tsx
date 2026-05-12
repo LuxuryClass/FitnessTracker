@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';;
 import styles from './Styles.module.scss';
 import cn from 'classnames';
-import { WeekCalendar } from '@/Components/UI/WeekCalendar/WeekCalendar';
+import { WeekCalendar } from '@/Components/Common/WeekCalendar/WeekCalendar';
 
 interface WeekCalendarSectionProps {
   plannedDates?: Date[];
@@ -28,6 +28,7 @@ const WeekCalendarSectionComponent = ({
           Расписание <span className={styles.arrow}>›</span>
         </h2>
       </div>
+      
       <WeekCalendar plannedDates={plannedDates} completedDates={completedDates} />
     </div>
   );

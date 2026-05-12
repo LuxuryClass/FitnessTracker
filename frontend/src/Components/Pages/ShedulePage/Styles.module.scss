@@ -1,0 +1,23 @@
+@import '@styles/mixins.scss';
+
+.page {
+  @include scrollable();
+  padding-top: var(--padding-top);
+  padding-bottom: 85px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}

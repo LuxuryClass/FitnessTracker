@@ -12,6 +12,7 @@ import SettingsPage from '@/Components/Pages/SettingsPage/SettingsPage';
 import EditProfilePage from '@/Components/Pages/SettingsPage/EditProfilePage/EditProfilePage';
 import NotificationsPage from '@/Components/Pages/SettingsPage/NotificationsPage/NotificationPage';
 import PrivacyPage from '@/Components/Pages/SettingsPage/PrivacyPage/PrivacyPage';
+import SchedulePage from '@/Components/Pages/ShedulePage/ShedulePage';
 
 export function App() {
   return (
@@ -36,6 +37,8 @@ export function App() {
             <Route path="/edit-profile" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+
+            <Route path="/schedule" element={<SchedulePage />} />
           </Route>
         </Routes>
       </BrowserRouter>

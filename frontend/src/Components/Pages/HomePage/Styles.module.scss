@@ -3,13 +3,18 @@
   padding-top: var(--padding-top);
   display: flex;
   flex-direction: column;
-  height: 100vh; // ← ограничиваем высоту
-  padding-bottom: 90px;
+  height: 100vh;
+  padding-bottom: 120px;
   gap: 20px;
+}
+
+.page > * {
+  flex-shrink: 0;
 }
 
 .minicards {
   display: flex;
+  justify-content: center;
   flex-wrap: nowrap;
   gap: 8.5px;
 }
@@ -31,18 +36,11 @@
   margin-bottom: 12px;
 }
 
-.shedule_title {
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 34px;
-  letter-spacing: 0%;
-  color: var(--Primary-color);
-}
+.accentSection {
 
-.arrow {
-  font-size: 28px;
-  font-weight: 300;
-  color: var(--Primary-color);
-  line-height: 1;
-  margin-right: 4px;
+  &_title {
+    @include text_h2();
+    color: var(--Accent-grey-color);
+    padding-bottom: 8px;
+  }
 }

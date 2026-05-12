@@ -1,6 +1,6 @@
 import styles from './Styles.module.scss';
 import { memo } from 'react';
-import { RecentCard } from '../RecentProgressCard/RecentProgressCard';
+import { RecentCard } from '../../../../Common/RecentProgressCard/RecentProgressCard';
 import classNames from 'classnames';
 
 export interface CardData {

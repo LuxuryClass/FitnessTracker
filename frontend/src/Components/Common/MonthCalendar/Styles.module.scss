@@ -1,0 +1,165 @@
+.calendar {
+  width: 100%;
+  max-width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+
+    &__calendar {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    box-shadow:
+        0px 1px 2px 0px rgba(255, 255, 255, 0.2) inset,
+        0px 8px 24px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(40px);
+    padding: 22px 10px;
+    }
+}
+
+.monthHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.monthTitle {
+    flex: 1;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 34px;
+    letter-spacing: 0%;
+    color: #fff;
+    text-align: center;
+}
+
+.arrow {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.dayNames {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.dayName {
+  text-align: center;
+  color: var(--Accent-grey-color, #888);
+
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 34px;
+    letter-spacing: 0%;
+}
+
+.daysWrapper {
+  width: 100%;
+  overflow: hidden;
+  touch-action: pan-y;
+  position: relative;
+}
+
+.sliderTrack {
+  display: flex;
+  width: 300%;
+  transform: translateX(-33.3333%);
+  transition: transform 0.3s ease;
+
+  &_left {
+    transform: translateX(-66.6666%);
+  }
+
+  &_right {
+    transform: translateX(0%);
+  }
+
+  &_noTransition {
+    transition: none;
+  }
+}
+
+.monthSlide {
+  width: 33.3333%;
+  flex-shrink: 0;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.dayCell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day {
+  width: 35px;
+  height: 35px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+
+  transition: background 0.15s ease;
+
+  &_today {
+    background: var(--Accent-2-color, #2a2a2a);
+  }
+
+  &_selected {
+    background: var(
+      --Primary-color,
+      #9FDA16
+    );
+  }
+}
+
+.dayNumber {
+    @include text_h2();
+    font-weight: 400;
+  color: #fff;
+  line-height: 1;
+
+  .day_otherMonth & {
+    color: var(--Accent-grey-color);
+  }
+
+
+
+  &_selected {
+    color: #080A00;
+    font-weight: 700;
+  }
+}
+
+.dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--Primary-color);
+
+  &_selected {
+    background: #000;
+  }
+}

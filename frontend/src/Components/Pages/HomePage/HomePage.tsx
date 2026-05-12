@@ -1,6 +1,6 @@
 import { Header } from './components/Header/header';
 import { CardData, RecentCardsList } from './components/RecentProgress/RecentProgress';
-import { StatCard } from './components/StatsCards/StatsCards';
+import { StatCard } from '../../Common/StatCard/StatCard';
 import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
 import { WeekCalendarSection } from './components/WeekCalendarSection/WeekCalendarSection';
@@ -8,6 +8,7 @@ import { useAuth } from '@/Auth';
 import { authApi, RecentProgressItem } from '@/Auth/authApi';
 import defaultAvatar from '/masscot-main.png';
 import { useEffect, useState } from 'react';
+import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
 
 const plannedDates = [
   new Date(2026, 3, 21),
@@ -88,6 +89,12 @@ const HomePage = () => {
         <RecentCardsList className={styles.recent_list} cards={recentProgress} />
       )}
 
+      <div className={styles.accentSection}>
+        <h2 className={styles.accentSection_title}>Акцент на мышцы на этой неделе</h2>
+        <MuscleAccentComponent className={styles.accentSection_component}/>
+      </div>
+
+      
     </main>
   );
 }
