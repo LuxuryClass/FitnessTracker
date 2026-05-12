@@ -6,7 +6,7 @@ import styles from './Styles.module.scss';
 
 const SchedulePage = () => {
   const today = new Date();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [_, setSelectedDate] = useState<Date | null>(null);
 
   const plannedDates = [
     new Date(today.getFullYear(), today.getMonth(), 2),
@@ -31,8 +31,6 @@ const SchedulePage = () => {
       </div>
 
       <MonthCalendar
-        year={today.getFullYear()}
-        month={today.getMonth()}
         plannedDates={plannedDates}
         completedDates={completedDates}
         onDayClick={handleDayClick}
