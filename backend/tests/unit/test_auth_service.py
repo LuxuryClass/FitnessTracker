@@ -16,7 +16,7 @@ from tests.conftest import create_mock_user_response
 # ---------------------- РЕГИСТРАЦИЯ ----------------------
 
 @pytest.mark.asyncio
-async def test_register_success(mock_db_session, mock_user):
+async def test_register_success(mock_db_session, mock_user, mock_redis):
     """
     Успешная регистрация нового пользователя.
 
@@ -49,11 +49,21 @@ async def test_register_success(mock_db_session, mock_user):
 
                 with patch("app.services.auth_service.create_token_pair") as mock_tokens:
                     mock_tokens.return_value = ("access_token", "refresh_token")
-                    auth_response, refresh_token = await auth_service.register(db=mock_db_session, payload=request)
+                    with patch.object(auth_service, "_store_refresh_session", new_callable=AsyncMock) as mock_store_refresh:
+                        auth_response, refresh_token = await auth_service.register(
+                            db=mock_db_session,
+                            redis=mock_redis,
+                            payload=request,
+                        )
 
     assert auth_response.access_token == "access_token"
     assert refresh_token == "refresh_token"
     assert auth_response.user.email == mock_user.email
+    mock_store_refresh.assert_awaited_once_with(
+        redis=mock_redis,
+        user_id=mock_user.id,
+        refresh_token="refresh_token",
+    )
     mock_repo.create.assert_awaited_once_with(
         db=mock_db_session,
         email="new@example.com",
@@ -64,7 +74,7 @@ async def test_register_success(mock_db_session, mock_user):
 
 
 @pytest.mark.asyncio
-async def test_register_duplicate_email(mock_db_session):
+async def test_register_duplicate_email(mock_db_session, mock_redis):
     """
     Регистрация с уже существующим email → AlreadyExistsException.
 
@@ -77,11 +87,11 @@ async def test_register_duplicate_email(mock_db_session):
         mock_repo.get_by_email = AsyncMock(return_value=MagicMock())
         mock_repo.get_by_name = AsyncMock(return_value=None)
         with pytest.raises(AlreadyExistsException):
-            await auth_service.register(db=mock_db_session, payload=request)
+            await auth_service.register(db=mock_db_session, redis=mock_redis, payload=request)
 
 
 @pytest.mark.asyncio
-async def test_register_duplicate_username(mock_db_session):
+async def test_register_duplicate_username(mock_db_session, mock_redis):
     """
     Регистрация с уже занятым name → AlreadyExistsException.
 
@@ -93,13 +103,13 @@ async def test_register_duplicate_username(mock_db_session):
         mock_repo.get_by_email = AsyncMock(return_value=None)
         mock_repo.get_by_name = AsyncMock(return_value=MagicMock())
         with pytest.raises(AlreadyExistsException):
-            await auth_service.register(db=mock_db_session, payload=request)
+            await auth_service.register(db=mock_db_session, redis=mock_redis, payload=request)
 
 
 # ---------------------- ЛОГИН ----------------------
 
 @pytest.mark.asyncio
-async def test_login_success(mock_db_session, mock_user):
+async def test_login_success(mock_db_session, mock_user, mock_redis):
     """
     Успешный вход – возвращается пара токенов и данные пользователя.
 
@@ -116,14 +126,24 @@ async def test_login_success(mock_db_session, mock_user):
                 mock_tokens.return_value = ("access_token", "refresh_token")
                 with patch("app.services.auth_service.build_user_response") as mock_build:
                     mock_build.return_value = create_mock_user_response()
-                    auth_response, refresh_token = await auth_service.login(db=mock_db_session, payload=request)
+                    with patch.object(auth_service, "_store_refresh_session", new_callable=AsyncMock) as mock_store_refresh:
+                        auth_response, refresh_token = await auth_service.login(
+                            db=mock_db_session,
+                            redis=mock_redis,
+                            payload=request,
+                        )
 
     assert auth_response.access_token == "access_token"
     assert refresh_token == "refresh_token"
+    mock_store_refresh.assert_awaited_once_with(
+        redis=mock_redis,
+        user_id=mock_user.id,
+        refresh_token="refresh_token",
+    )
 
 
 @pytest.mark.asyncio
-async def test_login_wrong_password(mock_db_session, mock_user):
+async def test_login_wrong_password(mock_db_session, mock_user, mock_redis):
     """
     Вход с неправильным паролем → UnauthorizedException.
     """
@@ -132,11 +152,11 @@ async def test_login_wrong_password(mock_db_session, mock_user):
         mock_repo.get_by_email = AsyncMock(return_value=mock_user)
         with patch("app.services.auth_service.verify_password", return_value=False):
             with pytest.raises(UnauthorizedException):
-                await auth_service.login(db=mock_db_session, payload=request)
+                await auth_service.login(db=mock_db_session, redis=mock_redis, payload=request)
 
 
 @pytest.mark.asyncio
-async def test_login_user_not_found(mock_db_session):
+async def test_login_user_not_found(mock_db_session, mock_redis):
     """
     Вход с несуществующим email → UnauthorizedException.
     """
@@ -144,11 +164,11 @@ async def test_login_user_not_found(mock_db_session):
     with patch("app.services.auth_service.user_repository") as mock_repo:
         mock_repo.get_by_email = AsyncMock(return_value=None)
         with pytest.raises(UnauthorizedException):
-            await auth_service.login(db=mock_db_session, payload=request)
+            await auth_service.login(db=mock_db_session, redis=mock_redis, payload=request)
 
 
 @pytest.mark.asyncio
-async def test_login_inactive_user(mock_db_session, mock_user):
+async def test_login_inactive_user(mock_db_session, mock_user, mock_redis):
     """
     Вход деактивированного пользователя → UnauthorizedException.
     """
@@ -158,13 +178,13 @@ async def test_login_inactive_user(mock_db_session, mock_user):
         mock_repo.get_by_email = AsyncMock(return_value=mock_user)
         with patch("app.services.auth_service.verify_password", return_value=True):
             with pytest.raises(UnauthorizedException):
-                await auth_service.login(db=mock_db_session, payload=request)
+                await auth_service.login(db=mock_db_session, redis=mock_redis, payload=request)
 
 
 # ---------------------- ОБНОВЛЕНИЕ ТОКЕНОВ ----------------------
 
 @pytest.mark.asyncio
-async def test_refresh_success(mock_db_session, mock_user):
+async def test_refresh_success(mock_db_session, mock_user, mock_redis):
     """
     Успешное обновление токенов по валидному refresh-токену.
 
@@ -182,21 +202,33 @@ async def test_refresh_success(mock_db_session, mock_user):
             "exp": 9999999999
         }
         with patch("app.services.auth_service.ensure_token_type"):
-            with patch("app.services.auth_service.user_repository") as mock_repo:
-                mock_repo.get_by_id = AsyncMock(return_value=mock_user)
-                with patch("app.services.auth_service.create_token_pair") as mock_tokens:
-                    mock_tokens.return_value = ("new_access", "new_refresh")
-                    token_response, new_refresh_token = await auth_service.refresh(
-                        db=mock_db_session,
-                        refresh_token=refresh_token,
-                    )
+            with patch("app.services.auth_service.is_refresh_session_active", new_callable=AsyncMock) as mock_session_active:
+                mock_session_active.return_value = True
+                with patch("app.services.auth_service.user_repository") as mock_repo:
+                    mock_repo.get_by_id = AsyncMock(return_value=mock_user)
+                    with patch("app.services.auth_service.create_token_pair") as mock_tokens:
+                        mock_tokens.return_value = ("new_access", "new_refresh")
+                        with patch("app.services.auth_service.revoke_refresh_session", new_callable=AsyncMock) as mock_revoke:
+                            with patch.object(auth_service, "_store_refresh_session", new_callable=AsyncMock) as mock_store_refresh:
+                                token_response, new_refresh_token = await auth_service.refresh(
+                                    db=mock_db_session,
+                                    redis=mock_redis,
+                                    refresh_token=refresh_token,
+                                )
 
     assert token_response.access_token == "new_access"
     assert new_refresh_token == "new_refresh"
+    mock_session_active.assert_awaited_once_with(mock_redis, "jti")
+    mock_revoke.assert_awaited_once_with(redis=mock_redis, token_jti="jti")
+    mock_store_refresh.assert_awaited_once_with(
+        redis=mock_redis,
+        user_id=mock_user.id,
+        refresh_token="new_refresh",
+    )
 
 
 @pytest.mark.asyncio
-async def test_refresh_user_not_found(mock_db_session):
+async def test_refresh_user_not_found(mock_db_session, mock_redis):
     """
     Обновление токенов, если пользователь не найден → UnauthorizedException.
     """
@@ -206,10 +238,32 @@ async def test_refresh_user_not_found(mock_db_session):
     with patch("app.services.auth_service.decode_jwt_token") as mock_decode:
         mock_decode.return_value = {"type": "refresh", "sub": str(user_id), "jti": "jti", "exp": 9999}
         with patch("app.services.auth_service.ensure_token_type"):
-            with patch("app.services.auth_service.user_repository") as mock_repo:
-                mock_repo.get_by_id = AsyncMock(return_value=None)
-                with pytest.raises(UnauthorizedException):
-                    await auth_service.refresh(db=mock_db_session, refresh_token=refresh_token)
+            with patch("app.services.auth_service.is_refresh_session_active", new_callable=AsyncMock) as mock_session_active:
+                mock_session_active.return_value = True
+                with patch("app.services.auth_service.user_repository") as mock_repo:
+                    mock_repo.get_by_id = AsyncMock(return_value=None)
+                    with pytest.raises(UnauthorizedException):
+                        await auth_service.refresh(db=mock_db_session, redis=mock_redis, refresh_token=refresh_token)
+
+
+@pytest.mark.asyncio
+async def test_refresh_revoked_session(mock_db_session, mock_user, mock_redis):
+    """
+    Обновление токенов с отозванной refresh-сессией → UnauthorizedException.
+    """
+    refresh_token = "revoked_refresh_token"
+    with patch("app.services.auth_service.decode_jwt_token") as mock_decode:
+        mock_decode.return_value = {
+            "type": "refresh",
+            "sub": str(mock_user.id),
+            "jti": "revoked-jti",
+            "exp": 9999999999,
+        }
+        with patch("app.services.auth_service.ensure_token_type"):
+            with patch("app.services.auth_service.is_refresh_session_active", new_callable=AsyncMock) as mock_session_active:
+                mock_session_active.return_value = False
+                with pytest.raises(UnauthorizedException, match="Refresh токен отозван"):
+                    await auth_service.refresh(db=mock_db_session, redis=mock_redis, refresh_token=refresh_token)
 
 
 # ---------------------- ВЫХОД ----------------------
@@ -224,13 +278,24 @@ async def test_logout_success(mock_redis):
         - add_token_to_blacklist вызывается с правильными параметрами.
     """
     access_token = "some_access_token"
+    refresh_token = "some_refresh_token"
 
     with patch("app.services.auth_service.decode_jwt_token") as mock_decode:
-        mock_decode.return_value = {"type": "access", "jti": "unique-jti", "exp": 9999999999}
+        mock_decode.side_effect = [
+            {"type": "access", "jti": "unique-jti", "exp": 9999999999},
+            {"type": "refresh", "jti": "refresh-jti", "exp": 9999999999, "sub": str(uuid4())},
+        ]
         with patch("app.services.auth_service.ensure_token_type"):
             with patch("app.services.auth_service.add_token_to_blacklist") as mock_blacklist:
                 mock_blacklist.return_value = None   # AsyncMock
-                result = await auth_service.logout(redis=mock_redis, access_token=access_token)
+                with patch("app.services.auth_service.revoke_refresh_session") as mock_revoke:
+                    mock_revoke.return_value = None
+                    result = await auth_service.logout(
+                        redis=mock_redis,
+                        access_token=access_token,
+                        refresh_token=refresh_token,
+                    )
 
     assert result.detail == "Вы успешно вышли из системы."
     mock_blacklist.assert_awaited_once_with(mock_redis, "unique-jti", 9999999999)
+    mock_revoke.assert_awaited_once_with(redis=mock_redis, token_jti="refresh-jti")

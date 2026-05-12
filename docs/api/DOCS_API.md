@@ -6,6 +6,7 @@
 - Формат запросов и ответов: `application/json`
 - Защищенные endpoint требуют заголовок:
   - `Authorization: Bearer <access_token>`
+- Refresh-токен хранится в `HttpOnly` cookie и отправляется браузером автоматически.
 - Swagger:
   - `GET /docs`
   - `GET /redoc`
@@ -63,7 +64,6 @@
 ```json
 {
   "access_token": "<jwt_access>",
-  "refresh_token": "<jwt_refresh>",
   "token_type": "bearer",
   "user": {
     "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
@@ -86,6 +86,10 @@
   }
 }
 ```
+
+**Set-Cookie**
+
+- В ответе backend выставляет `HttpOnly` cookie с refresh-токеном.
 
 **Ошибки**
 
@@ -112,7 +116,6 @@
 ```json
 {
   "access_token": "<jwt_access>",
-  "refresh_token": "<jwt_refresh>",
   "token_type": "bearer",
   "user": {
     "id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
@@ -136,6 +139,10 @@
 }
 ```
 
+**Set-Cookie**
+
+- В ответе backend выставляет `HttpOnly` cookie с refresh-токеном.
+
 **Ошибки**
 
 - `401` — неверный email/пароль, деактивированный пользователь
@@ -145,36 +152,34 @@
 
 ### 1.3 `POST /api/auth/refresh`
 
-Обновление пары токенов по refresh-токену.
+Обновление access-токена по refresh-токену из `HttpOnly` cookie.
 
-**Request body**
+**Cookies**
 
-```json
-{
-  "refresh_token": "<jwt_refresh>"
-}
-```
+- `refresh_token` (имя cookie определяется backend-настройкой)
 
 **Response 200**
 
 ```json
 {
   "access_token": "<new_jwt_access>",
-  "refresh_token": "<new_jwt_refresh>",
   "token_type": "bearer"
 }
 ```
 
+**Set-Cookie**
+
+- В ответе backend выставляет новую `HttpOnly` cookie с ротированным refresh-токеном.
+
 **Ошибки**
 
-- `401` — невалидный токен, неверный тип токена, пользователь не найден/деактивирован
-- `422` — ошибка валидации
+- `401` — refresh cookie отсутствует, токен невалидный/просроченный, неверный тип токена, refresh-сессия отозвана, пользователь не найден/деактивирован
 
 ---
 
 ### 1.4 `POST /api/auth/logout`
 
-Логаут. Кладет текущий access-токен в blacklist до срока его истечения.
+Логаут. Кладет текущий access-токен в Redis blacklist до срока его истечения (best-effort), отзывает refresh-сессию в Redis (если refresh cookie передана) и очищает refresh cookie.
 
 **Headers**
 
@@ -187,6 +192,10 @@
   "detail": "Вы успешно вышли из системы."
 }
 ```
+
+**Set-Cookie**
+
+- В ответе backend удаляет refresh cookie.
 
 **Ошибки**
 
@@ -1049,8 +1058,8 @@ null
 ## Быстрый рабочий сценарий для frontend
 
 1. Пользователь регистрируется (`POST /api/auth/register`) или логинится (`POST /api/auth/login`).
-2. Frontend сохраняет `access_token` и `refresh_token`.
-3. При истечении `access_token` вызывает `POST /api/auth/refresh`.
+2. Frontend сохраняет только `access_token` (в памяти), refresh хранится в `HttpOnly` cookie.
+3. При истечении `access_token` вызывает `POST /api/auth/refresh` (браузер отправляет refresh cookie автоматически).
 4. Frontend получает профиль через `GET /api/users/me`.
 5. Frontend получает данные для главного экрана:
    - Метрики пользователя из `GET /api/users/me` (`streak_weeks`, `weekly_volume_tons`, `weekly_sessions_progress`)

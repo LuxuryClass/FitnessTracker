@@ -41,8 +41,9 @@ async def register(
     payload: RegisterRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
 ) -> AuthResponse:
-    auth_response, refresh_token = await auth_service.register(db, payload)
+    auth_response, refresh_token = await auth_service.register(db=db, redis=redis, payload=payload)
     _set_refresh_cookie(response, refresh_token)
     return auth_response
 
@@ -52,8 +53,9 @@ async def login(
     payload: LoginRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
 ) -> AuthResponse:
-    auth_response, refresh_token = await auth_service.login(db, payload)
+    auth_response, refresh_token = await auth_service.login(db=db, redis=redis, payload=payload)
     _set_refresh_cookie(response, refresh_token)
     return auth_response
 
@@ -63,21 +65,28 @@ async def refresh(
     request: Request,
     response: Response,
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
 ) -> AccessTokenResponse:
     refresh_token = request.cookies.get(settings.auth_refresh_cookie_name)
     if not refresh_token:
         raise UnauthorizedException("Refresh cookie отсутствует. Выполните вход заново.")
-    token_response, new_refresh_token = await auth_service.refresh(db, refresh_token)
+    token_response, new_refresh_token = await auth_service.refresh(
+        db=db,
+        redis=redis,
+        refresh_token=refresh_token,
+    )
     _set_refresh_cookie(response, new_refresh_token)
     return token_response
 
 
 @router.post("/logout", response_model=LogoutResponse, status_code=status.HTTP_200_OK)
 async def logout(
+    request: Request,
     response: Response,
     access_token: str = Depends(get_bearer_token),
     redis: Redis = Depends(get_redis),
 ) -> LogoutResponse:
-    logout_response = await auth_service.logout(redis=redis, access_token=access_token)
+    refresh_token = request.cookies.get(settings.auth_refresh_cookie_name)
+    logout_response = await auth_service.logout(redis=redis, access_token=access_token, refresh_token=refresh_token)
     _clear_refresh_cookie(response)
     return logout_response
