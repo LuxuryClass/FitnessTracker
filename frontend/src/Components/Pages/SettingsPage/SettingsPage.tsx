@@ -45,15 +45,6 @@ const SettingsPage = () => {
     setAvatarSrc(user?.avatar_url ?? defaultAvatar);
   }, [user?.avatar_url]);
 
-  useEffect(() => {
-    return () => {
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
-      }
-    };
-  }, []);
-
   const clearPreviewUrl = () => {
     if (!previewUrlRef.current) {
       return;
@@ -130,10 +121,14 @@ const SettingsPage = () => {
       return;
     }
 
+    const previousAvatarUrl = user?.avatar_url ?? null;
     clearPreviewUrl();
     const localPreviewUrl = URL.createObjectURL(file);
     previewUrlRef.current = localPreviewUrl;
     setAvatarSrc(localPreviewUrl);
+    if (user) {
+      updateUser({ ...user, avatar_url: localPreviewUrl });
+    }
 
     setIsUploadingAvatar(true);
     try {
@@ -145,8 +140,11 @@ const SettingsPage = () => {
       setAvatarSrc(updatedUser.avatar_url ?? defaultAvatar);
       clearPreviewUrl();
     } catch (error) {
+      if (user) {
+        updateUser({ ...user, avatar_url: previousAvatarUrl });
+      }
       clearPreviewUrl();
-      setAvatarSrc(user?.avatar_url ?? defaultAvatar);
+      setAvatarSrc(previousAvatarUrl ?? defaultAvatar);
       if (error instanceof ApiError) {
         alert(error.message);
       } else {
