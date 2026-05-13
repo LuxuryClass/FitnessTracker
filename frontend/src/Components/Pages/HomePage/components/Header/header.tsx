@@ -4,7 +4,7 @@ import { Button } from "@/Components/UI/Button/Button";
 import activBell from "/Bell_Active.svg";
 import basicBell from "/Bell.svg";
 import cn from "classnames";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   userName: string;
@@ -24,10 +24,10 @@ const HeaderComponent = ({ userName, userAvatar, isActivBell, className }: Heade
   
   return (
     <div className={cn(styles.header, className)}>
-      <div>
+      <Link to="/settings">
         <p className={styles.greeting}>{greeting()},</p>
         <h1 className={styles.userName}>{userName}</h1>
-      </div>
+      </Link>
       <div className={styles.buttons}>
         <Button color="accent-2" className={styles.avatar_button}>
           <img className={styles.userAvatar} src={userAvatar} alt="avatar" loading="eager" decoding="async" onClick={() => navigate('/settings')}/>

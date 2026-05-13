@@ -1,5 +1,5 @@
 import { Header } from './components/Header/header';
-import { CardData, RecentCardsList } from './components/RecentProgress/RecentProgress';
+import { RecentCardData, RecentCardsList } from './components/RecentProgress/RecentProgress';
 import { StatCard } from '../../Common/StatCard/StatCard';
 import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
@@ -9,6 +9,7 @@ import { authApi, RecentProgressItem } from '@/Auth/authApi';
 import defaultAvatar from '/masscot-main.png';
 import { useEffect, useState } from 'react';
 import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
+import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
 
 const plannedDates = [
   new Date(2026, 3, 21),
@@ -20,9 +21,37 @@ const completedDates = [
   new Date(2026, 3, 20),
 ];
 
+// Тестовые тренировки для блока "Далее"
+const upcomingWorkouts = [
+  {
+    id: '1',
+    title: 'День ног',
+    time: 'Завтра, 9:00',
+    exercisesCount: 5,
+    muscleGroups: ['Ноги', 'Ягодицы'],
+    date: new Date(),
+  },
+  {
+    id: '2',
+    title: 'День спины',
+    time: '14 мая, 17:00',
+    exercisesCount: 4,
+    muscleGroups: ['Спина', 'Бицепс'],
+    date: new Date(),
+  },
+  {
+    id: '3',
+    title: 'Кардио',
+    time: '16 мая, 8:30',
+    exercisesCount: 3,
+    muscleGroups: ['Кардио'],
+    date: new Date(),
+  },
+];
+
 const HomePage = () => {
   const { user, tokens } = useAuth();
-  const [recentProgress, setRecentProgress] = useState<CardData[]>([]);
+  const [recentProgress, setRecentProgress] = useState<RecentCardData[]>([]);
 
   const userName = user?.name ?? "Пользователь";
   const userAvatar = user?.avatar_url ?? defaultAvatar;
@@ -39,7 +68,7 @@ const HomePage = () => {
 
       try {
         const data = await authApi.getRecentProgress(tokens.accessToken);
-        const mappedData: CardData[] = data.map((item: RecentProgressItem) => {
+        const mappedData: RecentCardData[] = data.map((item: RecentProgressItem) => {
           const differenceNum = Number(item.difference_kg);
           const sign = differenceNum >= 0 ? '+' : '';
           return {
@@ -61,8 +90,11 @@ const HomePage = () => {
 
   return (
     <main className={styles.page}>
+      
+      {/* Блок "Шапка" */}
       <Header className={styles.header} userName={userName} userAvatar={userAvatar}/>
 
+      {/* Блок "Ближайшая тренеровка" */}
       <TodayWorkout  title = "День жимов"
         duration = "75 мин"
         exercisesCount = {6}
@@ -77,43 +109,44 @@ const HomePage = () => {
         ]}
       />
 
+      {/* Блок "Миникарточки статистики" */}
       <div className={styles.minicards}>
         <StatCard isVisible={true} type="streak" value={streakWeeks}></StatCard>
         <StatCard isVisible={true} type="week" value={weeklyCompletedSessions} total={weeklyTotalSessions}></StatCard>
         <StatCard isVisible={true} type="totalWeight" value={weeklyVolumeTons}></StatCard>
       </div>
-
+      
+      {/* Блок "Расписание" */}
       <WeekCalendarSection plannedDates={plannedDates} completedDates={completedDates}/>
-
+        
+      {/* Блок "Недавний прогресс" */}
       {recentProgress.length > 0 && (
         <RecentCardsList className={styles.recent_list} cards={recentProgress} />
       )}
 
+      {/* Блок "Акцент на мышщы на этой неделе" */}
       <div className={styles.accentSection}>
-        <h2 className={styles.accentSection_title}>Акцент на мышцы на этой неделе</h2>
+        <h3 className={styles.accentSection_title}>Акцент на мышцы на этой неделе</h3>
         <MuscleAccentComponent className={styles.accentSection_component}/>
       </div>
 
-    {/* Тестовые карточки
-    <div className={styles.testCards}>
-      <RecentCard
-        title="Жим лёжа"
-        muscleGroup="Грудь"
-        difference="+5кг"
-      />
-      <RecentCard
-        title="Приседания"
-        muscleGroup="Ноги, Ягодицы"
-        difference="+10кг"
-      />
-      <RecentCard
-        title="Тяга штанги"
-        muscleGroup="Спина, Бицепс"
-        difference="+7.5кг"
-      />
-    </div> */}
+      {/* Блок "Далее" */}
+      <div className={styles.nextSection}>
+        <h3 className={styles.accentSection_title}>Далее</h3>
+        <div className={styles.upcomingList}>
+          {upcomingWorkouts.map(workout => (
+            <WorkoutCard
+              key={workout.id}
+              title={workout.title}
+              time={workout.time}
+              exercisesCount={workout.exercisesCount}
+              muscleGroups={workout.muscleGroups}
+              onClick={() => console.log('Открыть тренировку', workout.id)}
+            />
+          ))}
+        </div>
+      </div>
 
-      
     </main>
   );
 }

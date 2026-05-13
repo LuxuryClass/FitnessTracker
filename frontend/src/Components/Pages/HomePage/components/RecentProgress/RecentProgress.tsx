@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { RecentCard } from '../../../../Common/RecentProgressCard/RecentProgressCard';
 import classNames from 'classnames';
 
-export interface CardData {
+export interface RecentCardData {
     id: string | number;
     title: string;
     muscleGroup: string;
@@ -11,7 +11,7 @@ export interface CardData {
 }
 
 interface RecentCardsListProps {
-    cards: CardData[];
+    cards: RecentCardData[];
     className?: string;
 }
 
