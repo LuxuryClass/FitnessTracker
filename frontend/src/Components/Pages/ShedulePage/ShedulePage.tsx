@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import { MonthCalendar } from '@/Components/Common/MonthCalendar/MonthCalendar';
 import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
@@ -15,8 +16,12 @@ interface WorkoutDay {
 }
 
 const SchedulePage = () => {
+  const location = useLocation();
+  const passedDateStr = (location.state as any)?.selectedDate as string | undefined;
   const today = new Date();
-  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const [selectedDate, setSelectedDate] = useState<Date>(
+    passedDateStr ? new Date(passedDateStr) : today
+  );
 
   const workouts: WorkoutDay[] = [
     {

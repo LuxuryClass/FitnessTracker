@@ -1,11 +1,38 @@
-.calendar {
-  display: flex;
-  justify-content: space-between;
-  gap: 4px;
+.weekSlider {
   background-color: var(--Dark-grey-color);
   border-radius: 16px;
   height: 96px;
-  padding: 9px 16px;
+  padding: 10px 0;
+  overflow: hidden;
+}
+
+.daysWrapper {
+  width: 100%;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.sliderTrack {
+  display: flex;
+  width: 300%;
+  transform: translateX(-33.3333%);
+  transition: transform 0.3s ease;
+
+  &_left { transform: translateX(-66.6666%); }
+  &_right { transform: translateX(0%); }
+  &_noTransition { transition: none; }
+}
+
+.weekSlide {
+  width: 33.3333%;
+  flex-shrink: 0;
+  padding: 0 16px;
+}
+
+.daysRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
 }
 
 .day {
@@ -13,14 +40,16 @@
   flex-direction: column;
   align-items: center;
   width: 44px;
+  height: 100%;
   padding-block: 4px 7px;
   border-radius: 10px;
   transition: background-color 0.2s ease;
+  cursor: pointer;
+
+  &:active { opacity: 0.8; }
 }
 
-.day_today {
-  background: var(--Primary-color, #9FDA16);
-}
+.day_today { background: var(--Primary-color, #9FDA16); }
 
 .date_wrapper {
   display: flex;
@@ -35,9 +64,7 @@
   text-transform: uppercase;
 }
 
-.dayName_today {
-  color: #080A00;
-}
+.dayName_today { color: #080A00; }
 
 .date {
   display: flex;
@@ -48,15 +75,13 @@
   @include text_h2();
 }
 
-.date_today {
-  color: #080A00;
-}
+.date_today { color: #080A00; }
 
 .indicator {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 12px;
+  height: 16px;
 }
 
 .dot {
@@ -71,14 +96,8 @@
   background: transparent;
 }
 
-.dot_planned_today {
-  border-color: #080A00;
-}
+.dot_planned_today { border-color: #080A00; }
 
-.dot_completed {
-  background: var(--Primary-color, #9FDA16);
-}
+.dot_completed { background: var(--Primary-color, #9FDA16); }
 
-.dot_completed_today {
-  background: #080A00;
-}
+.dot_completed_today { background: #080A00; }

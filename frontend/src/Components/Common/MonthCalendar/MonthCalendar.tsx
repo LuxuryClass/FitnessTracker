@@ -234,8 +234,7 @@ const MonthCalendarComponent = ({
         {monthDays.map((day, index) => {
             const isSelectedDay =
             day.isCurrentMonth &&
-            isSameDay(day.date, selectedDate) &&
-            isSameMonth(day.date, selectedDate); // ← дополнительная проверка
+            isSameDay(day.date, selectedDate);
 
             return (
             <div key={index} className={styles.dayCell}>

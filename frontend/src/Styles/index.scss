@@ -25,6 +25,11 @@ body {
   color: $text-color;
 }
 
+Link {
+  outline: none;
+  border: none;
+  text-decoration: none;
+}
 #root {
   width: 100%;
   max-width: 420px;

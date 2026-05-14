@@ -24,7 +24,7 @@ const HeaderComponent = ({ userName, userAvatar, isActivBell, className }: Heade
   
   return (
     <div className={cn(styles.header, className)}>
-      <Link to="/settings">
+      <Link className={styles.link} to="/settings">
         <p className={styles.greeting}>{greeting()},</p>
         <h1 className={styles.userName}>{userName}</h1>
       </Link>

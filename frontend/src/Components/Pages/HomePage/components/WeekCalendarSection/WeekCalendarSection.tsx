@@ -22,9 +22,9 @@ const WeekCalendarSectionComponent = ({
   };
 
   return (
-    <div className={cn(styles.wrapper, className)} onClick={handleClick}>
+    <div className={cn(styles.wrapper, className)}>
       <div className={styles.header}>
-        <h2 className={styles.title}>
+        <h2 className={styles.title} onClick={handleClick}>
           Расписание <span className={styles.arrow}>›</span>
         </h2>
       </div>
