@@ -97,7 +97,7 @@ const WeekCalendarComponent = ({
     <div className={styles.daysRow}>
       {days.map((day) => (
         <div 
-          key={day.dayName} 
+          key={format(day.fullDate, 'yyyy-MM-dd')}
           className={cn(styles.day, day.isToday && styles.day_today)}
           onClick={() => handleDayClick(day.fullDate)}
         >

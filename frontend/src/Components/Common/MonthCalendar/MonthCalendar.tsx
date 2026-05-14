@@ -231,13 +231,14 @@ const MonthCalendarComponent = ({
     const renderMonth = (monthDays: ReturnType<typeof getMonthDays>) => {
     return (
         <div className={styles.daysGrid}>
-        {monthDays.map((day, index) => {
+        {monthDays.map(day => {
+            const dayKey = format(day.date, 'yyyy-MM-dd');
             const isSelectedDay =
             day.isCurrentMonth &&
             isSameDay(day.date, selectedDate);
 
             return (
-            <div key={index} className={styles.dayCell}>
+            <div key={dayKey} className={styles.dayCell}>
                 <div
                 className={cn(
                     styles.day,
