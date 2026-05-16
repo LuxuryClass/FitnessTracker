@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { startOfMonth } from 'date-fns';
 import { Button } from '@/Components/UI/Button/Button';
@@ -6,8 +6,7 @@ import { MonthCalendar } from '@/Components/Common/MonthCalendar/MonthCalendar';
 import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
 import styles from './Styles.module.scss';
 import { Link } from 'react-router-dom';
-import { authApi, ScheduleWorkoutItem } from '@/Auth/authApi';
-import { useAuth } from '@/Auth';
+import { useScheduleQuery } from '@/hooks/useScheduleQuery';
 
 const formatDate = (d: Date): string => {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -22,37 +21,18 @@ const getMonthRange = (month: Date): { from: string; to: string } => {
 
 const SchedulePage = () => {
   const location = useLocation();
-  const { tokens } = useAuth();
   const passedDateStr = (location.state as any)?.selectedDate as string | undefined;
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<Date>(
     passedDateStr ? new Date(passedDateStr) : today
   );
-  const [workouts, setWorkouts] = useState<ScheduleWorkoutItem[]>([]);
+  const [monthRange, setMonthRange] = useState(() => getMonthRange(startOfMonth(selectedDate)));
 
-  const fetchMonth = useCallback(async (month: Date) => {
-    if (!tokens?.accessToken) return;
-    const { from, to } = getMonthRange(month);
-    try {
-      const data = await authApi.getSchedule(tokens.accessToken, from, to);
-      setWorkouts(prev => {
-        // Заменяем данные за этот месяц, сохраняя остальные
-        const filtered = prev.filter(w => w.date < from || w.date > to);
-        return [...filtered, ...data];
-      });
-    } catch (error) {
-      console.error('Не удалось загрузить расписание:', error);
-    }
-  }, [tokens?.accessToken]);
-
-  // Загружаем текущий месяц при маунте
-  useEffect(() => {
-    fetchMonth(startOfMonth(selectedDate));
-  }, [tokens?.accessToken]);
+  const { data: workouts = [] } = useScheduleQuery(monthRange.from, monthRange.to);
 
   const handleMonthChange = useCallback((monthStart: Date) => {
-    fetchMonth(monthStart);
-  }, [fetchMonth]);
+    setMonthRange(getMonthRange(monthStart));
+  }, []);
 
   const plannedDates = workouts
     .filter(w => w.status === 'planned')

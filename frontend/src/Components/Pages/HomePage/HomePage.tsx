@@ -5,36 +5,36 @@ import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
 import { WeekCalendarSection } from './components/WeekCalendarSection/WeekCalendarSection';
 import { useAuth } from '@/Auth';
-import { authApi, RecentProgressItem, ScheduleWorkoutItem } from '@/Auth/authApi';
+import { RecentProgressItem } from '@/Auth/authApi';
 import defaultAvatar from '/masscot-main.png';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
 import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
+import { useScheduleQuery } from '@/hooks/useScheduleQuery';
+import { useRecentProgressQuery } from '@/hooks/useRecentProgressQuery';
 
 const formatDate = (d: Date): string => {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
+const getInitialWeekRange = () => {
+  const today = new Date();
+  const day = today.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() + diffToMonday);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  return { from: formatDate(weekStart), to: formatDate(weekEnd) };
+};
+
 const HomePage = () => {
-  const { user, tokens, prefetchedSchedule, prefetchedRecentProgress } = useAuth();
-  const [recentProgress, setRecentProgress] = useState<RecentCardData[]>(() => {
-    if (!prefetchedRecentProgress) return [];
-    return prefetchedRecentProgress.map((item: RecentProgressItem) => {
-      const differenceNum = Number(item.difference_kg);
-      const sign = differenceNum >= 0 ? '+' : '';
-      return {
-        id: item.exercise_id,
-        title: item.exercise_name,
-        muscleGroup: item.muscle_group,
-        difference: `${sign}${differenceNum}кг`,
-      };
-    });
-  });
-  const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduleWorkoutItem[]>(
-    () => prefetchedSchedule ?? []
-  );
-  const prefetchConsumed = useRef(false);
+  const { user } = useAuth();
+  const [weekRange, setWeekRange] = useState(getInitialWeekRange);
+
+  const { data: scheduleData = [] } = useScheduleQuery(weekRange.from, weekRange.to);
+  const { data: recentProgressData = [] } = useRecentProgressQuery();
 
   const userName = user?.name ?? "Пользователь";
   const userAvatar = user?.avatar_url ?? defaultAvatar;
@@ -43,61 +43,32 @@ const HomePage = () => {
   const weeklyCompletedSessions = user?.weekly_sessions_progress?.completed ?? 0;
   const weeklyTotalSessions = user?.weekly_sessions_progress?.total ?? 0;
 
-  useEffect(() => {
-    if (!tokens?.accessToken || prefetchedRecentProgress !== null) return;
-    const fetchRecentProgress = async () => {
-      try {
-        const data = await authApi.getRecentProgress(tokens.accessToken);
-        const mappedData: RecentCardData[] = data.map((item: RecentProgressItem) => {
-          const differenceNum = Number(item.difference_kg);
-          const sign = differenceNum >= 0 ? '+' : '';
-          return {
-            id: item.exercise_id,
-            title: item.exercise_name,
-            muscleGroup: item.muscle_group,
-            difference: `${sign}${differenceNum}кг`,
-          };
-        });
-        setRecentProgress(mappedData);
-      } catch (error) {
-        console.error('Не удалось загрузить недавний прогресс:', error);
-      }
+  const recentProgress: RecentCardData[] = recentProgressData.map((item: RecentProgressItem) => {
+    const differenceNum = Number(item.difference_kg);
+    const sign = differenceNum >= 0 ? '+' : '';
+    return {
+      id: item.exercise_id,
+      title: item.exercise_name,
+      muscleGroup: item.muscle_group,
+      difference: `${sign}${differenceNum}кг`,
     };
-    fetchRecentProgress();
-  }, [tokens?.accessToken, prefetchedRecentProgress]);
+  });
 
-  const handleWeekChange = useCallback(async (weekStart: Date, weekEnd: Date) => {
-    if (!tokens?.accessToken) return;
-    // Первый вызов — данные уже есть из prefetch, пропускаем
-    if (!prefetchConsumed.current && prefetchedSchedule !== null) {
-      prefetchConsumed.current = true;
-      return;
-    }
-    prefetchConsumed.current = true;
-    try {
-      const data = await authApi.getSchedule(tokens.accessToken, formatDate(weekStart), formatDate(weekEnd));
-      setScheduledWorkouts(prev => {
-        const fromStr = formatDate(weekStart);
-        const toStr = formatDate(weekEnd);
-        const filtered = prev.filter(w => w.date < fromStr || w.date > toStr);
-        return [...filtered, ...data];
-      });
-    } catch (error) {
-      console.error('Не удалось загрузить расписание:', error);
-    }
-  }, [tokens?.accessToken, prefetchedSchedule]);
+  const handleWeekChange = useCallback((weekStart: Date, weekEnd: Date) => {
+    setWeekRange({ from: formatDate(weekStart), to: formatDate(weekEnd) });
+  }, []);
 
-  const plannedDates = scheduledWorkouts
+  const plannedDates = scheduleData
     .filter(w => w.status === 'planned')
     .map(w => new Date(w.date));
 
-  const completedDates = scheduledWorkouts
+  const completedDates = scheduleData
     .filter(w => w.status === 'completed')
     .map(w => new Date(w.date));
 
   const todayStr = formatDate(new Date());
 
-  const upcomingWorkouts = scheduledWorkouts
+  const upcomingWorkouts = scheduleData
     .filter(w => w.date >= todayStr)
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
     .slice(0, 5);

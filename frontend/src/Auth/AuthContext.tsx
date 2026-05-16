@@ -1,13 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { ApiError, authApi, type AuthUser, type LoginPayload, type RegisterPayload, type RecentProgressItem, type ScheduleWorkoutItem, type StoredTokens } from "./authApi";
+import { ApiError, authApi, type AuthUser, type LoginPayload, type RegisterPayload, type StoredTokens } from "./authApi";
 
 interface AuthContextValue {
   user: AuthUser | null;
   tokens: StoredTokens | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  prefetchedSchedule: ScheduleWorkoutItem[] | null;
-  prefetchedRecentProgress: RecentProgressItem[] | null;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
@@ -25,8 +23,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [tokens, setTokens] = useState<StoredTokens | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [prefetchedSchedule, setPrefetchedSchedule] = useState<ScheduleWorkoutItem[] | null>(null);
-  const [prefetchedRecentProgress, setPrefetchedRecentProgress] = useState<RecentProgressItem[] | null>(null);
 
   const clearAuthState = () => {
     setTokens(null);
@@ -44,28 +40,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const bootstrap = async () => {
       try {
         const refreshedTokens = await authApi.refresh();
-
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() + diffToMonday);
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        const pad = (n: number) => String(n).padStart(2, '0');
-        const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-        const [currentUser, schedule, recentProgress] = await Promise.all([
-          authApi.getMe(refreshedTokens.accessToken),
-          authApi.getSchedule(refreshedTokens.accessToken, fmt(weekStart), fmt(weekEnd)).catch(() => null),
-          authApi.getRecentProgress(refreshedTokens.accessToken).catch(() => null),
-        ]);
+        const currentUser = await authApi.getMe(refreshedTokens.accessToken);
 
         if (!isMounted) return;
-
         applySession(currentUser, refreshedTokens);
-        setPrefetchedSchedule(schedule);
-        setPrefetchedRecentProgress(recentProgress);
       } catch {
         if (!isMounted) return;
         clearAuthState();
@@ -131,15 +109,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       tokens,
       isAuthenticated: Boolean(user && tokens?.accessToken),
       isLoading,
-      prefetchedSchedule,
-      prefetchedRecentProgress,
       login,
       register,
       logout,
       refreshSession,
       updateUser,
     }),
-    [user, tokens, isLoading, prefetchedSchedule, prefetchedRecentProgress]
+    [user, tokens, isLoading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
