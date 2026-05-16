@@ -1,15 +1,32 @@
+from datetime import date
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
+from app.schemas.schedule import ScheduleWorkoutItem
 from app.schemas.workout import WorkoutCreateRequest, WorkoutResponse, WorkoutUpdateRequest
 from app.services import workout_service
 
 router = APIRouter(prefix="/workouts", tags=["Тренировки"])
+
+
+@router.get("/schedule", response_model=list[ScheduleWorkoutItem], status_code=status.HTTP_200_OK)
+async def get_schedule(
+    date_from: date,
+    date_to: date,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[ScheduleWorkoutItem]:
+    return await workout_service.get_schedule(
+        db=db,
+        current_user=current_user,
+        date_from=date_from,
+        date_to=date_to,
+    )
 
 
 @router.get("", response_model=list[WorkoutResponse], status_code=status.HTTP_200_OK)

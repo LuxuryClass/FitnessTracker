@@ -644,6 +644,57 @@
 
 Все endpoint-ы раздела возвращают **тренировки текущего пользователя**.
 
+### 4.0 `GET /api/workouts/schedule`
+
+Получение расписания тренировок в диапазоне дат.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Query params**
+
+- `date_from` — начало диапазона, формат `YYYY-MM-DD` (включительно)
+- `date_to` — конец диапазона, формат `YYYY-MM-DD` (включительно)
+
+**Response 200**
+
+```json
+[
+  {
+    "id": "d20027a7-2575-4335-9b4d-523eed70a489",
+    "title": "День жимов",
+    "date": "2026-05-16",
+    "time": "09:00",
+    "status": "planned",
+    "exercises_count": 3,
+    "muscle_groups": ["грудь", "плечи"]
+  }
+]
+```
+
+**Поля ответа**
+
+- `id` — UUID тренировки
+- `title` — название тренировки
+- `date` — дата тренировки (`YYYY-MM-DD`), берётся из `planned_for`
+- `time` — время тренировки (`HH:MM`), берётся из `planned_for`; `null` если время не задано
+- `status` — `"planned"` или `"completed"`
+- `exercises_count` — количество упражнений в тренировке
+- `muscle_groups` — уникальные группы мышц из всех упражнений тренировки
+
+**Логика статуса**
+
+- `"completed"` — если существует `WorkoutSession` со `status='completed'` для этой тренировки (независимо от времени `planned_for`)
+- `"planned"` — во всех остальных случаях
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `422` — ошибка валидации (неверный формат дат)
+
+---
+
 ### 4.1 `GET /api/workouts`
 
 Список тренировок текущего пользователя.
@@ -1064,7 +1115,9 @@ null
 5. Frontend получает данные для главного экрана:
    - Метрики пользователя из `GET /api/users/me` (`streak_weeks`, `weekly_volume_tons`, `weekly_sessions_progress`)
    - Недавний прогресс через `GET /api/users/me/recent-progress`
-6. Frontend работает с упражнениями пользователя через `/api/exercises`.
+   - Расписание на текущую неделю через `GET /api/workouts/schedule?date_from=...&date_to=...`; при листании WeekCalendar запрашивается следующая/предыдущая неделя
+6. На странице расписания Frontend запрашивает `GET /api/workouts/schedule` для текущего месяца; при смене месяца запрашивается новый диапазон.
+7. Frontend работает с упражнениями пользователя через `/api/exercises`.
 7. Frontend создает и редактирует тренировки через `/api/workouts`, передавая массив `exercises` c элементами формата `{ "exercise_id": "UUID" }`.
 8. При старте тренировки Frontend вызывает `POST /api/workout-sessions/start`, отправляет подходы через `POST /api/workout-sessions/{session_id}/sets` и завершает через `POST /api/workout-sessions/{session_id}/complete`.
 

@@ -1,60 +1,71 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { startOfMonth } from 'date-fns';
 import { Button } from '@/Components/UI/Button/Button';
 import { MonthCalendar } from '@/Components/Common/MonthCalendar/MonthCalendar';
 import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
 import styles from './Styles.module.scss';
 import { Link } from 'react-router-dom';
+import { authApi, ScheduleWorkoutItem } from '@/Auth/authApi';
+import { useAuth } from '@/Auth';
 
-interface WorkoutDay {
-  id: string;
-  title: string;
-  time: string;
-  exercisesCount: number;
-  muscleGroups: string[];
-  date: Date;
-}
+const formatDate = (d: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const getMonthRange = (month: Date): { from: string; to: string } => {
+  const from = new Date(month.getFullYear(), month.getMonth(), 1);
+  const to = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  return { from: formatDate(from), to: formatDate(to) };
+};
 
 const SchedulePage = () => {
   const location = useLocation();
+  const { tokens } = useAuth();
   const passedDateStr = (location.state as any)?.selectedDate as string | undefined;
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<Date>(
     passedDateStr ? new Date(passedDateStr) : today
   );
+  const [workouts, setWorkouts] = useState<ScheduleWorkoutItem[]>([]);
 
-  const workouts: WorkoutDay[] = [
-    {
-      id: '1',
-      title: 'День жимов',
-      time: '9:30',
-      exercisesCount: 6,
-      muscleGroups: ['Грудь', 'Плечи'],
-      date: new Date(today.getFullYear(), today.getMonth(), 2),
-    },
-    {
-      id: '2',
-      title: 'День ног',
-      time: '17:00',
-      exercisesCount: 5,
-      muscleGroups: ['Ноги', 'Ягодицы'],
-      date: new Date(today.getFullYear(), today.getMonth(), 2),
-    },
-    {
-      id: '3',
-      title: 'День спины',
-      time: '19:30',
-      exercisesCount: 4,
-      muscleGroups: ['Спина', 'Бицепс'],
-      date: new Date(today.getFullYear(), today.getMonth(), 8),
-    },
-  ];
+  const fetchMonth = useCallback(async (month: Date) => {
+    if (!tokens?.accessToken) return;
+    const { from, to } = getMonthRange(month);
+    try {
+      const data = await authApi.getSchedule(tokens.accessToken, from, to);
+      setWorkouts(prev => {
+        // Заменяем данные за этот месяц, сохраняя остальные
+        const filtered = prev.filter(w => w.date < from || w.date > to);
+        return [...filtered, ...data];
+      });
+    } catch (error) {
+      console.error('Не удалось загрузить расписание:', error);
+    }
+  }, [tokens?.accessToken]);
 
-  const plannedDates = workouts.map(w => w.date);
+  // Загружаем текущий месяц при маунте
+  useEffect(() => {
+    fetchMonth(startOfMonth(selectedDate));
+  }, [tokens?.accessToken]);
 
+  const handleMonthChange = useCallback((monthStart: Date) => {
+    fetchMonth(monthStart);
+  }, [fetchMonth]);
+
+  const plannedDates = workouts
+    .filter(w => w.status === 'planned')
+    .map(w => new Date(w.date));
+
+  const completedDates = workouts
+    .filter(w => w.status === 'completed')
+    .map(w => new Date(w.date));
+
+  const selectedDateStr = formatDate(selectedDate);
   const selectedWorkouts = workouts
-    .filter(w => w.date.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0])
-    .sort((a, b) => a.time.localeCompare(b.time));
+    .filter(w => w.date === selectedDateStr)
+    .sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''));
 
   const handleDayClick = (date: Date) => {
     setSelectedDate(date);
@@ -69,8 +80,9 @@ const SchedulePage = () => {
 
       <MonthCalendar
         plannedDates={plannedDates}
-        completedDates={[]}
+        completedDates={completedDates}
         onDayClick={handleDayClick}
+        onMonthChange={handleMonthChange}
         initialDate={selectedDate}
         className={styles.calendarWrapper}
       />
@@ -86,10 +98,10 @@ const SchedulePage = () => {
               <div key={workout.id} className={styles.workoutCard}>
                 <WorkoutCard
                   title={workout.title}
-                  time={workout.time}
-                  exercisesCount={workout.exercisesCount}
-                  muscleGroups={workout.muscleGroups}
-                  date={workout.date}
+                  time={workout.time ?? undefined}
+                  exercisesCount={workout.exercises_count}
+                  muscleGroups={workout.muscle_groups}
+                  date={new Date(workout.date)}
                   onClick={() => console.log('Открыть тренировку', workout.id)}
                 />
               </div>

@@ -5,53 +5,21 @@ import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
 import { WeekCalendarSection } from './components/WeekCalendarSection/WeekCalendarSection';
 import { useAuth } from '@/Auth';
-import { authApi, RecentProgressItem } from '@/Auth/authApi';
+import { authApi, RecentProgressItem, ScheduleWorkoutItem } from '@/Auth/authApi';
 import defaultAvatar from '/masscot-main.png';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
 import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
 
-const plannedDates = [
-  new Date(2026, 3, 21),
-  new Date(2026, 3, 23),
-  new Date(2026, 3, 25),
-];
-
-const completedDates = [
-  new Date(2026, 3, 20),
-];
-
-// Тестовые тренировки для блока "Далее"
-const upcomingWorkouts = [
-  {
-    id: '1',
-    title: 'День ног',
-    time: 'Завтра, 9:00',
-    exercisesCount: 5,
-    muscleGroups: ['Ноги', 'Ягодицы'],
-    date: new Date(),
-  },
-  {
-    id: '2',
-    title: 'День спины',
-    time: '14 мая, 17:00',
-    exercisesCount: 4,
-    muscleGroups: ['Спина', 'Бицепс'],
-    date: new Date(),
-  },
-  {
-    id: '3',
-    title: 'Кардио',
-    time: '16 мая, 8:30',
-    exercisesCount: 3,
-    muscleGroups: ['Кардио'],
-    date: new Date(),
-  },
-];
+const formatDate = (d: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
 const HomePage = () => {
   const { user, tokens } = useAuth();
   const [recentProgress, setRecentProgress] = useState<RecentCardData[]>([]);
+  const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduleWorkoutItem[]>([]);
 
   const userName = user?.name ?? "Пользователь";
   const userAvatar = user?.avatar_url ?? defaultAvatar;
@@ -62,10 +30,7 @@ const HomePage = () => {
 
   useEffect(() => {
     const fetchRecentProgress = async () => {
-      if (!tokens?.accessToken) {
-        return;
-      }
-
+      if (!tokens?.accessToken) return;
       try {
         const data = await authApi.getRecentProgress(tokens.accessToken);
         const mappedData: RecentCardData[] = data.map((item: RecentProgressItem) => {
@@ -88,9 +53,41 @@ const HomePage = () => {
     fetchRecentProgress();
   }, [tokens?.accessToken]);
 
+  // Загружаем расписание для конкретной недели при листании
+  const handleWeekChange = useCallback(async (weekStart: Date, weekEnd: Date) => {
+    if (!tokens?.accessToken) return;
+    try {
+      const data = await authApi.getSchedule(tokens.accessToken, formatDate(weekStart), formatDate(weekEnd));
+      // Мержим с уже загруженными данными, заменяя записи за этот диапазон
+      setScheduledWorkouts(prev => {
+        const fromStr = formatDate(weekStart);
+        const toStr = formatDate(weekEnd);
+        const filtered = prev.filter(w => w.date < fromStr || w.date > toStr);
+        return [...filtered, ...data];
+      });
+    } catch (error) {
+      console.error('Не удалось загрузить расписание:', error);
+    }
+  }, [tokens?.accessToken]);
+
+  const plannedDates = scheduledWorkouts
+    .filter(w => w.status === 'planned')
+    .map(w => new Date(w.date));
+
+  const completedDates = scheduledWorkouts
+    .filter(w => w.status === 'completed')
+    .map(w => new Date(w.date));
+
+  const todayStr = formatDate(new Date());
+
+  const upcomingWorkouts = scheduledWorkouts
+    .filter(w => w.date >= todayStr)
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
+    .slice(0, 5);
+
   return (
     <main className={styles.page}>
-      
+
       {/* Блок "Шапка" */}
       <Header className={styles.header} userName={userName} userAvatar={userAvatar}/>
 
@@ -115,10 +112,14 @@ const HomePage = () => {
         <StatCard isVisible={true} type="week" value={weeklyCompletedSessions} total={weeklyTotalSessions}></StatCard>
         <StatCard isVisible={true} type="totalWeight" value={weeklyVolumeTons}></StatCard>
       </div>
-      
+
       {/* Блок "Расписание" */}
-      <WeekCalendarSection plannedDates={plannedDates} completedDates={completedDates}/>
-        
+      <WeekCalendarSection
+        plannedDates={plannedDates}
+        completedDates={completedDates}
+        onWeekChange={handleWeekChange}
+      />
+
       {/* Блок "Недавний прогресс" */}
       {recentProgress.length > 0 && (
         <RecentCardsList className={styles.recent_list} cards={recentProgress} />
@@ -131,21 +132,23 @@ const HomePage = () => {
       </div>
 
       {/* Блок "Далее" */}
-      <div className={styles.nextSection}>
-        <h3 className={styles.accentSection_title}>Далее</h3>
-        <div className={styles.upcomingList}>
-          {upcomingWorkouts.map(workout => (
-            <WorkoutCard
-              key={workout.id}
-              title={workout.title}
-              time={workout.time}
-              exercisesCount={workout.exercisesCount}
-              muscleGroups={workout.muscleGroups}
-              onClick={() => console.log('Открыть тренировку', workout.id)}
-            />
-          ))}
+      {upcomingWorkouts.length > 0 && (
+        <div className={styles.nextSection}>
+          <h3 className={styles.accentSection_title}>Далее</h3>
+          <div className={styles.upcomingList}>
+            {upcomingWorkouts.map(workout => (
+              <WorkoutCard
+                key={workout.id}
+                title={workout.title}
+                date={new Date(workout.date)}
+                time={workout.time ?? undefined}
+                exercisesCount={workout.exercises_count}
+                muscleGroups={workout.muscle_groups}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
     </main>
   );

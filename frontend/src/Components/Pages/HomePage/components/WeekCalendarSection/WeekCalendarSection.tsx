@@ -7,13 +7,15 @@ import { WeekCalendar } from '@/Components/Common/WeekCalendar/WeekCalendar';
 interface WeekCalendarSectionProps {
   plannedDates?: Date[];
   completedDates?: Date[];
+  onWeekChange?: (weekStart: Date, weekEnd: Date) => void;
   className?: string;
 }
 
-const WeekCalendarSectionComponent = ({ 
-  plannedDates = [], 
+const WeekCalendarSectionComponent = ({
+  plannedDates = [],
   completedDates = [],
-  className 
+  onWeekChange,
+  className
 }: WeekCalendarSectionProps) => {
   const navigate = useNavigate();
 
@@ -28,8 +30,12 @@ const WeekCalendarSectionComponent = ({
           Расписание <span className={styles.arrow}>›</span>
         </h2>
       </div>
-      
-      <WeekCalendar plannedDates={plannedDates} completedDates={completedDates} />
+
+      <WeekCalendar
+        plannedDates={plannedDates}
+        completedDates={completedDates}
+        onWeekChange={onWeekChange}
+      />
     </div>
   );
 };

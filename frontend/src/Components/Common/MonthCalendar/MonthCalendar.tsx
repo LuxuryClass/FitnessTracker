@@ -20,6 +20,7 @@ interface MonthCalendarProps {
   plannedDates?: Date[];
   completedDates?: Date[];
   onDayClick?: (date: Date) => void;
+  onMonthChange?: (monthStart: Date) => void;
   initialDate?: Date;
   className?: string;
 }
@@ -59,6 +60,7 @@ const MonthCalendarComponent = ({
   plannedDates = [],
   completedDates = [],
   onDayClick,
+  onMonthChange,
   initialDate,
   className,
 }: MonthCalendarProps) => {
@@ -165,11 +167,11 @@ const MonthCalendarComponent = ({
       );
 
       setTimeout(() => {
-        setCurrentMonth(prev =>
-          direction === 'next'
-            ? addMonths(prev, 1)
-            : subMonths(prev, 1)
-        );
+        setCurrentMonth(prev => {
+          const next = direction === 'next' ? addMonths(prev, 1) : subMonths(prev, 1);
+          onMonthChange?.(next);
+          return next;
+        });
 
         // моментально вернуть в центр
         setWithTransition(false);
@@ -184,7 +186,7 @@ const MonthCalendarComponent = ({
         });
       }, 300);
     },
-    [isAnimating]
+    [isAnimating, onMonthChange]
   );
 
   const handleTouchStart = (

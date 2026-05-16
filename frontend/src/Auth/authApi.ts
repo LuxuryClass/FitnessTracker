@@ -132,6 +132,16 @@ export interface AuthResult {
   tokens: StoredTokens;
 }
 
+export interface ScheduleWorkoutItem {
+  id: string;
+  title: string;
+  date: string;
+  time: string | null;
+  status: 'planned' | 'completed';
+  exercises_count: number;
+  muscle_groups: string[];
+}
+
 export interface RecentProgressItem {
   exercise_id: string;
   exercise_name: string;
@@ -214,6 +224,13 @@ export const authApi = {
 
   async getRecentProgress(accessToken: string): Promise<RecentProgressItem[]> {
     return request<RecentProgressItem[]>("/users/me/recent-progress", {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async getSchedule(accessToken: string, dateFrom: string, dateTo: string): Promise<ScheduleWorkoutItem[]> {
+    return request<ScheduleWorkoutItem[]>(`/workouts/schedule?date_from=${dateFrom}&date_to=${dateTo}`, {
       method: "GET",
       accessToken,
     });

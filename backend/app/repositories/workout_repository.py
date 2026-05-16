@@ -23,6 +23,27 @@ class WorkoutRepository:
         result = await db.execute(statement)
         return list(result.scalars().all())
 
+    async def list_planned_in_range(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        date_from: datetime,
+        date_to: datetime,
+    ) -> list[Workout]:
+        statement = (
+            select(Workout)
+            .where(
+                Workout.user_id == user_id,
+                Workout.is_planned.is_(True),
+                Workout.planned_for.is_not(None),
+                Workout.planned_for >= date_from,
+                Workout.planned_for <= date_to,
+            )
+            .order_by(Workout.planned_for)
+        )
+        result = await db.execute(statement)
+        return list(result.scalars().all())
+
     async def count_planned_in_range(
         self,
         db: AsyncSession,

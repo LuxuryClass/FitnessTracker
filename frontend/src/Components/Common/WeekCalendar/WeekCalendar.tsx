@@ -1,12 +1,13 @@
-import { memo, useMemo, useState, useRef } from 'react';
+import { memo, useMemo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addWeeks, subWeeks, startOfWeek, format } from 'date-fns';
+import { addWeeks, subWeeks, startOfWeek, addDays, format } from 'date-fns';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 
 interface WeekCalendarProps {
   plannedDates?: Date[];
   completedDates?: Date[];
+  onWeekChange?: (weekStart: Date, weekEnd: Date) => void;
   className?: string;
 }
 
@@ -35,10 +36,11 @@ const getWeekDays = (weekStart: Date, plannedSet: Set<string>, completedSet: Set
   return days;
 };
 
-const WeekCalendarComponent = ({ 
-  plannedDates = [], 
+const WeekCalendarComponent = ({
+  plannedDates = [],
   completedDates = [],
-  className 
+  onWeekChange,
+  className
 }: WeekCalendarProps) => {
   const navigate = useNavigate();
   const today = new Date();
@@ -47,6 +49,10 @@ const WeekCalendarComponent = ({
   const [position, setPosition] = useState<'center' | 'left' | 'right'>('center');
   const [withTransition, setWithTransition] = useState(true);
   const touchStartX = useRef(0);
+
+  useEffect(() => {
+    onWeekChange?.(currentWeekStart, addDays(currentWeekStart, 6));
+  }, []);
 
   const plannedSet = useMemo(() => new Set(plannedDates.map(d => format(d, 'yyyy-MM-dd'))), [plannedDates]);
   const completedSet = useMemo(() => new Set(completedDates.map(d => format(d, 'yyyy-MM-dd'))), [completedDates]);
@@ -64,7 +70,11 @@ const WeekCalendarComponent = ({
     setWithTransition(true);
     setPosition(direction === 'next' ? 'left' : 'right');
     setTimeout(() => {
-      setCurrentWeekStart(prev => direction === 'next' ? addWeeks(prev, 1) : subWeeks(prev, 1));
+      setCurrentWeekStart(prev => {
+        const next = direction === 'next' ? addWeeks(prev, 1) : subWeeks(prev, 1);
+        onWeekChange?.(next, addDays(next, 6));
+        return next;
+      });
       setWithTransition(false);
       setPosition('center');
       requestAnimationFrame(() => {
