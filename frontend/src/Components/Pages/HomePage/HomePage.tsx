@@ -7,7 +7,7 @@ import { WeekCalendarSection } from './components/WeekCalendarSection/WeekCalend
 import { useAuth } from '@/Auth';
 import { authApi, RecentProgressItem, ScheduleWorkoutItem } from '@/Auth/authApi';
 import defaultAvatar from '/masscot-main.png';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
 import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
 
@@ -17,9 +17,24 @@ const formatDate = (d: Date): string => {
 };
 
 const HomePage = () => {
-  const { user, tokens } = useAuth();
-  const [recentProgress, setRecentProgress] = useState<RecentCardData[]>([]);
-  const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduleWorkoutItem[]>([]);
+  const { user, tokens, prefetchedSchedule, prefetchedRecentProgress } = useAuth();
+  const [recentProgress, setRecentProgress] = useState<RecentCardData[]>(() => {
+    if (!prefetchedRecentProgress) return [];
+    return prefetchedRecentProgress.map((item: RecentProgressItem) => {
+      const differenceNum = Number(item.difference_kg);
+      const sign = differenceNum >= 0 ? '+' : '';
+      return {
+        id: item.exercise_id,
+        title: item.exercise_name,
+        muscleGroup: item.muscle_group,
+        difference: `${sign}${differenceNum}кг`,
+      };
+    });
+  });
+  const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduleWorkoutItem[]>(
+    () => prefetchedSchedule ?? []
+  );
+  const prefetchConsumed = useRef(false);
 
   const userName = user?.name ?? "Пользователь";
   const userAvatar = user?.avatar_url ?? defaultAvatar;
@@ -29,8 +44,8 @@ const HomePage = () => {
   const weeklyTotalSessions = user?.weekly_sessions_progress?.total ?? 0;
 
   useEffect(() => {
+    if (!tokens?.accessToken || prefetchedRecentProgress !== null) return;
     const fetchRecentProgress = async () => {
-      if (!tokens?.accessToken) return;
       try {
         const data = await authApi.getRecentProgress(tokens.accessToken);
         const mappedData: RecentCardData[] = data.map((item: RecentProgressItem) => {
@@ -46,19 +61,21 @@ const HomePage = () => {
         setRecentProgress(mappedData);
       } catch (error) {
         console.error('Не удалось загрузить недавний прогресс:', error);
-        setRecentProgress([]);
       }
     };
-
     fetchRecentProgress();
-  }, [tokens?.accessToken]);
+  }, [tokens?.accessToken, prefetchedRecentProgress]);
 
-  // Загружаем расписание для конкретной недели при листании
   const handleWeekChange = useCallback(async (weekStart: Date, weekEnd: Date) => {
     if (!tokens?.accessToken) return;
+    // Первый вызов — данные уже есть из prefetch, пропускаем
+    if (!prefetchConsumed.current && prefetchedSchedule !== null) {
+      prefetchConsumed.current = true;
+      return;
+    }
+    prefetchConsumed.current = true;
     try {
       const data = await authApi.getSchedule(tokens.accessToken, formatDate(weekStart), formatDate(weekEnd));
-      // Мержим с уже загруженными данными, заменяя записи за этот диапазон
       setScheduledWorkouts(prev => {
         const fromStr = formatDate(weekStart);
         const toStr = formatDate(weekEnd);
@@ -68,7 +85,7 @@ const HomePage = () => {
     } catch (error) {
       console.error('Не удалось загрузить расписание:', error);
     }
-  }, [tokens?.accessToken]);
+  }, [tokens?.accessToken, prefetchedSchedule]);
 
   const plannedDates = scheduledWorkouts
     .filter(w => w.status === 'planned')

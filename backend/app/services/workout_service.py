@@ -2,11 +2,14 @@ from collections import defaultdict
 from datetime import date, datetime, time, timezone
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, ForbiddenException, NotFoundException
+from app.models.exercise import Exercise
 from app.models.workout import Workout
 from app.models.workout_exercise import WorkoutExercise
+from app.models.workout_session import WorkoutSession
 from app.models.user import User
 from app.repositories import exercise_repository, workout_exercise_repository, workout_repository, workout_session_repository
 from app.schemas.schedule import ScheduleWorkoutItem
@@ -195,58 +198,77 @@ class WorkoutService:
         date_from: date,
         date_to: date,
     ) -> list[ScheduleWorkoutItem]:
-        # Конвертируем даты в datetime с учётом UTC (начало и конец дня)
         dt_from = datetime.combine(date_from, time.min, tzinfo=timezone.utc)
         dt_to = datetime.combine(date_to, time.max, tzinfo=timezone.utc)
 
-        workouts = await workout_repository.list_planned_in_range(db, current_user.id, dt_from, dt_to)
-        if not workouts:
-            return []
-
-        # Получаем id завершённых сессий одним запросом
-        completed_ids = await workout_session_repository.list_completed_workout_ids_in_range(
-            db, current_user.id, dt_from, dt_to
+        statement = (
+            select(Workout, WorkoutExercise, Exercise, WorkoutSession.workout_id.label("completed_workout_id"))
+            .where(
+                Workout.user_id == current_user.id,
+                Workout.is_planned.is_(True),
+                Workout.planned_for.is_not(None),
+                Workout.planned_for >= dt_from,
+                Workout.planned_for <= dt_to,
+            )
+            .outerjoin(WorkoutExercise, WorkoutExercise.workout_id == Workout.id)
+            .outerjoin(Exercise, Exercise.id == WorkoutExercise.exercise_id)
+            .outerjoin(
+                WorkoutSession,
+                (WorkoutSession.workout_id == Workout.id)
+                & (WorkoutSession.user_id == current_user.id)
+                & (WorkoutSession.status == "completed")
+                & (WorkoutSession.completed_at.is_not(None))
+                & (WorkoutSession.completed_at >= dt_from)
+                & (WorkoutSession.completed_at <= dt_to),
+            )
+            .order_by(Workout.planned_for)
         )
 
-        # Загружаем все упражнения одним запросом
-        workout_ids = [w.id for w in workouts]
-        workout_exercises = await workout_exercise_repository.list_by_workout_ids(db, workout_ids)
+        rows = (await db.execute(statement)).all()
 
-        exercise_ids = list({we.exercise_id for we in workout_exercises})
-        exercises = await exercise_repository.get_by_ids(db, exercise_ids)
-        exercise_map = {ex.id: ex for ex in exercises}
-
-        # Группируем упражнения по тренировке
+        workouts_order: list[UUID] = []
+        workouts_map: dict[UUID, Workout] = {}
+        completed_ids: set[UUID] = set()
         grouped: dict[UUID, list[WorkoutExercise]] = defaultdict(list)
-        for we in workout_exercises:
-            grouped[we.workout_id].append(we)
+        exercise_map: dict[UUID, Exercise] = {}
+        seen_we: set[tuple[UUID, UUID]] = set()
+
+        for workout, we, exercise, completed_workout_id in rows:
+            if workout.id not in workouts_map:
+                workouts_map[workout.id] = workout
+                workouts_order.append(workout.id)
+            if completed_workout_id is not None:
+                completed_ids.add(completed_workout_id)
+            if we is not None and exercise is not None:
+                key = (workout.id, we.exercise_id)
+                if key not in seen_we:
+                    seen_we.add(key)
+                    exercise_map[we.exercise_id] = exercise
+                    grouped[workout.id].append(we)
 
         result: list[ScheduleWorkoutItem] = []
-        for workout in workouts:
+        for workout_id in workouts_order:
+            workout = workouts_map[workout_id]
             assert workout.planned_for is not None
             muscle_groups_set: list[str] = []
-            seen: set[str] = set()
-            for we in grouped.get(workout.id, []):
+            seen_mg: set[str] = set()
+            for we in grouped.get(workout_id, []):
                 ex = exercise_map.get(we.exercise_id)
                 if ex:
                     for mg in ex.muscle_groups:
-                        if mg not in seen:
-                            seen.add(mg)
+                        if mg not in seen_mg:
+                            seen_mg.add(mg)
                             muscle_groups_set.append(mg)
 
-            status = "completed" if workout.id in completed_ids else "planned"
-            planned_local = workout.planned_for
-            result.append(
-                ScheduleWorkoutItem(
-                    id=workout.id,
-                    title=workout.title,
-                    date=planned_local.date(),
-                    time=planned_local.strftime("%H:%M"),
-                    status=status,
-                    exercises_count=len(grouped.get(workout.id, [])),
-                    muscle_groups=muscle_groups_set,
-                )
-            )
+            result.append(ScheduleWorkoutItem(
+                id=workout.id,
+                title=workout.title,
+                date=workout.planned_for.date(),
+                time=workout.planned_for.strftime("%H:%M"),
+                status="completed" if workout_id in completed_ids else "planned",
+                exercises_count=len(grouped.get(workout_id, [])),
+                muscle_groups=muscle_groups_set,
+            ))
 
         return result
 
