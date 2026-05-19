@@ -30,11 +30,20 @@ export const TabsGroup = <T extends string>({
     const activeElement = tabsRef.current[activeTab];
     const container = containerRef.current;
     if (activeElement && container) {
-      const containerRect = container.getBoundingClientRect();
-      const elementRect = activeElement.getBoundingClientRect();
+      const containerStyle = getComputedStyle(container);
+      const paddingLeft = parseFloat(containerStyle.paddingLeft);
+      const paddingRight = parseFloat(containerStyle.paddingRight);
+      
+      const elementLeft = activeElement.offsetLeft;
+      const elementWidth = activeElement.offsetWidth;
+      const containerWidth = container.clientWidth;
+      
+      const maxLeft = containerWidth - elementWidth - paddingRight;
+      const left = Math.max(paddingLeft, Math.min(elementLeft, maxLeft));
+      
       setIndicatorStyle({
-        left: elementRect.left - containerRect.left,
-        width: elementRect.width,
+        left,
+        width: elementWidth,
       });
     }
   }, [activeTab]);
