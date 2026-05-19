@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     app_name: str = "API планировщика тренировок"
     api_prefix: str = "/api"
 
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/fitness_tracker"
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/flame_fitness"
     redis_url: str = "redis://localhost:6379/0"
 
     jwt_secret_key: str = Field(default="change-this-secret-key-in-env", min_length=16)

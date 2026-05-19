@@ -24,8 +24,8 @@ const StartPage = () => {
 
   return (
     <div className={classNames(styles.start_page, styles[animationState])}>
-      <img className={styles.logo} src={logoImage} alt="Fitness Tracker Logo" />
-      <h1 className={styles.title}>Fitness Tracker</h1>
+      <img className={styles.logo} src={logoImage} alt="Flame Fitness Logo" />
+      <h1 className={styles.title}>Flame Fitness</h1>
     </div>
   );
 };
