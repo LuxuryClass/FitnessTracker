@@ -5,6 +5,16 @@
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 6.1vw, 24px);
+  animation: unlockInteractions 0.8s forwards;
+}
+
+@keyframes unlockInteractions {
+  0%, 99% {
+    pointer-events: none;
+  }
+  100% {
+    pointer-events: auto;
+  }
 }
 
 // Профиль
