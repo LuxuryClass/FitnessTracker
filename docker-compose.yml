@@ -40,7 +40,12 @@ services:
       APP_NAME: "API планировщика тренировок"
       API_PREFIX: "/api"
       DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fitness_tracker"
-      REDIS_URL: "redis://redis:6379/0"      
+      REDIS_URL: "redis://redis:6379/0"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@example.com}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-qwertyuiop1234567890}
       BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
     depends_on:
@@ -50,6 +55,56 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
+    restart: unless-stopped
+
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fitness-celery-worker
+    environment:
+      APP_NAME: "API планировщика тренировок"
+      API_PREFIX: "/api"
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fitness_tracker"
+      REDIS_URL: "redis://redis:6379/0"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@example.com}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-qwertyuiop1234567890}
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["sh", "-c", "alembic upgrade head && celery -A app.core.celery_app.celery_app worker -l info"]
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fitness-celery-beat
+    environment:
+      APP_NAME: "API планировщика тренировок"
+      API_PREFIX: "/api"
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fitness_tracker"
+      REDIS_URL: "redis://redis:6379/0"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@example.com}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-qwertyuiop1234567890}
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["sh", "-c", "alembic upgrade head && celery -A app.core.celery_app.celery_app beat -l info"]
     restart: unless-stopped
 
 volumes:

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy import desc, func, select
@@ -60,6 +61,21 @@ class WorkoutSessionRepository:
             WorkoutSession.completed_at.is_not(None),
             WorkoutSession.completed_at >= date_from,
             WorkoutSession.completed_at <= date_to,
+        )
+        result = await db.execute(statement)
+        return set(result.scalars().all())
+
+    async def list_completed_workout_ids(
+        self,
+        db: AsyncSession,
+        workout_ids: Sequence[UUID],
+    ) -> set[UUID]:
+        if not workout_ids:
+            return set()
+        statement = select(WorkoutSession.workout_id).where(
+            WorkoutSession.workout_id.in_(workout_ids),
+            WorkoutSession.status == "completed",
+            WorkoutSession.completed_at.is_not(None),
         )
         result = await db.execute(statement)
         return set(result.scalars().all())

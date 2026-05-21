@@ -23,7 +23,7 @@ from app.core.security import (
     verify_password,
 )
 from app.models.user import User
-from app.repositories import user_repository
+from app.repositories import notification_settings_repository, user_repository
 from app.schemas.auth import AccessTokenResponse, AuthResponse, LoginRequest, LogoutResponse, RegisterRequest
 from app.services.user_metrics_service import build_user_response
 
@@ -56,6 +56,16 @@ class AuthService:
 
         password_hash = hash_password(payload.password)
         user = await user_repository.create(db=db, email=email, name=name, password_hash=password_hash)
+        await notification_settings_repository.create(
+            db=db,
+            user_id=user.id,
+            enabled=True,
+            sound=True,
+            vibration=False,
+            do_not_disturb=False,
+            reminders=True,
+            reminder_offset_minutes=0,
+        )
         await db.commit()
         await db.refresh(user)
         return await self._build_auth_response(db=db, redis=redis, user=user)

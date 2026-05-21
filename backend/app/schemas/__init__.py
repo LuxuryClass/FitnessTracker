@@ -2,6 +2,13 @@
 
 from app.schemas.auth import AccessTokenResponse, AuthResponse, LoginRequest, LogoutResponse, RegisterRequest
 from app.schemas.exercise import ExerciseCreateRequest, ExerciseResponse, ExerciseUpdateRequest
+from app.schemas.notifications import (
+    NotificationSettings,
+    NotificationSettingsUpdateRequest,
+    PushSubscriptionDeleteRequest,
+    PushSubscriptionRequest,
+    VapidPublicKeyResponse,
+)
 from app.schemas.schedule import ScheduleWorkoutItem
 from app.schemas.user import UserResponse, UserUpdateRequest, WeeklySessionsProgress
 from app.schemas.workout import (
@@ -30,6 +37,11 @@ __all__ = [
     "ExerciseCreateRequest",
     "ExerciseUpdateRequest",
     "ExerciseResponse",
+    "NotificationSettings",
+    "NotificationSettingsUpdateRequest",
+    "PushSubscriptionRequest",
+    "PushSubscriptionDeleteRequest",
+    "VapidPublicKeyResponse",
     "ScheduleWorkoutItem",
     "WorkoutCreateRequest",
     "WorkoutUpdateRequest",

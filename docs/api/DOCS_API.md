@@ -416,6 +416,157 @@
 
 ---
 
+### 2.5 `GET /api/users/me/notifications`
+
+Получение текущих настроек уведомлений пользователя.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Response 200**
+
+```json
+{
+  "enabled": true,
+  "sound": true,
+  "vibration": false,
+  "do_not_disturb": false,
+  "reminders": true,
+  "reminder_offset_minutes": 30
+}
+```
+
+**Поля**
+
+- `enabled` — включены ли уведомления вообще
+- `sound` — использовать звук
+- `vibration` — использовать вибрацию
+- `do_not_disturb` — «Не беспокоить» (полный запрет отправки)
+- `reminders` — напоминания о тренировках
+- `reminder_offset_minutes` — за сколько минут до `planned_for` отправлять push
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+
+---
+
+### 2.6 `PATCH /api/users/me/notifications`
+
+Обновление настроек уведомлений пользователя.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Request body**
+
+Передается минимум одно поле:
+
+```json
+{
+  "enabled": true,
+  "sound": true,
+  "vibration": false,
+  "do_not_disturb": false,
+  "reminders": true,
+  "reminder_offset_minutes": 30
+}
+```
+
+**Response 200**
+
+```json
+{
+  "enabled": true,
+  "sound": true,
+  "vibration": false,
+  "do_not_disturb": false,
+  "reminders": true,
+  "reminder_offset_minutes": 30
+}
+```
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `422` — ошибка валидации
+
+---
+
+### 2.7 `POST /api/users/me/notifications/subscriptions`
+
+Регистрация/обновление push-подписки пользователя.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Request body**
+
+```json
+{
+  "endpoint": "https://fcm.googleapis.com/fcm/send/...",
+  "keys": {
+    "p256dh": "base64==",
+    "auth": "base64=="
+  }
+}
+```
+
+**Response 204**
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `422` — ошибка валидации
+
+---
+
+### 2.8 `DELETE /api/users/me/notifications/subscriptions`
+
+Удаление push-подписки пользователя.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Request body**
+
+```json
+{
+  "endpoint": "https://fcm.googleapis.com/fcm/send/..."
+}
+```
+
+**Response 204**
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `404` — подписка не найдена
+
+---
+
+### 2.9 `GET /api/notifications/vapid-public-key`
+
+Получение публичного VAPID ключа для регистрации push-подписки.
+
+**Response 200**
+
+```json
+{
+  "public_key": "BElu...base64url..."
+}
+```
+
+**Ошибки**
+
+- `400` — VAPID public key не настроен
+
+---
+
 ## 3) Упражнения
 
 В разделе есть два типа упражнений:
