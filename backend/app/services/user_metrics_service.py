@@ -28,14 +28,14 @@ async def build_weekly_sessions_progress(db: AsyncSession, user_id: UUID) -> Wee
         range_start=week_start,
         range_end=week_end,
     )
-    future_planned = await workout_repository.count_planned_in_range(
+    planned_this_week = await workout_repository.count_planned_in_range(
         db=db,
         user_id=user_id,
-        range_start=now_utc,
+        range_start=week_start,
         range_end=week_end,
     )
 
-    return WeeklySessionsProgress(completed=completed, total=completed + future_planned)
+    return WeeklySessionsProgress(completed=completed, total=planned_this_week)
 
 
 async def build_user_response(db: AsyncSession, user: User) -> UserResponse:
