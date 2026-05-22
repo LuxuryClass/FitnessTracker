@@ -57,6 +57,7 @@ export default defineConfig({
         navigateFallback: 'index.html',
         skipWaiting: true,
         clientsClaim: true,
+        importScripts: ['push-handlers.js'],
         runtimeCaching: [
           {
             urlPattern: ({ request, url }) =>
