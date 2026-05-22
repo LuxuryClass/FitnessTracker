@@ -79,7 +79,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["sh", "-c", "alembic upgrade head && celery -A app.core.celery_app.celery_app worker -l info"]
+    command: ["sh", "-c", "celery -A app.core.celery_app.celery_app worker -l info --concurrency=1 --max-tasks-per-child=1"]
     restart: unless-stopped
 
   celery-beat:
@@ -104,7 +104,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["sh", "-c", "alembic upgrade head && celery -A app.core.celery_app.celery_app beat -l info"]
+    command: ["sh", "-c", "celery -A app.core.celery_app.celery_app beat -l info"]
     restart: unless-stopped
 
 volumes:

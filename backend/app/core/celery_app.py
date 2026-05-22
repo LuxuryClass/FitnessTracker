@@ -7,6 +7,7 @@ celery_app = Celery(
     "flame_fitness",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
+    include=["app.tasks.notifications"],
 )
 
 celery_app.conf.update(
@@ -19,5 +20,3 @@ celery_app.conf.update(
         }
     },
 )
-
-celery_app.autodiscover_tasks(["app.tasks"])
