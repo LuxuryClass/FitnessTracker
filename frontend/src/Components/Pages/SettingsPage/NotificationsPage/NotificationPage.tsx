@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/Components/UI/Button/Button';
 import { Toggle } from '@/Components/UI/Toggle/Toggle';
 import { useAuth } from '@/Auth';
@@ -12,6 +13,7 @@ import {
   type NotificationSettings as ApiNotificationSettings,
   type NotificationSettingsUpdatePayload,
 } from '@/Notifications';
+import { useNotificationSettingsQuery } from '@/hooks/useNotificationSettingsQuery';
 import styles from './Styles.module.scss';
 
 interface UiSettings {
@@ -49,56 +51,38 @@ const apiToUi = (api: ApiNotificationSettings): UiSettings => ({
 });
 
 const NotificationsPage = () => {
-  const { tokens } = useAuth();
+  const { tokens, user } = useAuth();
   const accessToken = tokens?.accessToken ?? null;
+  const queryClient = useQueryClient();
+  const queryKey = ['notificationSettings', user?.id] as const;
 
-  const [settings, setSettings] = useState<UiSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Чтение настроек через React Query — кэш и стейт загрузки берутся отсюда.
+  const { data: apiSettings, isLoading, error: queryError } = useNotificationSettingsQuery();
+  const settings: UiSettings | null = apiSettings ? apiToUi(apiSettings) : null;
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const timeInputRef = useRef<HTMLInputElement>(null);
 
-  // Загружаем настройки при монтировании.
-  useEffect(() => {
-    if (!accessToken) return;
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const response = await notificationsApi.getSettings(accessToken);
-        if (!cancelled) {
-          setSettings(apiToUi(response));
-          setError(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          const message = err instanceof ApiError ? err.message : 'Не удалось загрузить настройки уведомлений.';
-          setError(message);
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    };
-
-    void load();
-    return () => { cancelled = true; };
-  }, [accessToken]);
-
-  // Универсальный PATCH с откатом UI при ошибке.
+  // Optimistic PATCH: мгновенно обновляем кэш React Query, дёргаем API,
+  // на ошибке возвращаем предыдущее значение в кэш.
   const patchSettings = async (
     payload: NotificationSettingsUpdatePayload,
-    optimistic: UiSettings,
-    rollback: UiSettings,
+    optimisticApi: ApiNotificationSettings,
   ) => {
     if (!accessToken) return;
-    setSettings(optimistic);
+
+    const previous = queryClient.getQueryData<ApiNotificationSettings>(queryKey);
+    queryClient.setQueryData<ApiNotificationSettings>(queryKey, optimisticApi);
     setIsSaving(true);
     setError(null);
     try {
       const response = await notificationsApi.updateSettings(accessToken, payload);
-      setSettings(apiToUi(response));
+      queryClient.setQueryData<ApiNotificationSettings>(queryKey, response);
     } catch (err) {
-      setSettings(rollback);
+      if (previous) {
+        queryClient.setQueryData<ApiNotificationSettings>(queryKey, previous);
+      }
       const message = err instanceof ApiError ? err.message : 'Не удалось сохранить настройки.';
       setError(message);
     } finally {
@@ -107,7 +91,7 @@ const NotificationsPage = () => {
   };
 
   // Включение уведомлений: запрос permission -> push subscribe -> upsert на сервер -> PATCH enabled=true.
-  const enableNotifications = async (current: UiSettings): Promise<void> => {
+  const enableNotifications = async (): Promise<void> => {
     if (!accessToken) return;
     if (!isPushSupported()) {
       setError('Push-уведомления не поддерживаются в этом браузере.');
@@ -128,9 +112,8 @@ const NotificationsPage = () => {
       await notificationsApi.upsertSubscription(accessToken, subscription);
 
       const response = await notificationsApi.updateSettings(accessToken, { enabled: true });
-      setSettings(apiToUi(response));
+      queryClient.setQueryData<ApiNotificationSettings>(queryKey, response);
     } catch (err) {
-      setSettings(current);
       const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Не удалось включить уведомления.';
       setError(message);
     } finally {
@@ -139,7 +122,7 @@ const NotificationsPage = () => {
   };
 
   // Отключение: unsubscribe -> удалить подписку на сервере -> PATCH enabled=false.
-  const disableNotifications = async (current: UiSettings): Promise<void> => {
+  const disableNotifications = async (): Promise<void> => {
     if (!accessToken) return;
     setIsSaving(true);
     setError(null);
@@ -156,9 +139,8 @@ const NotificationsPage = () => {
         }
       }
       const response = await notificationsApi.updateSettings(accessToken, { enabled: false });
-      setSettings(apiToUi(response));
+      queryClient.setQueryData<ApiNotificationSettings>(queryKey, response);
     } catch (err) {
-      setSettings(current);
       const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Не удалось отключить уведомления.';
       setError(message);
     } finally {
@@ -169,35 +151,40 @@ const NotificationsPage = () => {
   const handleToggleEnabled = () => {
     if (!settings || isSaving) return;
     if (settings.enabled) {
-      void disableNotifications(settings);
+      void disableNotifications();
     } else {
-      void enableNotifications(settings);
+      void enableNotifications();
     }
   };
 
   const handleToggleBoolean = (key: 'sound' | 'vibration' | 'doNotDisturb' | 'reminders') => {
-    if (!settings || isSaving) return;
-    const next: UiSettings = { ...settings, [key]: !settings[key] };
+    if (!settings || !apiSettings || isSaving) return;
     const apiKeyMap = {
       sound: 'sound',
       vibration: 'vibration',
       doNotDisturb: 'do_not_disturb',
       reminders: 'reminders',
     } as const;
-    void patchSettings({ [apiKeyMap[key]]: next[key] }, next, settings);
+    const apiKey = apiKeyMap[key];
+    const nextValue = !settings[key];
+    const optimisticApi: ApiNotificationSettings = { ...apiSettings, [apiKey]: nextValue };
+    void patchSettings({ [apiKey]: nextValue }, optimisticApi);
   };
 
   const handleReminderTimeChange = (value: string) => {
-    if (!settings || isSaving) return;
-    const next: UiSettings = { ...settings, reminderTime: value };
+    if (!settings || !apiSettings || isSaving) return;
     const minutes = timeStringToMinutes(value);
-    void patchSettings({ reminder_offset_minutes: minutes }, next, settings);
+    const optimisticApi: ApiNotificationSettings = { ...apiSettings, reminder_offset_minutes: minutes };
+    void patchSettings({ reminder_offset_minutes: minutes }, optimisticApi);
   };
 
   const handleTimeClick = () => {
     timeInputRef.current?.showPicker?.();
     timeInputRef.current?.click();
   };
+
+  // Ошибка загрузки query показывается так же, как остальные.
+  const displayError = error ?? (queryError instanceof Error ? queryError.message : null);
 
   if (isLoading || !settings) {
     return (
@@ -206,7 +193,7 @@ const NotificationsPage = () => {
           <Button size="back" />
           <h1 className={styles.title}>Уведомления</h1>
         </div>
-        {error && <p className={styles.error}>{error}</p>}
+        {displayError && <p className={styles.error}>{displayError}</p>}
       </div>
     );
   }
@@ -218,7 +205,7 @@ const NotificationsPage = () => {
         <h1 className={styles.title}>Уведомления</h1>
       </div>
 
-      {error && <p className={styles.error}>{error}</p>}
+      {displayError && <p className={styles.error}>{displayError}</p>}
 
       {/* Первый список */}
       <div className={styles.list}>
