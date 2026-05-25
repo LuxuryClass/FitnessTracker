@@ -14,6 +14,7 @@ import {
   type NotificationSettingsUpdatePayload,
 } from '@/Notifications';
 import { useNotificationSettingsQuery } from '@/hooks/useNotificationSettingsQuery';
+import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 import styles from './Styles.module.scss';
 
 interface UiSettings {
@@ -55,6 +56,7 @@ const NotificationsPage = () => {
   const accessToken = tokens?.accessToken ?? null;
   const queryClient = useQueryClient();
   const queryKey = ['notificationSettings', user?.id] as const;
+  const callWithAuth = useAuthenticatedCall();
 
   const { data: apiSettings, isLoading, error: queryError } = useNotificationSettingsQuery();
   const settings: UiSettings | null = apiSettings ? apiToUi(apiSettings) : null;
@@ -72,7 +74,7 @@ const NotificationsPage = () => {
     queryClient.setQueryData<ApiNotificationSettings>(queryKey, optimisticApi);
     setError(null);
     try {
-      await notificationsApi.updateSettings(accessToken, payload);
+      await callWithAuth((token) => notificationsApi.updateSettings(token, payload));
     } catch (err) {
       void queryClient.invalidateQueries({ queryKey });
       const message = err instanceof ApiError ? err.message : 'Не удалось сохранить настройки.';
@@ -91,10 +93,10 @@ const NotificationsPage = () => {
         return;
       }
 
-      const vapidPublicKey = await notificationsApi.getVapidPublicKey(accessToken);
+      const vapidPublicKey = await callWithAuth((token) => notificationsApi.getVapidPublicKey(token));
       const subscription = await subscribeToPush(vapidPublicKey);
-      await notificationsApi.upsertSubscription(accessToken, subscription);
-      await notificationsApi.updateSettings(accessToken, { enabled: true });
+      await callWithAuth((token) => notificationsApi.upsertSubscription(token, subscription));
+      await callWithAuth((token) => notificationsApi.updateSettings(token, { enabled: true }));
     } catch (err) {
       void queryClient.invalidateQueries({ queryKey });
       const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Не удалось включить уведомления.';
@@ -109,7 +111,7 @@ const NotificationsPage = () => {
       const endpoint = await unsubscribeFromPush();
       if (endpoint) {
         try {
-          await notificationsApi.deleteSubscription(accessToken, endpoint);
+          await callWithAuth((token) => notificationsApi.deleteSubscription(token, endpoint));
         } catch (err) {
           // 404 — подписки уже нет на сервере, это норма; остальное пробрасываем.
           if (!(err instanceof ApiError) || err.status !== 404) {
@@ -117,7 +119,7 @@ const NotificationsPage = () => {
           }
         }
       }
-      await notificationsApi.updateSettings(accessToken, { enabled: false });
+      await callWithAuth((token) => notificationsApi.updateSettings(token, { enabled: false }));
     } catch (err) {
       void queryClient.invalidateQueries({ queryKey });
       const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Не удалось отключить уведомления.';
