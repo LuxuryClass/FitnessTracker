@@ -56,76 +56,55 @@ const NotificationsPage = () => {
   const queryClient = useQueryClient();
   const queryKey = ['notificationSettings', user?.id] as const;
 
-  // Чтение настроек через React Query — кэш и стейт загрузки берутся отсюда.
   const { data: apiSettings, isLoading, error: queryError } = useNotificationSettingsQuery();
   const settings: UiSettings | null = apiSettings ? apiToUi(apiSettings) : null;
 
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const timeInputRef = useRef<HTMLInputElement>(null);
 
-  // Optimistic PATCH: мгновенно обновляем кэш React Query, дёргаем API,
-  // на ошибке возвращаем предыдущее значение в кэш.
+
   const patchSettings = async (
     payload: NotificationSettingsUpdatePayload,
     optimisticApi: ApiNotificationSettings,
   ) => {
     if (!accessToken) return;
 
-    const previous = queryClient.getQueryData<ApiNotificationSettings>(queryKey);
     queryClient.setQueryData<ApiNotificationSettings>(queryKey, optimisticApi);
-    setIsSaving(true);
     setError(null);
     try {
-      const response = await notificationsApi.updateSettings(accessToken, payload);
-      queryClient.setQueryData<ApiNotificationSettings>(queryKey, response);
+      await notificationsApi.updateSettings(accessToken, payload);
     } catch (err) {
-      if (previous) {
-        queryClient.setQueryData<ApiNotificationSettings>(queryKey, previous);
-      }
+      void queryClient.invalidateQueries({ queryKey });
       const message = err instanceof ApiError ? err.message : 'Не удалось сохранить настройки.';
       setError(message);
-    } finally {
-      setIsSaving(false);
     }
   };
 
   // Включение уведомлений: запрос permission -> push subscribe -> upsert на сервер -> PATCH enabled=true.
   const enableNotifications = async (): Promise<void> => {
     if (!accessToken) return;
-    if (!isPushSupported()) {
-      setError('Push-уведомления не поддерживаются в этом браузере.');
-      return;
-    }
-
-    setIsSaving(true);
-    setError(null);
     try {
       const permission = await requestNotificationPermission();
       if (permission !== 'granted') {
         setError('Разрешение на уведомления отклонено.');
+        void queryClient.invalidateQueries({ queryKey });
         return;
       }
 
       const vapidPublicKey = await notificationsApi.getVapidPublicKey(accessToken);
       const subscription = await subscribeToPush(vapidPublicKey);
       await notificationsApi.upsertSubscription(accessToken, subscription);
-
-      const response = await notificationsApi.updateSettings(accessToken, { enabled: true });
-      queryClient.setQueryData<ApiNotificationSettings>(queryKey, response);
+      await notificationsApi.updateSettings(accessToken, { enabled: true });
     } catch (err) {
+      void queryClient.invalidateQueries({ queryKey });
       const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Не удалось включить уведомления.';
       setError(message);
-    } finally {
-      setIsSaving(false);
     }
   };
 
   // Отключение: unsubscribe -> удалить подписку на сервере -> PATCH enabled=false.
   const disableNotifications = async (): Promise<void> => {
     if (!accessToken) return;
-    setIsSaving(true);
-    setError(null);
     try {
       const endpoint = await unsubscribeFromPush();
       if (endpoint) {
@@ -138,27 +117,36 @@ const NotificationsPage = () => {
           }
         }
       }
-      const response = await notificationsApi.updateSettings(accessToken, { enabled: false });
-      queryClient.setQueryData<ApiNotificationSettings>(queryKey, response);
+      await notificationsApi.updateSettings(accessToken, { enabled: false });
     } catch (err) {
+      void queryClient.invalidateQueries({ queryKey });
       const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Не удалось отключить уведомления.';
       setError(message);
-    } finally {
-      setIsSaving(false);
     }
   };
 
   const handleToggleEnabled = () => {
-    if (!settings || isSaving) return;
-    if (settings.enabled) {
-      void disableNotifications();
-    } else {
+    if (!settings || !apiSettings) return;
+    const nextEnabled = !settings.enabled;
+
+    if (nextEnabled && !isPushSupported()) {
+      setError('Push-уведомления не поддерживаются в этом браузере.');
+      return;
+    }
+
+    setError(null);
+    const optimisticApi: ApiNotificationSettings = { ...apiSettings, enabled: nextEnabled };
+    queryClient.setQueryData<ApiNotificationSettings>(queryKey, optimisticApi);
+
+    if (nextEnabled) {
       void enableNotifications();
+    } else {
+      void disableNotifications();
     }
   };
 
   const handleToggleBoolean = (key: 'sound' | 'vibration' | 'doNotDisturb' | 'reminders') => {
-    if (!settings || !apiSettings || isSaving) return;
+    if (!settings || !apiSettings) return;
     const apiKeyMap = {
       sound: 'sound',
       vibration: 'vibration',
@@ -172,7 +160,7 @@ const NotificationsPage = () => {
   };
 
   const handleReminderTimeChange = (value: string) => {
-    if (!settings || !apiSettings || isSaving) return;
+    if (!settings || !apiSettings) return;
     const minutes = timeStringToMinutes(value);
     const optimisticApi: ApiNotificationSettings = { ...apiSettings, reminder_offset_minutes: minutes };
     void patchSettings({ reminder_offset_minutes: minutes }, optimisticApi);

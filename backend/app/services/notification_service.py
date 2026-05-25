@@ -18,7 +18,7 @@ class NotificationService:
             created = await notification_settings_repository.create(
                 db=db,
                 user_id=current_user.id,
-                enabled=True,
+                enabled=False,
                 sound=True,
                 vibration=False,
                 do_not_disturb=False,
@@ -45,7 +45,7 @@ class NotificationService:
             existing = await notification_settings_repository.create(
                 db=db,
                 user_id=current_user.id,
-                enabled=True,
+                enabled=False,
                 sound=True,
                 vibration=False,
                 do_not_disturb=False,

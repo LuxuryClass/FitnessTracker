@@ -24,7 +24,7 @@ class UserNotificationSettings(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     sound: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     vibration: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     do_not_disturb: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
