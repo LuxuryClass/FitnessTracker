@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import { Input } from '@/Components/UI/Input/Input';
 import styles from './Styles.module.scss';
-import searchIcon from "/Public/icons/Search.svg";
+import searchIcon from "/icons/Search.svg";
 import cn from 'classnames';
 import ExerciseCard from '@/Components/Common/ExerciseCard/ExerciseCard';
 
