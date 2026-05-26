@@ -5,6 +5,7 @@ from app.repositories.notification_settings_repository import notification_setti
 from app.repositories.push_subscription_repository import push_subscription_repository
 from app.repositories.user_repository import user_repository
 from app.repositories.workout_exercise_repository import workout_exercise_repository
+from app.repositories.workout_exercise_target_set_repository import workout_exercise_target_set_repository
 from app.repositories.workout_notification_log_repository import workout_notification_log_repository
 from app.repositories.workout_repository import workout_repository
 from app.repositories.workout_session_repository import workout_session_repository
@@ -18,6 +19,7 @@ __all__ = [
     "workout_repository",
     "exercise_repository",
     "workout_exercise_repository",
+    "workout_exercise_target_set_repository",
     "workout_session_repository",
     "workout_session_set_repository",
 ]

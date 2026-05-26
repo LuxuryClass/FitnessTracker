@@ -1,16 +1,48 @@
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+class WorkoutTargetSetItem(BaseModel):
+    set_index: int = Field(ge=1)
+    target_reps: int | None = Field(default=None, gt=0)
+    target_weight_kg: Decimal | None = Field(default=None, ge=0)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+def _validate_target_sets(
+    value: list[WorkoutTargetSetItem] | None,
+) -> list[WorkoutTargetSetItem] | None:
+    if value is None:
+        return None
+    indices = [item.set_index for item in value]
+    expected = list(range(1, len(value) + 1))
+    if indices != expected:
+        raise ValueError(
+            "target_sets должны иметь последовательные set_index 1..N без пропусков и дублей."
+        )
+    return value
+
+
 class WorkoutExerciseCreateItem(BaseModel):
     exercise_id: UUID
+    target_sets: list[WorkoutTargetSetItem] | None = Field(default=None, max_length=100)
+
+    @field_validator("target_sets")
+    @classmethod
+    def validate_target_sets(
+        cls, value: list[WorkoutTargetSetItem] | None
+    ) -> list[WorkoutTargetSetItem] | None:
+        return _validate_target_sets(value)
 
 
 class WorkoutExerciseResponse(BaseModel):
     exercise_id: UUID
     order_index: int = Field(ge=1)
+    target_sets: list[WorkoutTargetSetItem] = Field(default_factory=list)
 
 
 class WorkoutCreateRequest(BaseModel):
@@ -137,3 +169,24 @@ class WorkoutResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class NextWorkoutExerciseItem(BaseModel):
+    name: str
+    muscle_groups: list[str]
+    order_index: int
+    sets_count: int | None = None
+    target_reps_min: int | None = None
+    target_reps_max: int | None = None
+    target_weight_kg_min: Decimal | None = None
+    target_weight_kg_max: Decimal | None = None
+
+
+class NextWorkoutResponse(BaseModel):
+    id: UUID
+    title: str
+    planned_for: datetime
+    estimated_duration_minutes: int | None = None
+    exercises_count: int
+    muscle_groups: list[str]
+    exercises: list[NextWorkoutExerciseItem]

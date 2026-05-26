@@ -1,17 +1,18 @@
 import { Header } from './components/Header/header';
 import { RecentCardData, RecentCardsList } from './components/RecentProgress/RecentProgress';
 import { StatCard } from '../../Common/StatCard/StatCard';
-import { TodayWorkout } from './components/TodayWorkout/TodayWorkautCard';
+import { TodayWorkout, type TodayWorkoutExercise } from './components/TodayWorkout/TodayWorkautCard';
 import styles from './Styles.module.scss';
 import { WeekCalendarSection } from './components/WeekCalendarSection/WeekCalendarSection';
 import { useAuth } from '@/Auth';
-import { RecentProgressItem } from '@/Auth/authApi';
+import { RecentProgressItem, type NextWorkoutExerciseItem } from '@/Auth/authApi';
 import defaultAvatar from '/masscot-main.png';
 import { useCallback, useState } from 'react';
 import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
 import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
 import { useScheduleQuery } from '@/hooks/useScheduleQuery';
 import { useRecentProgressQuery } from '@/hooks/useRecentProgressQuery';
+import { useNextWorkoutQuery } from '@/hooks/useNextWorkoutQuery';
 
 const formatDate = (d: Date): string => {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -35,6 +36,7 @@ const HomePage = () => {
 
   const { data: scheduleData = [] } = useScheduleQuery(weekRange.from, weekRange.to);
   const { data: recentProgressData = [] } = useRecentProgressQuery();
+  const { data: nextWorkout } = useNextWorkoutQuery();
 
   const userName = user?.name ?? "Пользователь";
   const userAvatar = user?.avatar_url ?? defaultAvatar;
@@ -79,20 +81,28 @@ const HomePage = () => {
       {/* Блок "Шапка" */}
       <Header className={styles.header} userName={userName} userAvatar={userAvatar}/>
 
-      {/* Блок "Ближайшая тренеровка" */}
-      <TodayWorkout  title = "День жимов"
-        duration = "75 мин"
-        exercisesCount = {6}
-        muscleGroups = {["Грудь", "Плечи"]}
-        exercises = {[
-          { name: "Жим лежа", sets: 4, reps: 10, muscleGroup: "Грудь" },
-          { name: "Жим гантелей", sets: 3, reps: 12, muscleGroup: "Грудь" },
-          { name: "Жим гантелей", sets: 3, reps: 12, muscleGroup: "Грудь" },
-          { name: "Жим гантелей", sets: 3, reps: 12, muscleGroup: "Грудь" },
-          { name: "Жим гантелей", sets: 3, reps: 12, muscleGroup: "Грудь" },
-          { name: "Жим гантелей", sets: 3, reps: 12, muscleGroup: "Грудь" },
-        ]}
-      />
+      {/* Блок "Ближайшая тренировка" */}
+      {nextWorkout ? (
+        <TodayWorkout
+          title={nextWorkout.title}
+          plannedFor={nextWorkout.planned_for}
+          durationMinutes={nextWorkout.estimated_duration_minutes}
+          exercisesCount={nextWorkout.exercises_count}
+          muscleGroups={nextWorkout.muscle_groups}
+          exercises={nextWorkout.exercises.map((item: NextWorkoutExerciseItem): TodayWorkoutExercise => ({
+            name: item.name,
+            // На карточке показываем первую группу мышц упражнения — этого достаточно для краткой пометки.
+            muscleGroup: item.muscle_groups[0] ?? '',
+            setsCount: item.sets_count,
+            targetRepsMin: item.target_reps_min,
+            targetRepsMax: item.target_reps_max,
+            targetWeightKgMin: item.target_weight_kg_min !== null ? Number(item.target_weight_kg_min) : null,
+            targetWeightKgMax: item.target_weight_kg_max !== null ? Number(item.target_weight_kg_max) : null,
+          }))}
+        />
+      ) : (
+        <TodayWorkout isEmpty />
+      )}
 
       {/* Блок "Миникарточки статистики" */}
       <div className={styles.minicards}>

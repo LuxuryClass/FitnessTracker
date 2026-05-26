@@ -153,6 +153,27 @@ export interface RecentProgressItem {
   previous_max_weight_kg: number | string | null;
 }
 
+export interface NextWorkoutExerciseItem {
+  name: string;
+  muscle_groups: string[];
+  order_index: number;
+  sets_count: number | null;
+  target_reps_min: number | null;
+  target_reps_max: number | null;
+  target_weight_kg_min: number | string | null;
+  target_weight_kg_max: number | string | null;
+}
+
+export interface NextWorkoutResponse {
+  id: string;
+  title: string;
+  planned_for: string;
+  estimated_duration_minutes: number | null;
+  exercises_count: number;
+  muscle_groups: string[];
+  exercises: NextWorkoutExerciseItem[];
+}
+
 const mapTokens = (pair: AccessTokenResponse): StoredTokens => ({
   accessToken: pair.access_token,
   tokenType: pair.token_type,
@@ -233,6 +254,13 @@ export const authApi = {
 
   async getSchedule(accessToken: string, dateFrom: string, dateTo: string): Promise<ScheduleWorkoutItem[]> {
     return request<ScheduleWorkoutItem[]>(`/workouts/schedule?date_from=${dateFrom}&date_to=${dateTo}`, {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async getNextWorkout(accessToken: string): Promise<NextWorkoutResponse | null> {
+    return request<NextWorkoutResponse | null>("/workouts/next", {
       method: "GET",
       accessToken,
     });
