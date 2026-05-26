@@ -13,6 +13,7 @@ import EditProfilePage from '@/Components/Pages/SettingsPage/EditProfilePage/Edi
 import NotificationsPage from '@/Components/Pages/SettingsPage/NotificationsPage/NotificationPage';
 import PrivacyPage from '@/Components/Pages/SettingsPage/PrivacyPage/PrivacyPage';
 import SchedulePage from '@/Components/Pages/ShedulePage/ShedulePage';
+import ExerciseSelectPage from '@/Components/Pages/AddPa/components/ExerciseSelectPage/ExerciseSelectPage';
 
 export function App() {
   return (
@@ -34,6 +35,7 @@ export function App() {
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
 
+            <Route path="/exercises/:groupId" element={<ExerciseSelectPage />} />
             <Route path="/edit-profile" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />

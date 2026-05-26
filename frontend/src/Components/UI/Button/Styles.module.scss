@@ -43,9 +43,16 @@
   }
 
   &_s {
-    @include button_text_h3();
+    @include text_subtitle();
+    height: 32px;
+    color: var(--Primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     border-radius: var(--small-radius);
   }
+
 
   &_primary {
     background-color: var(--Primary-color);
