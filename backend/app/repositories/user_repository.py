@@ -1,4 +1,5 @@
 from uuid import UUID
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +41,18 @@ class UserRepository:
             user.email = email
         if username is not None:
             user.username = username
+        await db.flush()
+        return user
+
+    async def update_metrics(
+        self,
+        db: AsyncSession,
+        user: User,
+        streak_weeks: int,
+        weekly_volume_tons: Decimal,
+    ) -> User:
+        user.streak_weeks = streak_weeks
+        user.weekly_volume_tons = weekly_volume_tons
         await db.flush()
         return user
 

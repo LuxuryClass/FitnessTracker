@@ -661,6 +661,230 @@
 
 ---
 
+## 5) Тренировочные сессии
+
+Все endpoint-ы раздела работают только с **сессиями текущего пользователя**.
+
+### 5.1 `POST /api/workout-sessions/start`
+
+Запуск тренировочной сессии по существующей тренировке.
+
+Если у пользователя уже есть активная сессия этой же тренировки, backend вернет ее (без создания дубля).
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Request body**
+
+```json
+{
+  "workout_id": "f642622f-42eb-4392-83f1-27c4f1433414"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "id": "5bcb3b4f-6d64-4f96-9a4d-cdc39528b366",
+  "user_id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
+  "workout_id": "f642622f-42eb-4392-83f1-27c4f1433414",
+  "status": "in_progress",
+  "started_at": "2026-05-07T18:20:00+00:00",
+  "completed_at": null,
+  "created_at": "2026-05-07T18:20:00+00:00",
+  "updated_at": "2026-05-07T18:20:00+00:00",
+  "sets": []
+}
+```
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `404` — тренировка не найдена
+- `400` — уже есть активная сессия другой тренировки
+- `422` — ошибка валидации
+
+---
+
+### 5.2 `GET /api/workout-sessions/active`
+
+Получение текущей активной сессии пользователя.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Response 200**
+
+Если активной сессии нет:
+
+```json
+null
+```
+
+Если есть активная сессия:
+
+```json
+{
+  "id": "5bcb3b4f-6d64-4f96-9a4d-cdc39528b366",
+  "user_id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
+  "workout_id": "f642622f-42eb-4392-83f1-27c4f1433414",
+  "status": "in_progress",
+  "started_at": "2026-05-07T18:20:00+00:00",
+  "completed_at": null,
+  "created_at": "2026-05-07T18:20:00+00:00",
+  "updated_at": "2026-05-07T18:30:00+00:00",
+  "sets": [
+    {
+      "id": "5a8559bf-c5ca-4b51-ab8d-1fda29b3f019",
+      "session_id": "5bcb3b4f-6d64-4f96-9a4d-cdc39528b366",
+      "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
+      "client_event_id": "dfa7b7a7-0baf-4efd-a98b-c13fc52f9b5a",
+      "set_index": 1,
+      "weight_kg": 60.0,
+      "reps": 10,
+      "created_at": "2026-05-07T18:22:00+00:00",
+      "updated_at": "2026-05-07T18:22:00+00:00"
+    }
+  ]
+}
+```
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+
+---
+
+### 5.3 `GET /api/workout-sessions/{session_id}`
+
+Получение конкретной сессии пользователя по id (активной или завершенной).
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Response 200**
+
+Формат такой же, как в `GET /api/workout-sessions/active` (объект с полем `sets`).
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `404` — сессия не найдена
+
+---
+
+### 5.4 `POST /api/workout-sessions/{session_id}/sets`
+
+Создание или обновление записи подхода (upsert) в рамках активной сессии.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Request body**
+
+```json
+{
+  "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
+  "client_event_id": "dfa7b7a7-0baf-4efd-a98b-c13fc52f9b5a",
+  "set_index": 1,
+  "weight_kg": 60.0,
+  "reps": 10
+}
+```
+
+**Поля**
+
+- `exercise_id` — UUID упражнения из выбранной тренировки
+- `client_event_id` — UUID события клиента (для идемпотентности)
+- `set_index` — номер подхода, `>= 1`
+- `weight_kg` — вес, `>= 0`
+- `reps` — количество повторений, `>= 1`
+
+**Правила**
+
+- если повторно отправить тот же `client_event_id`, дубль не создается (возвращается уже сохраненная запись);
+- upsert выполняется по паре (`exercise_id`, `set_index`);
+- подход можно добавить только в сессию со статусом `in_progress`.
+
+**Response 200**
+
+```json
+{
+  "id": "5a8559bf-c5ca-4b51-ab8d-1fda29b3f019",
+  "session_id": "5bcb3b4f-6d64-4f96-9a4d-cdc39528b366",
+  "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
+  "client_event_id": "dfa7b7a7-0baf-4efd-a98b-c13fc52f9b5a",
+  "set_index": 1,
+  "weight_kg": 60.0,
+  "reps": 10,
+  "created_at": "2026-05-07T18:22:00+00:00",
+  "updated_at": "2026-05-07T18:22:00+00:00"
+}
+```
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `404` — сессия не найдена
+- `400` — сессия завершена или упражнение не входит в тренировку
+- `422` — ошибка валидации
+
+---
+
+### 5.5 `POST /api/workout-sessions/{session_id}/complete`
+
+Завершение активной сессии.
+
+При завершении backend обновляет пользовательские метрики:
+
+- `streak_weeks`
+- `weekly_volume_tons`
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Response 200**
+
+```json
+{
+  "id": "5bcb3b4f-6d64-4f96-9a4d-cdc39528b366",
+  "user_id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
+  "workout_id": "f642622f-42eb-4392-83f1-27c4f1433414",
+  "status": "completed",
+  "started_at": "2026-05-07T18:20:00+00:00",
+  "completed_at": "2026-05-07T19:05:00+00:00",
+  "created_at": "2026-05-07T18:20:00+00:00",
+  "updated_at": "2026-05-07T19:05:00+00:00",
+  "sets": [
+    {
+      "id": "5a8559bf-c5ca-4b51-ab8d-1fda29b3f019",
+      "session_id": "5bcb3b4f-6d64-4f96-9a4d-cdc39528b366",
+      "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
+      "client_event_id": "dfa7b7a7-0baf-4efd-a98b-c13fc52f9b5a",
+      "set_index": 1,
+      "weight_kg": 60.0,
+      "reps": 10,
+      "created_at": "2026-05-07T18:22:00+00:00",
+      "updated_at": "2026-05-07T18:22:00+00:00"
+    }
+  ]
+}
+```
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `404` — сессия не найдена
+- `400` — сессия уже завершена
+
+---
+
 ## Быстрый рабочий сценарий для frontend
 
 1. Пользователь регистрируется (`POST /api/auth/register`) или логинится (`POST /api/auth/login`).
@@ -669,5 +893,6 @@
 4. Frontend получает профиль через `GET /api/users/me`.
 5. Frontend работает с упражнениями пользователя через `/api/exercises`.
 6. Frontend создает и редактирует тренировки через `/api/workouts`, передавая массив `exercises` c элементами формата `{ "exercise_id": "UUID" }`.
+7. При старте тренировки Frontend вызывает `POST /api/workout-sessions/start`, отправляет подходы через `POST /api/workout-sessions/{session_id}/sets` и завершает через `POST /api/workout-sessions/{session_id}/complete`.
 
 Дополнительно: seed-команды backend описаны в `docs/backend/SEEDS.md`.
