@@ -5,6 +5,7 @@ import { SettingsTab } from './components/SettingsTab/SettingsTabs';
 import { Button } from '@/Components/UI/Button/Button';
 import { TabsGroup } from '@/Components/UI/TabsGroup/TabsGroup';
 import ExercisesTabs from './components/ExercisesTabs/ExercisesTabs';
+import { PreviewTab } from './components/PreviewTab/PreviewTab';
 
 type TabType = 'settings' | 'exercises' | 'preview';
 
@@ -100,7 +101,19 @@ const CreateWorkoutPage = () => {
           />
         );
       case 'preview':
-        return <div className={styles.placeholder}>Превью</div>;
+        return (
+          <PreviewTab
+            workoutName={formData.workoutName}
+            date={formData.startType === 'schedule' ? formData.scheduleDate : undefined}
+            time={formData.startType === 'schedule' ? formData.scheduleTime : undefined}
+            exercises={[
+              { id: '1', name: 'Жим лежа', muscleGroup: 'Грудь' },
+              { id: '2', name: 'Жим гантелей', muscleGroup: 'Грудь' },
+              { id: '3', name: 'Махи гантелями', muscleGroup: 'Плечи' },
+            ]}
+            onReorder={(items) => console.log('Новый порядок:', items)}
+          />
+        );
       default:
         return <SettingsTab formData={formData} updateFormData={updateFormData} />;
     }

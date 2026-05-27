@@ -1,0 +1,64 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--Dark-grey-color);
+  border-radius: 12px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  border: 1px solid transparent; // ← добавить дефолтный бордер
+  
+  &_dragging {
+    background-color: var(--Accent-2-color);
+  }
+  
+  &_over {
+    border-color: var(--Primary-color);
+    background: rgba(159, 218, 22, 0.1);
+  }
+}
+
+
+.handle {
+  color: var(--Accent-grey-color);
+  cursor: grab;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  word-break: break-word;
+}
+
+.right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  justify-content: flex-end;
+}
+
+.maxWeight {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--Primary-color);
+  white-space: nowrap;
+}

@@ -10,12 +10,14 @@ interface MuscleGroupBadgeProps {
 const MuscleGroupBadgeComponent = ({ groups, className }: MuscleGroupBadgeProps) => {
   if (!groups || groups.length === 0) return null;
 
+  const uniqueGroups = [...new Set(groups)];
+
   return (
     <div className={cn(styles.badge, className)}>
-      {groups.map((group, index) => (
+      {uniqueGroups.map((group, index) => (
         <span key={index} className={styles.group}>
           {group}
-          {index < groups.length - 1 && <span className={styles.separator}>•</span>}
+          {index < uniqueGroups.length - 1 && <span className={styles.separator}>•</span>}
         </span>
       ))}
     </div>

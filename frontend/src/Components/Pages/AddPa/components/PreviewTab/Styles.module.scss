@@ -1,0 +1,82 @@
+@import '@styles/mixins.scss';
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// Карточка — появляется первой
+.tab > *:first-child {
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--Dark-grey-color);
+  border-radius: 16px;
+}
+
+.metaItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metaLabel {
+  font-size: 14px;
+  color: var(--Accent-grey-color);
+}
+
+.metaValue {
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.exercisesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out 0.1s forwards;
+}
+
+.sectionTitle {
+  @include text-subtitle();
+  text-align: start;
+}
+
+.exercisesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  > * {
+    opacity: 0;
+    animation: slideFromLeft 0.25s ease-out forwards;
+    @include staggerAnimation(0.07s, 20);
+  }
+}
+
+@keyframes slideFromLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.accentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out 0.15s forwards;
+}
