@@ -15,7 +15,7 @@ const NavigationComponent = () => {
     location.pathname === path || location.pathname.startsWith(path + "/");
 
   return (
-    <div className={styles.navigation}>
+    <div className={`${styles.navigation} bottom-nav`}>
       
       {/* Главная */}
       <Link to="/home" className={`${styles.link} ${isActive("/home") ? styles.link_active : ""}`}>

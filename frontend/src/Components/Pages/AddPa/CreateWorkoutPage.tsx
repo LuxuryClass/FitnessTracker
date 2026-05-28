@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import styles from './Styles.module.scss';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useLayoutEffect } from 'react';
 import { SettingsTab } from './components/SettingsTab/SettingsTabs';
 import { Button } from '@/Components/UI/Button/Button';
 import { TabsGroup } from '@/Components/UI/TabsGroup/TabsGroup';
@@ -42,6 +42,33 @@ const CreateWorkoutPage = () => {
     selectedTemplate: null,
     selectedExercises: {},
   });
+
+  useLayoutEffect(() => {
+    const updateNavHeight = () => {
+      const nav = document.querySelector('.bottom-nav');
+      if (nav) {
+        const height = nav.getBoundingClientRect().height;
+        document.documentElement.style.setProperty('--nav-bottom', `${height + 36}px`);
+      } else {
+        document.documentElement.style.setProperty('--nav-bottom', '94px');
+      }
+    };
+
+    updateNavHeight();
+
+    const nav = document.querySelector('.bottom-nav');
+    let observer: ResizeObserver | null = null;
+    if (nav) {
+      observer = new ResizeObserver(updateNavHeight);
+      observer.observe(nav);
+    }
+
+    window.addEventListener('resize', updateNavHeight);
+    return () => {
+      window.removeEventListener('resize', updateNavHeight);
+      if (observer) observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const date = passedDate || new Date();
