@@ -60,17 +60,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-
-  > * {
-    opacity: 0;
-    animation: slideFromLeft 0.25s ease-out forwards;
-    @include staggerAnimation(0.07s, 20);
-  }
-}
-
-@keyframes slideFromLeft {
-  from { opacity: 0; transform: translateX(-12px); }
-  to { opacity: 1; transform: translateX(0); }
 }
 
 .accentSection {
