@@ -7,6 +7,7 @@ interface ExerciseCardProps {
   targetMuscles: string[];
   equipment?: string[];
   imageUrl?: string;
+  onClick?: () => void;
   onToggle?: (id: string) => void;
   isSelected?: boolean;
   className?: string;
@@ -18,6 +19,7 @@ const ExerciseCard = ({
   targetMuscles, 
   equipment = [],
   imageUrl,
+  onClick,
   onToggle, 
   isSelected = false,
   className 
@@ -28,7 +30,7 @@ const ExerciseCard = ({
   };
 
   return (
-    <div className={cn(styles.card, className, isSelected && styles.selected)}>
+    <div className={cn(styles.card, className, isSelected && styles.selected)} onClick={onClick}>
       <div className={styles.cardContent}>
         {/* Картинка */}
         <div className={styles.cardImage}>

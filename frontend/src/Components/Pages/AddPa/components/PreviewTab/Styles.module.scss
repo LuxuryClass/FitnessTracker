@@ -1,12 +1,9 @@
-@import '@styles/mixins.scss';
-
 .tab {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-// Карточка — появляется первой
 .tab > *:first-child {
   opacity: 0;
   animation: fadeInUp 0.3s ease-out forwards;
