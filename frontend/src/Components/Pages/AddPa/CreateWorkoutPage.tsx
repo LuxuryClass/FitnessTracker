@@ -32,7 +32,6 @@ const CreateWorkoutPage = () => {
   const passedActiveTab = (location.state as any)?.activeTab as TabType | undefined;
 
   const [activeTab, setActiveTab] = useState<TabType>('settings');
-
   const [formData, setFormData] = useState<WorkoutFormData>({
     workoutName: '',
     startType: 'now',
@@ -50,7 +49,7 @@ const CreateWorkoutPage = () => {
         const height = nav.getBoundingClientRect().height;
         document.documentElement.style.setProperty('--nav-bottom', `${height + 36}px`);
       } else {
-        document.documentElement.style.setProperty('--nav-bottom', '94px');
+        document.documentElement.style.setProperty('--nav-bottom', '86px');
       }
     };
 
@@ -114,15 +113,10 @@ const CreateWorkoutPage = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'settings':
-        return (
-          <SettingsTab 
-            formData={formData}
-            updateFormData={updateFormData}
-          />
-        );
+        return <SettingsTab formData={formData} updateFormData={updateFormData} />;
       case 'exercises':
         return (
-          <ExercisesTabs 
+          <ExercisesTabs
             selectedExercises={formData.selectedExercises}
             onExercisesChange={(updater) => updateFormData('selectedExercises', updater)}
           />
