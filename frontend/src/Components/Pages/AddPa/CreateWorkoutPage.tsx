@@ -36,8 +36,12 @@ const CreateWorkoutPage = () => {
   const passedStartType = (location.state as any)?.startType as string | undefined;
   const passedActiveTab = (location.state as any)?.activeTab as TabType | undefined;
   const returnedSelectedExercises = (location.state as any)?.selectedExercises as Record<string, string[]> | undefined;
+  const returnedExerciseSearchQuery = (location.state as any)?.exerciseSearchQuery as string | undefined;
 
   const [activeTab, setActiveTab] = useState<TabType>('settings');
+  // Поисковый запрос на сетке категорий — живёт в корне, чтобы переход в /exercises/:id
+  // и обратно сохранял запрос (между переходами по табам и навигацией).
+  const [exerciseSearchQuery, setExerciseSearchQuery] = useState<string>('');
 
   const { data: allExercises = [] } = useExercisesQuery();
   const createWorkoutMutation = useCreateWorkoutMutation();
@@ -125,6 +129,13 @@ const CreateWorkoutPage = () => {
     }
   }, [returnedSelectedExercises]);
 
+  // Подхватываем поисковый запрос, который пользователь оставил на /exercises/:id.
+  useEffect(() => {
+    if (returnedExerciseSearchQuery !== undefined) {
+      setExerciseSearchQuery(returnedExerciseSearchQuery);
+    }
+  }, [returnedExerciseSearchQuery]);
+
   const updateFormData = useCallback(<K extends keyof WorkoutFormData>(
     key: K,
     value: WorkoutFormData[K] | ((prev: WorkoutFormData[K]) => WorkoutFormData[K])
@@ -198,6 +209,8 @@ const CreateWorkoutPage = () => {
           <ExercisesTabs
             selectedExercises={formData.selectedExercises}
             onExercisesChange={(updater) => updateFormData('selectedExercises', updater)}
+            initialSearchQuery={exerciseSearchQuery}
+            onSearchQueryChange={setExerciseSearchQuery}
           />
         );
       case 'preview':

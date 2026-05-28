@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import { Input } from '@/Components/UI/Input/Input';
@@ -18,13 +18,30 @@ interface MuscleGroup {
 interface ExercisesTabsProps {
   selectedExercises: Record<string, string[]>;
   onExercisesChange: (updater: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
+  initialSearchQuery?: string;
+  onSearchQueryChange?: (value: string) => void;
 }
 
-const ExercisesTabs = ({ selectedExercises, /*onExercisesChange*/ }: ExercisesTabsProps) => {
+const ExercisesTabs = ({
+  selectedExercises,
+  /*onExercisesChange*/
+  initialSearchQuery = '',
+  onSearchQueryChange,
+}: ExercisesTabsProps) => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const { user } = useAuth();
   const { data: exercises = [] } = useExercisesQuery();
+
+  // Подхватываем запрос, прокинутый сверху (после возврата с /exercises/:groupId).
+  useEffect(() => {
+    setSearchQuery(initialSearchQuery);
+  }, [initialSearchQuery]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    onSearchQueryChange?.(value);
+  };
 
   const muscleGroups: MuscleGroup[] = [
     { id: 'chest', name: 'Грудь', icon: '/icons/chest.svg' },
@@ -37,12 +54,20 @@ const ExercisesTabs = ({ selectedExercises, /*onExercisesChange*/ }: ExercisesTa
     { id: 'myself', name: 'Личные', icon: '/icons/personal.svg' },
   ];
 
-  const filteredGroups = muscleGroups.filter(group =>
-    group.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Поиск идёт только по названию упражнений. Категория показывается, если в ней
+  // есть хотя бы одно совпавшее упражнение; счётчик отражает число совпадений.
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const getMatchingExercises = (groupId: string) => {
+    const inCategory = filterExercisesByCategory(exercises, groupId, user?.id ?? null);
+    if (!trimmedQuery) return inCategory;
+    return inCategory.filter(e => e.name.toLowerCase().includes(trimmedQuery));
+  };
 
-  const getExercisesCount = (groupId: string) =>
-    filterExercisesByCategory(exercises, groupId, user?.id ?? null).length;
+  const filteredGroups = trimmedQuery
+    ? muscleGroups.filter(group => getMatchingExercises(group.id).length > 0)
+    : muscleGroups;
+
+  const getExercisesCount = (groupId: string) => getMatchingExercises(groupId).length;
 
   const getSelectedCount = (groupId: string) => {
     return selectedExercises[groupId]?.length || 0;
@@ -53,6 +78,7 @@ const ExercisesTabs = ({ selectedExercises, /*onExercisesChange*/ }: ExercisesTa
       state: {
         muscleGroup: group,
         currentSelectedExercises: selectedExercises,
+        exerciseSearchQuery: searchQuery,
       }
     });
   };
@@ -69,7 +95,7 @@ const ExercisesTabs = ({ selectedExercises, /*onExercisesChange*/ }: ExercisesTa
           <Input
             type="text"
             value={searchQuery}
-            onChange={setSearchQuery}
+            onChange={handleSearchChange}
             placeholder="Поиск"
             className={styles.searchInput}
           />

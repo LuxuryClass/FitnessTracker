@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import { Input } from '@/Components/UI/Input/Input';
@@ -8,7 +8,7 @@ import cn from 'classnames';
 import ExerciseCard from '@/Components/Common/ExerciseCard/ExerciseCard';
 import { useAuth } from '@/Auth';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
-import { labelForSecondary } from '@/Utils/muscleGroups';
+import { labelForSecondary, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
 import { filterExercisesByCategory } from '../../exerciseFiltering';
 
 interface Filter {
@@ -27,45 +27,6 @@ const groupNames: Record<string, string> = {
   myself: 'Личные',
 };
 
-// TODO: подмышечные UI-фильтры пока хардкоженные; синхронизировать с PRIMARY_TO_SECONDARY[groupId].
-const getFiltersForGroup = (groupId: string): Filter[] => {
-  const filtersByGroup: Record<string, Filter[]> = {
-    back: [
-      { id: 'lats', label: 'Широчайшие' },
-      { id: 'rhomboids', label: 'Ромбовидные' },
-      { id: 'trapezius', label: 'Трапеция' },
-      { id: 'erectors', label: 'Разгибатели спины' },
-    ],
-    chest: [
-      { id: 'upper', label: 'Верх груди' },
-      { id: 'middle', label: 'Средняя часть' },
-      { id: 'lower', label: 'Низ груди' },
-    ],
-    legs: [
-      { id: 'quadriceps', label: 'Квадрицепс' },
-      { id: 'hamstrings', label: 'Бицепс бедра' },
-      { id: 'glutes', label: 'Ягодичные' },
-      { id: 'calves', label: 'Икроножные' },
-    ],
-    shoulders: [
-      { id: 'front', label: 'Передняя дельта' },
-      { id: 'side', label: 'Средняя дельта' },
-      { id: 'rear', label: 'Задняя дельта' },
-    ],
-    arms: [
-      { id: 'biceps', label: 'Бицепс' },
-      { id: 'triceps', label: 'Трицепс' },
-      { id: 'forearms', label: 'Предплечья' },
-    ],
-    core: [
-      { id: 'rectus', label: 'Прямая мышца' },
-      { id: 'obliques', label: 'Косые мышцы' },
-      { id: 'transverse', label: 'Поперечная мышца' },
-    ],
-  };
-  return filtersByGroup[groupId] || [];
-};
-
 const ExerciseSelectPage = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
@@ -73,8 +34,9 @@ const ExerciseSelectPage = () => {
   const { user } = useAuth();
   const { data: allExercises = [] } = useExercisesQuery();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<Filter[]>([]);
+  const initialSearchQuery = (location.state as any)?.exerciseSearchQuery ?? '';
+
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearchQuery);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
   // Инициализируем ОДИН раз при входе на страницу
@@ -84,10 +46,15 @@ const ExerciseSelectPage = () => {
 
   const groupName = groupId ? groupNames[groupId] || 'Упражнения' : 'Упражнения';
 
+  // Фильтры по подмышцам берём из канонического словаря — id фильтра совпадает
+  // с реальным ключом в `secondary_muscles` упражнения, лейбл — через i18n-словарь.
+  const filters: Filter[] = useMemo(() => {
+    const keys = PRIMARY_TO_SECONDARY[groupId ?? ''] ?? [];
+    return keys.map(k => ({ id: k, label: labelForSecondary(k) }));
+  }, [groupId]);
+
   useEffect(() => {
-    setFilters(getFiltersForGroup(groupId || ''));
     setSelectedFilters([]);
-    setSearchQuery('');
   }, [groupId]);
 
   const groupExercises = filterExercisesByCategory(allExercises, groupId || '', user?.id ?? null);
@@ -102,15 +69,10 @@ const ExerciseSelectPage = () => {
     }
 
     if (selectedFilters.length > 0) {
-      // Соответствие любому из выбранных фильтров — по подмышце или подписи.
-      const matchesAnyFilter = selectedFilters.every(filterId => {
-        const filter = filters.find(f => f.id === filterId);
-        if (!filter) return false;
-        return ex.secondary_muscles.some(m =>
-          m.toLowerCase().includes(filter.id.toLowerCase()) ||
-          labelForSecondary(m).toLowerCase().includes(filter.label.toLowerCase())
-        );
-      });
+      // Упражнение проходит, если совпадает хотя бы с одним из выбранных фильтров.
+      const matchesAnyFilter = selectedFilters.some(filterKey =>
+        ex.secondary_muscles.includes(filterKey)
+      );
       if (!matchesAnyFilter) return false;
     }
 
@@ -145,6 +107,7 @@ const ExerciseSelectPage = () => {
         returnedGroupId: groupId,
         selectedExercises: allSelectedExercises,
         activeTab: 'exercises',
+        exerciseSearchQuery: searchQuery,
       },
     });
   };
