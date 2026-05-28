@@ -6,28 +6,14 @@ import styles from './Styles.module.scss';
 import searchIcon from "/icons/Search.svg";
 import cn from 'classnames';
 import ExerciseCard from '@/Components/Common/ExerciseCard/ExerciseCard';
+import { useAuth } from '@/Auth';
+import { useExercisesQuery } from '@/hooks/useExercisesQuery';
+import { filterExercisesByCategory, labelForSecondary } from '../../muscleGroupMapping';
 
 interface Filter {
   id: string;
   label: string;
 }
-
-interface Exercise {
-  id: string;
-  name: string;
-  muscleGroup: string;
-  targetMuscles: string[];
-  equipment?: string[];
-  imageUrl?: string;
-}
-
-const mockExercises: Exercise[] = [
-  { id: '1', name: 'Подтягивания', muscleGroup: 'back', targetMuscles: ['широчайшие', 'бицепс'], equipment: ['турник', 'резинка'] },
-  { id: '2', name: 'Тяга штанги', muscleGroup: 'back', targetMuscles: ['широчайшие', 'ромбовидные'], equipment: ['штанга', 'блины'] },
-  { id: '3', name: 'Жим лежа', muscleGroup: 'chest', targetMuscles: ['грудная', 'трицепс'], equipment: ['штанга', 'скамья'] },
-  { id: '4', name: 'Отжимания', muscleGroup: 'chest', targetMuscles: ['грудная', 'передняя дельта'], equipment: ['собственный вес'] },
-  { id: '5', name: 'Приседания', muscleGroup: 'legs', targetMuscles: ['квадрицепс', 'ягодичные'], equipment: ['штанга', 'стойка'] },
-];
 
 const groupNames: Record<string, string> = {
   chest: 'Грудь',
@@ -35,12 +21,12 @@ const groupNames: Record<string, string> = {
   legs: 'Ноги',
   shoulders: 'Плечи',
   arms: 'Руки',
-  abs: 'Пресс',
+  core: 'Корпус',
   cardio: 'Кардио',
-  another: 'Другое',
   myself: 'Личные',
 };
 
+// TODO: подмышечные UI-фильтры пока хардкоженные; синхронизировать с PRIMARY_TO_SECONDARY[groupId].
 const getFiltersForGroup = (groupId: string): Filter[] => {
   const filtersByGroup: Record<string, Filter[]> = {
     back: [
@@ -70,7 +56,7 @@ const getFiltersForGroup = (groupId: string): Filter[] => {
       { id: 'triceps', label: 'Трицепс' },
       { id: 'forearms', label: 'Предплечья' },
     ],
-    abs: [
+    core: [
       { id: 'rectus', label: 'Прямая мышца' },
       { id: 'obliques', label: 'Косые мышцы' },
       { id: 'transverse', label: 'Поперечная мышца' },
@@ -83,11 +69,12 @@ const ExerciseSelectPage = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const { data: allExercises = [] } = useExercisesQuery();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<Filter[]>([]);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [exercises] = useState<Exercise[]>(mockExercises);
 
   // Инициализируем ОДИН раз при входе на страницу
   const [allSelectedExercises, setAllSelectedExercises] = useState<Record<string, string[]>>(() => {
@@ -102,33 +89,33 @@ const ExerciseSelectPage = () => {
     setSearchQuery('');
   }, [groupId]);
 
-  const getFilteredExercises = () => {
-    let filtered = exercises.filter(ex => ex.muscleGroup === groupId);
+  const groupExercises = filterExercisesByCategory(allExercises, groupId || '', user?.id ?? null);
 
+  const filteredExercises = groupExercises.filter(ex => {
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(ex =>
-        ex.name.toLowerCase().includes(query) ||
-        ex.targetMuscles.some(muscle => muscle.toLowerCase().includes(query)) ||
-        (ex.equipment?.some(item => item.toLowerCase().includes(query)))
-      );
+      const q = searchQuery.toLowerCase();
+      const matchesName = ex.name.toLowerCase().includes(q);
+      const matchesSecondary = ex.secondary_muscles.some(m => labelForSecondary(m).toLowerCase().includes(q));
+      const matchesEquipment = ex.equipment?.toLowerCase().includes(q);
+      if (!(matchesName || matchesSecondary || matchesEquipment)) return false;
     }
 
     if (selectedFilters.length > 0) {
-      filtered = filtered.filter(ex =>
-        selectedFilters.every(filterId => {
-          const filterLabel = filters.find(f => f.id === filterId)?.label;
-          return filterLabel && ex.targetMuscles.some(muscle =>
-            muscle.toLowerCase().includes(filterLabel.toLowerCase())
-          );
-        })
-      );
+      // Соответствие любому из выбранных фильтров — по подмышце или подписи.
+      const matchesAnyFilter = selectedFilters.every(filterId => {
+        const filter = filters.find(f => f.id === filterId);
+        if (!filter) return false;
+        return ex.secondary_muscles.some(m =>
+          m.toLowerCase().includes(filter.id.toLowerCase()) ||
+          labelForSecondary(m).toLowerCase().includes(filter.label.toLowerCase())
+        );
+      });
+      if (!matchesAnyFilter) return false;
     }
 
-    return filtered;
-  };
+    return true;
+  });
 
-  const filteredExercises = getFilteredExercises();
   const currentGroupSelected = allSelectedExercises[groupId || ''] || [];
 
   const handleToggleFilter = (filterId: string) => {
@@ -162,6 +149,7 @@ const ExerciseSelectPage = () => {
   };
 
   const handleCreateExercise = () => {
+    // TODO: модалка/страница создания упражнения через POST /exercises (отдельная итерация).
     console.log('Создать упражнение');
   };
 
@@ -217,9 +205,8 @@ const ExerciseSelectPage = () => {
                 key={exercise.id}
                 id={exercise.id}
                 name={exercise.name}
-                targetMuscles={exercise.targetMuscles}
-                equipment={exercise.equipment}
-                imageUrl={exercise.imageUrl}
+                targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
+                equipment={exercise.equipment ? [exercise.equipment] : []}
                 onToggle={handleToggleExercise}
                 isSelected={currentGroupSelected.includes(exercise.id)}
               />

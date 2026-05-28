@@ -4,10 +4,43 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+ALLOWED_PRIMARY_MUSCLE_GROUPS: frozenset[str] = frozenset(
+    {"chest", "back", "legs", "shoulders", "arms", "core", "cardio"}
+)
+
+
+def _normalize_string_list(values: list[str], field_label: str) -> list[str]:
+    normalized: list[str] = []
+    seen: set[str] = set()
+
+    for raw in values:
+        cleaned = raw.strip().lower()
+        if not cleaned:
+            raise ValueError(f"{field_label} не может содержать пустые значения.")
+        if cleaned in seen:
+            raise ValueError(f"{field_label} не должен содержать дубли.")
+        seen.add(cleaned)
+        normalized.append(cleaned)
+
+    return normalized
+
+
+def _validate_primary_groups(values: list[str]) -> list[str]:
+    normalized = _normalize_string_list(values, "primary_muscle_groups")
+    invalid = [v for v in normalized if v not in ALLOWED_PRIMARY_MUSCLE_GROUPS]
+    if invalid:
+        raise ValueError(
+            "primary_muscle_groups содержит недопустимые значения: "
+            f"{invalid}. Допустимы: {sorted(ALLOWED_PRIMARY_MUSCLE_GROUPS)}."
+        )
+    return normalized
+
+
 class ExerciseCreateRequest(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
-    muscle_groups: list[str] = Field(min_length=1, max_length=20)
+    primary_muscle_groups: list[str] = Field(min_length=1, max_length=10)
+    secondary_muscles: list[str] = Field(default_factory=list, max_length=30)
     equipment: str = Field(min_length=1, max_length=120)
 
     @field_validator("name")
@@ -36,28 +69,22 @@ class ExerciseCreateRequest(BaseModel):
             raise ValueError("equipment не может быть пустым.")
         return normalized
 
-    @field_validator("muscle_groups")
+    @field_validator("primary_muscle_groups")
     @classmethod
-    def validate_muscle_groups(cls, value: list[str]) -> list[str]:
-        normalized_groups: list[str] = []
-        seen: set[str] = set()
+    def validate_primary_muscle_groups(cls, value: list[str]) -> list[str]:
+        return _validate_primary_groups(value)
 
-        for raw_group in value:
-            normalized = raw_group.strip().lower()
-            if not normalized:
-                raise ValueError("muscle_groups не может содержать пустые значения.")
-            if normalized in seen:
-                raise ValueError("muscle_groups не должен содержать дубли.")
-            seen.add(normalized)
-            normalized_groups.append(normalized)
-
-        return normalized_groups
+    @field_validator("secondary_muscles")
+    @classmethod
+    def validate_secondary_muscles(cls, value: list[str]) -> list[str]:
+        return _normalize_string_list(value, "secondary_muscles")
 
 
 class ExerciseUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
-    muscle_groups: list[str] | None = Field(default=None, min_length=1, max_length=20)
+    primary_muscle_groups: list[str] | None = Field(default=None, min_length=1, max_length=10)
+    secondary_muscles: list[str] | None = Field(default=None, max_length=30)
     equipment: str | None = Field(default=None, max_length=120)
 
     @field_validator("name")
@@ -88,25 +115,19 @@ class ExerciseUpdateRequest(BaseModel):
             raise ValueError("equipment не может быть пустым.")
         return normalized
 
-    @field_validator("muscle_groups")
+    @field_validator("primary_muscle_groups")
     @classmethod
-    def validate_muscle_groups(cls, value: list[str] | None) -> list[str]:
+    def validate_primary_muscle_groups(cls, value: list[str] | None) -> list[str]:
         if value is None:
-            raise ValueError("muscle_groups не может быть null.")
+            raise ValueError("primary_muscle_groups не может быть null.")
+        return _validate_primary_groups(value)
 
-        normalized_groups: list[str] = []
-        seen: set[str] = set()
-
-        for raw_group in value:
-            normalized = raw_group.strip().lower()
-            if not normalized:
-                raise ValueError("muscle_groups не может содержать пустые значения.")
-            if normalized in seen:
-                raise ValueError("muscle_groups не должен содержать дубли.")
-            seen.add(normalized)
-            normalized_groups.append(normalized)
-
-        return normalized_groups
+    @field_validator("secondary_muscles")
+    @classmethod
+    def validate_secondary_muscles(cls, value: list[str] | None) -> list[str]:
+        if value is None:
+            raise ValueError("secondary_muscles не может быть null.")
+        return _normalize_string_list(value, "secondary_muscles")
 
     @model_validator(mode="after")
     def validate_payload(self) -> "ExerciseUpdateRequest":
@@ -124,9 +145,13 @@ class ExerciseUpdateRequest(BaseModel):
         if "description" in self.model_fields_set:
             update_data["description"] = self.description
 
-        if "muscle_groups" in self.model_fields_set:
-            assert self.muscle_groups is not None
-            update_data["muscle_groups"] = self.muscle_groups
+        if "primary_muscle_groups" in self.model_fields_set:
+            assert self.primary_muscle_groups is not None
+            update_data["primary_muscle_groups"] = self.primary_muscle_groups
+
+        if "secondary_muscles" in self.model_fields_set:
+            assert self.secondary_muscles is not None
+            update_data["secondary_muscles"] = self.secondary_muscles
 
         if "equipment" in self.model_fields_set:
             update_data["equipment"] = self.equipment
@@ -139,7 +164,8 @@ class ExerciseResponse(BaseModel):
     created_by_user_id: UUID | None
     name: str
     description: str | None
-    muscle_groups: list[str]
+    primary_muscle_groups: list[str]
+    secondary_muscles: list[str]
     equipment: str | None
     created_at: datetime
     updated_at: datetime

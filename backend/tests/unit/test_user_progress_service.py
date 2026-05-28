@@ -24,7 +24,8 @@ async def test_get_recent_progress_with_old_data(mock_db_session, mock_user):
     exercise = create_mock_exercise({
         "id": exercise_id,
         "name": "Приседания",
-        "muscle_groups": ["квадрицепсы"],
+        "primary_muscle_groups": ["legs"],
+        "secondary_muscles": ["quadriceps"],
     })
 
     with patch("app.services.user_progress_service.workout_session_set_repository") as set_repo, \
@@ -61,7 +62,8 @@ async def test_get_recent_progress_fallback_first_weight(mock_db_session, mock_u
     exercise = create_mock_exercise({
         "id": exercise_id,
         "name": "Жим",
-        "muscle_groups": ["грудь"],
+        "primary_muscle_groups": ["chest"],
+        "secondary_muscles": ["chest"],
     })
 
     with patch("app.services.user_progress_service.workout_session_set_repository") as set_repo, \
@@ -97,7 +99,8 @@ async def test_get_recent_progress_single_execution_skipped(mock_db_session, moc
     exercise = create_mock_exercise({
         "id": exercise_id,
         "name": "Планка",
-        "muscle_groups": ["кор"],
+        "primary_muscle_groups": ["core"],
+        "secondary_muscles": ["abs"],
     })
 
     with patch("app.services.user_progress_service.workout_session_set_repository") as set_repo, \

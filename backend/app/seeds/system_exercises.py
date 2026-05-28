@@ -13,7 +13,8 @@ from app.models.exercise import Exercise
 class SystemExerciseSeed:
     name: str
     description: str
-    muscle_groups: list[str]
+    primary_muscle_groups: list[str]
+    secondary_muscles: list[str]
     equipment: str
 
 
@@ -21,50 +22,114 @@ SYSTEM_EXERCISES: tuple[SystemExerciseSeed, ...] = (
     SystemExerciseSeed(
         name="Приседания со штангой",
         description="Базовое упражнение на ноги и ягодицы.",
-        muscle_groups=["квадрицепсы", "ягодицы", "бицепс бедра"],
+        primary_muscle_groups=["legs"],
+        secondary_muscles=["quadriceps", "gluteal", "hamstring"],
         equipment="штанга",
     ),
     SystemExerciseSeed(
         name="Жим штанги лежа",
         description="Базовое упражнение на грудные мышцы.",
-        muscle_groups=["грудь", "трицепс", "передние дельты"],
+        primary_muscle_groups=["chest"],
+        secondary_muscles=["chest", "triceps", "deltoids"],
         equipment="штанга",
     ),
     SystemExerciseSeed(
         name="Становая тяга",
         description="Базовое многосуставное упражнение на заднюю цепь.",
-        muscle_groups=["спина", "ягодицы", "бицепс бедра"],
+        primary_muscle_groups=["back", "legs"],
+        secondary_muscles=["lower-back", "gluteal", "hamstring"],
         equipment="штанга",
     ),
     SystemExerciseSeed(
         name="Тяга верхнего блока",
         description="Упражнение на широчайшие мышцы спины.",
-        muscle_groups=["спина", "бицепс"],
+        primary_muscle_groups=["back"],
+        secondary_muscles=["upper-back", "biceps"],
         equipment="блочный тренажер",
     ),
     SystemExerciseSeed(
         name="Жим гантелей сидя",
         description="Упражнение на плечи в вертикальной плоскости.",
-        muscle_groups=["плечи", "трицепс"],
+        primary_muscle_groups=["shoulders"],
+        secondary_muscles=["deltoids", "triceps"],
         equipment="гантели",
     ),
     SystemExerciseSeed(
         name="Выпады с гантелями",
         description="Упражнение на ноги и ягодицы с акцентом на стабильность.",
-        muscle_groups=["квадрицепсы", "ягодицы"],
+        primary_muscle_groups=["legs"],
+        secondary_muscles=["quadriceps", "gluteal"],
         equipment="гантели",
     ),
     SystemExerciseSeed(
         name="Планка",
         description="Статическое упражнение на мышцы кора.",
-        muscle_groups=["кор"],
+        primary_muscle_groups=["core"],
+        secondary_muscles=["abs"],
         equipment="коврик",
     ),
     SystemExerciseSeed(
         name="Подтягивания",
         description="Базовое упражнение на мышцы спины и рук.",
-        muscle_groups=["спина", "бицепс"],
+        primary_muscle_groups=["back"],
+        secondary_muscles=["upper-back", "biceps"],
         equipment="турник",
+    ),
+    SystemExerciseSeed(
+        name="Скручивания",
+        description="Упражнение на пресс и косые мышцы.",
+        primary_muscle_groups=["core"],
+        secondary_muscles=["abs", "obliques"],
+        equipment="коврик",
+    ),
+    SystemExerciseSeed(
+        name="Подъём ног в висе",
+        description="Упражнение на нижний пресс.",
+        primary_muscle_groups=["core"],
+        secondary_muscles=["abs"],
+        equipment="турник",
+    ),
+    SystemExerciseSeed(
+        name="Подъём гантелей на бицепс",
+        description="Изолированное упражнение на бицепс.",
+        primary_muscle_groups=["arms"],
+        secondary_muscles=["biceps", "forearm"],
+        equipment="гантели",
+    ),
+    SystemExerciseSeed(
+        name="Французский жим",
+        description="Изолированное упражнение на трицепс.",
+        primary_muscle_groups=["arms"],
+        secondary_muscles=["triceps"],
+        equipment="штанга",
+    ),
+    SystemExerciseSeed(
+        name="Махи в стороны",
+        description="Изолированное упражнение на средние дельты.",
+        primary_muscle_groups=["shoulders"],
+        secondary_muscles=["deltoids"],
+        equipment="гантели",
+    ),
+    SystemExerciseSeed(
+        name="Подъём на носки стоя",
+        description="Упражнение на икроножные мышцы.",
+        primary_muscle_groups=["legs"],
+        secondary_muscles=["calves"],
+        equipment="тренажер",
+    ),
+    SystemExerciseSeed(
+        name="Бег на дорожке",
+        description="Кардио на беговой дорожке.",
+        primary_muscle_groups=["cardio"],
+        secondary_muscles=[],
+        equipment="беговая дорожка",
+    ),
+    SystemExerciseSeed(
+        name="Велотренажер",
+        description="Кардио на велотренажере.",
+        primary_muscle_groups=["cardio"],
+        secondary_muscles=[],
+        equipment="велотренажер",
     ),
 )
 
@@ -93,7 +158,8 @@ async def seed_system_exercises() -> tuple[int, int]:
                         created_by_user_id=None,
                         name=seed_item.name,
                         description=seed_item.description,
-                        muscle_groups=seed_item.muscle_groups,
+                        primary_muscle_groups=seed_item.primary_muscle_groups,
+                        secondary_muscles=seed_item.secondary_muscles,
                         equipment=seed_item.equipment,
                     )
                 )
@@ -104,8 +170,11 @@ async def seed_system_exercises() -> tuple[int, int]:
             if existing_exercise.description != seed_item.description:
                 existing_exercise.description = seed_item.description
                 changed = True
-            if existing_exercise.muscle_groups != seed_item.muscle_groups:
-                existing_exercise.muscle_groups = seed_item.muscle_groups
+            if existing_exercise.primary_muscle_groups != seed_item.primary_muscle_groups:
+                existing_exercise.primary_muscle_groups = seed_item.primary_muscle_groups
+                changed = True
+            if existing_exercise.secondary_muscles != seed_item.secondary_muscles:
+                existing_exercise.secondary_muscles = seed_item.secondary_muscles
                 changed = True
             if existing_exercise.equipment != seed_item.equipment:
                 existing_exercise.equipment = seed_item.equipment

@@ -77,7 +77,7 @@ async def test_create_exercise_success(mock_db_session, mock_user):
     Успешное создание упражнения с уникальным именем.
     Проверка конфликта имени возвращает None, репозиторий создаёт запись, commit/refresh выполняется.
     """
-    payload = ExerciseCreateRequest(name="New Exercise", description="Some desc", muscle_groups=["arms"], equipment="dumbbells")
+    payload = ExerciseCreateRequest(name="New Exercise", description="Some desc", primary_muscle_groups=["arms"], secondary_muscles=["biceps"], equipment="dumbbells")
     new_ex = create_mock_exercise({"name": payload.name, "created_by_user_id": mock_user.id})
     with patch("app.services.exercise_service.exercise_repository") as mock_repo:
         mock_repo.get_user_exercise_by_name = AsyncMock(return_value=None)
@@ -93,7 +93,7 @@ async def test_create_exercise_name_conflict(mock_db_session, mock_user):
     Создание с уже существующим именем → AlreadyExistsException.
     get_user_exercise_by_name возвращает существующее упражнение.
     """
-    payload = ExerciseCreateRequest(name="Duplicate", muscle_groups=["legs"], equipment="barbell")
+    payload = ExerciseCreateRequest(name="Duplicate", primary_muscle_groups=["legs"], equipment="barbell")
     with patch("app.services.exercise_service.exercise_repository") as mock_repo:
         mock_repo.get_user_exercise_by_name = AsyncMock(return_value=create_mock_exercise())
         with pytest.raises(AlreadyExistsException):

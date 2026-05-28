@@ -51,14 +51,16 @@ class ExerciseRepository:
         created_by_user_id: UUID,
         name: str,
         description: str | None,
-        muscle_groups: list[str],
+        primary_muscle_groups: list[str],
+        secondary_muscles: list[str],
         equipment: str,
     ) -> Exercise:
         exercise = Exercise(
             created_by_user_id=created_by_user_id,
             name=name,
             description=description,
-            muscle_groups=muscle_groups,
+            primary_muscle_groups=primary_muscle_groups,
+            secondary_muscles=secondary_muscles,
             equipment=equipment,
         )
         db.add(exercise)

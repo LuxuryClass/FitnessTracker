@@ -331,7 +331,7 @@ class WorkoutService:
             for we in grouped.get(workout_id, []):
                 ex = exercise_map.get(we.exercise_id)
                 if ex:
-                    for mg in ex.muscle_groups:
+                    for mg in ex.primary_muscle_groups:
                         if mg not in seen_mg:
                             seen_mg.add(mg)
                             muscle_groups_set.append(mg)
@@ -403,7 +403,7 @@ class WorkoutService:
             if ex is None:
                 continue
 
-            for muscle_group in ex.muscle_groups:
+            for muscle_group in ex.primary_muscle_groups:
                 if muscle_group not in seen_muscle_groups:
                     seen_muscle_groups.add(muscle_group)
                     muscle_groups_aggregated.append(muscle_group)
@@ -426,7 +426,7 @@ class WorkoutService:
             exercise_items.append(
                 NextWorkoutExerciseItem(
                     name=ex.name,
-                    muscle_groups=list(ex.muscle_groups),
+                    muscle_groups=list(ex.primary_muscle_groups),
                     order_index=workout_exercise.order_index,
                     sets_count=sets_count,
                     target_reps_min=target_reps_min,

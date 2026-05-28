@@ -174,6 +174,45 @@ export interface NextWorkoutResponse {
   exercises: NextWorkoutExerciseItem[];
 }
 
+export interface Exercise {
+  id: string;
+  created_by_user_id: string | null;
+  name: string;
+  description: string | null;
+  primary_muscle_groups: string[];
+  secondary_muscles: string[];
+  equipment: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkoutTargetSetItem {
+  set_index: number;
+  target_reps: number | null;
+  target_weight_kg: string | number | null;
+}
+
+export interface WorkoutExerciseCreateItem {
+  exercise_id: string;
+  target_sets: WorkoutTargetSetItem[] | null;
+}
+
+export interface WorkoutCreatePayload {
+  title: string;
+  is_planned: boolean;
+  planned_for: string | null;
+  description: string | null;
+  exercises: WorkoutExerciseCreateItem[];
+}
+
+export interface WorkoutCreateResponse {
+  id: string;
+  title: string;
+  is_planned: boolean;
+  planned_for: string | null;
+  description: string | null;
+}
+
 const mapTokens = (pair: AccessTokenResponse): StoredTokens => ({
   accessToken: pair.access_token,
   tokenType: pair.token_type,
@@ -263,6 +302,28 @@ export const authApi = {
     return request<NextWorkoutResponse | null>("/workouts/next", {
       method: "GET",
       accessToken,
+    });
+  },
+
+  async getExercises(accessToken: string): Promise<Exercise[]> {
+    return request<Exercise[]>("/exercises", {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async getSystemExercises(accessToken: string): Promise<Exercise[]> {
+    return request<Exercise[]>("/exercises/system", {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async createWorkout(accessToken: string, payload: WorkoutCreatePayload): Promise<WorkoutCreateResponse> {
+    return request<WorkoutCreateResponse>("/workouts", {
+      method: "POST",
+      accessToken,
+      body: payload,
     });
   },
 };

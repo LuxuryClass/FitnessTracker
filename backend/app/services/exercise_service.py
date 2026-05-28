@@ -55,7 +55,8 @@ class ExerciseService:
             created_by_user_id=current_user.id,
             name=payload.name,
             description=payload.description,
-            muscle_groups=payload.muscle_groups,
+            primary_muscle_groups=payload.primary_muscle_groups,
+            secondary_muscles=payload.secondary_muscles,
             equipment=payload.equipment,
         )
         await db.commit()

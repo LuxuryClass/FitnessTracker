@@ -31,12 +31,12 @@ const getInitialWeekRange = () => {
 };
 
 const HomePage = () => {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [weekRange, setWeekRange] = useState(getInitialWeekRange);
 
   const { data: scheduleData = [] } = useScheduleQuery(weekRange.from, weekRange.to);
   const { data: recentProgressData = [] } = useRecentProgressQuery();
-  const { data: nextWorkout } = useNextWorkoutQuery();
+  const { data: nextWorkout, isPending: isNextWorkoutPending } = useNextWorkoutQuery();
 
   const userName = user?.name ?? "Пользователь";
   const userAvatar = user?.avatar_url ?? defaultAvatar;
@@ -82,26 +82,28 @@ const HomePage = () => {
       <Header className={styles.header} userName={userName} userAvatar={userAvatar}/>
 
       {/* Блок "Ближайшая тренировка" */}
-      {nextWorkout ? (
-        <TodayWorkout
-          title={nextWorkout.title}
-          plannedFor={nextWorkout.planned_for}
-          durationMinutes={nextWorkout.estimated_duration_minutes}
-          exercisesCount={nextWorkout.exercises_count}
-          muscleGroups={nextWorkout.muscle_groups}
-          exercises={nextWorkout.exercises.map((item: NextWorkoutExerciseItem): TodayWorkoutExercise => ({
-            name: item.name,
-            // На карточке показываем первую группу мышц упражнения — этого достаточно для краткой пометки.
-            muscleGroup: item.muscle_groups[0] ?? '',
-            setsCount: item.sets_count,
-            targetRepsMin: item.target_reps_min,
-            targetRepsMax: item.target_reps_max,
-            targetWeightKgMin: item.target_weight_kg_min !== null ? Number(item.target_weight_kg_min) : null,
-            targetWeightKgMax: item.target_weight_kg_max !== null ? Number(item.target_weight_kg_max) : null,
-          }))}
-        />
-      ) : (
-        <TodayWorkout isEmpty />
+      {!isAuthLoading && !isNextWorkoutPending && (
+        nextWorkout ? (
+          <TodayWorkout
+            title={nextWorkout.title}
+            plannedFor={nextWorkout.planned_for}
+            durationMinutes={nextWorkout.estimated_duration_minutes}
+            exercisesCount={nextWorkout.exercises_count}
+            muscleGroups={nextWorkout.muscle_groups}
+            exercises={nextWorkout.exercises.map((item: NextWorkoutExerciseItem): TodayWorkoutExercise => ({
+              name: item.name,
+              // На карточке показываем первую группу мышц упражнения — этого достаточно для краткой пометки.
+              muscleGroup: item.muscle_groups[0] ?? '',
+              setsCount: item.sets_count,
+              targetRepsMin: item.target_reps_min,
+              targetRepsMax: item.target_reps_max,
+              targetWeightKgMin: item.target_weight_kg_min !== null ? Number(item.target_weight_kg_min) : null,
+              targetWeightKgMax: item.target_weight_kg_max !== null ? Number(item.target_weight_kg_max) : null,
+            }))}
+          />
+        ) : (
+          <TodayWorkout isEmpty />
+        )
       )}
 
       {/* Блок "Миникарточки статистики" */}

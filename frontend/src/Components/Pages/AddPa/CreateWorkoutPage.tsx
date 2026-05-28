@@ -1,11 +1,14 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './Styles.module.scss';
-import { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import { useState, useEffect, useCallback, useLayoutEffect, useMemo } from 'react';
 import { SettingsTab } from './components/SettingsTab/SettingsTabs';
 import { Button } from '@/Components/UI/Button/Button';
 import { TabsGroup } from '@/Components/UI/TabsGroup/TabsGroup';
 import ExercisesTabs from './components/ExercisesTabs/ExercisesTabs';
 import { PreviewTab } from './components/PreviewTab/PreviewTab';
+import { useExercisesQuery } from '@/hooks/useExercisesQuery';
+import { useCreateWorkoutMutation } from '@/hooks/useCreateWorkoutMutation';
+import type { Exercise, WorkoutCreatePayload } from '@/Auth/authApi';
 
 type TabType = 'settings' | 'exercises' | 'preview';
 
@@ -23,15 +26,22 @@ export interface WorkoutFormData {
   scheduleTime: string;
   selectedTemplate: string | null;
   selectedExercises: Record<string, string[]>;
+  exerciseOrder: string[];
 }
 
 const CreateWorkoutPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const passedDate = (location.state as any)?.scheduleDate as Date | undefined;
   const passedStartType = (location.state as any)?.startType as string | undefined;
   const passedActiveTab = (location.state as any)?.activeTab as TabType | undefined;
+  const returnedSelectedExercises = (location.state as any)?.selectedExercises as Record<string, string[]> | undefined;
 
   const [activeTab, setActiveTab] = useState<TabType>('settings');
+
+  const { data: allExercises = [] } = useExercisesQuery();
+  const createWorkoutMutation = useCreateWorkoutMutation();
+
   const [formData, setFormData] = useState<WorkoutFormData>({
     workoutName: '',
     startType: 'now',
@@ -40,6 +50,7 @@ const CreateWorkoutPage = () => {
     scheduleTime: '19:30',
     selectedTemplate: null,
     selectedExercises: {},
+    exerciseOrder: [],
   });
 
   useLayoutEffect(() => {
@@ -89,12 +100,30 @@ const CreateWorkoutPage = () => {
       setActiveTab('exercises');
     }
   }, [passedActiveTab]);
-  
+
   useEffect(() => {
     if (passedStartType === 'schedule') {
       setFormData(prev => ({ ...prev, startType: 'schedule' }));
     }
   }, [passedStartType]);
+
+  // Принимаем обновлённый список выбранных упражнений с экрана выбора группы.
+  useEffect(() => {
+    if (returnedSelectedExercises) {
+      setFormData(prev => {
+        const flatIds = Object.values(returnedSelectedExercises).flat();
+        // Сохраняем порядок: сначала ранее зафиксированные id, которые остались выбраны;
+        // затем — новые id в порядке появления.
+        const stillSelected = prev.exerciseOrder.filter(id => flatIds.includes(id));
+        const newOnes = flatIds.filter(id => !stillSelected.includes(id));
+        return {
+          ...prev,
+          selectedExercises: returnedSelectedExercises,
+          exerciseOrder: [...stillSelected, ...newOnes],
+        };
+      });
+    }
+  }, [returnedSelectedExercises]);
 
   const updateFormData = useCallback(<K extends keyof WorkoutFormData>(
     key: K,
@@ -106,8 +135,58 @@ const CreateWorkoutPage = () => {
     }));
   }, []);
 
-  const handleSave = () => {
-    console.log('Сохраняем тренировку:', formData);
+  const exerciseById = useMemo(() => {
+    const map = new Map<string, Exercise>();
+    for (const ex of allExercises) map.set(ex.id, ex);
+    return map;
+  }, [allExercises]);
+
+  const orderedSelectedExercises = useMemo<Exercise[]>(() => {
+    const ids = formData.exerciseOrder.length > 0
+      ? formData.exerciseOrder
+      : Object.values(formData.selectedExercises).flat();
+    return ids
+      .map(id => exerciseById.get(id))
+      .filter((ex): ex is Exercise => ex !== undefined);
+  }, [formData.exerciseOrder, formData.selectedExercises, exerciseById]);
+
+  const handlePreviewReorder = useCallback((reordered: Exercise[]) => {
+    setFormData(prev => ({
+      ...prev,
+      exerciseOrder: reordered.map(ex => ex.id),
+    }));
+  }, []);
+
+  const isSaveDisabled =
+    formData.workoutName.trim().length === 0
+    || orderedSelectedExercises.length === 0
+    || createWorkoutMutation.isPending;
+
+  const handleSave = async () => {
+    if (isSaveDisabled) return;
+
+    const payload: WorkoutCreatePayload = {
+      title: formData.workoutName.trim(),
+      is_planned: formData.startType === 'schedule',
+      planned_for: formData.startType === 'schedule'
+        ? new Date(`${formData.scheduleDate}T${formData.scheduleTime}:00`).toISOString()
+        : null,
+      description: formData.notes.trim() || null,
+      exercises: orderedSelectedExercises.map(ex => ({
+        exercise_id: ex.id,
+        // TODO: заполнить, когда появится UI ввода подходов в превью.
+        target_sets: null,
+      })),
+    };
+
+    try {
+      await createWorkoutMutation.mutateAsync(payload);
+      navigate('/');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Не удалось сохранить тренировку';
+      // TODO: заменить на toast.
+      alert(message);
+    }
   };
 
   const renderTabContent = () => {
@@ -127,18 +206,18 @@ const CreateWorkoutPage = () => {
             workoutName={formData.workoutName}
             date={formData.startType === 'schedule' ? formData.scheduleDate : undefined}
             time={formData.startType === 'schedule' ? formData.scheduleTime : undefined}
-            exercises={[
-              { id: '1', name: 'Жим лежа', muscleGroup: 'Грудь' },
-              { id: '2', name: 'Жим гантелей', muscleGroup: 'Грудь' },
-              { id: '3', name: 'Махи гантелями', muscleGroup: 'Плечи' },
-            ]}
-            onReorder={(items) => console.log('Новый порядок:', items)}
+            exercises={orderedSelectedExercises}
+            onReorder={handlePreviewReorder}
           />
         );
       default:
         return <SettingsTab formData={formData} updateFormData={updateFormData} />;
     }
   };
+
+  const buttonLabel = createWorkoutMutation.isPending
+    ? 'Сохраняем...'
+    : formData.startType === 'now' ? 'Начать' : 'Запланировать';
 
   return (
     <div className={styles.page}>
@@ -151,8 +230,14 @@ const CreateWorkoutPage = () => {
         {renderTabContent()}
       </div>
 
-      <Button className={styles.create_button} size="l" fullWidth onClick={handleSave}>
-        {formData.startType === 'now' ? 'Начать' : 'Запланировать'}
+      <Button
+        className={styles.create_button}
+        size="l"
+        fullWidth
+        onClick={handleSave}
+        disabled={isSaveDisabled}
+      >
+        {buttonLabel}
       </Button>
     </div>
   );

@@ -357,7 +357,7 @@
   {
     "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
     "exercise_name": "Жим лёжа",
-    "muscle_group": "грудь",
+    "muscle_group": "chest",
     "difference_kg": 5.0,
     "recent_max_weight_kg": 80.0,
     "previous_max_weight_kg": 75.0
@@ -365,7 +365,7 @@
   {
     "exercise_id": "6f7dd56f-8188-4e93-aa62-5e2e453de0db",
     "exercise_name": "Приседания",
-    "muscle_group": "ноги",
+    "muscle_group": "legs",
     "difference_kg": -2.5,
     "recent_max_weight_kg": 117.5,
     "previous_max_weight_kg": 120.0
@@ -373,7 +373,7 @@
   {
     "exercise_id": "2f4bc4c2-2df2-4c3e-ab64-1f0d2c137fee",
     "exercise_name": "Жим гантелей сидя",
-    "muscle_group": "плечи",
+    "muscle_group": "shoulders",
     "difference_kg": 10.0,
     "recent_max_weight_kg": 30.0,
     "previous_max_weight_kg": 20.0
@@ -387,7 +387,7 @@
 
 - `exercise_id` — UUID упражнения
 - `exercise_name` — название упражнения
-- `muscle_group` — первая группа мышц из `muscle_groups` упражнения
+- `muscle_group` — первая `primary_muscle_groups` упражнения (одна из канонических: `chest`, `back`, `legs`, `shoulders`, `arms`, `core`, `cardio`)
 - `difference_kg` — разница в весе (может быть отрицательной)
 - `recent_max_weight_kg` — максимальный вес за последние 7 дней
 - `previous_max_weight_kg` — вес для сравнения (может быть `null` для новых упражнений)
@@ -573,6 +573,25 @@
 - системные (`GET /api/exercises/system`);
 - пользовательские (`/api/exercises*`).
 
+**Канонические значения групп мышц.**
+
+- `primary_muscle_groups` — фронт-категории, по которым упражнение группируется на UI. Минимум 1 значение, максимум 10. Канонические ключи (whitelist на бэке):
+  `chest`, `back`, `legs`, `shoulders`, `arms`, `core`, `cardio`.
+- `secondary_muscles` — детальные мышцы (для будущей визуализации). Может быть пустым (например, для `cardio`). Без whitelist (свободный текст). Рекомендуемые ключи (lowercase, kebab-case для составных):
+  `chest`, `upper-back`, `lower-back`, `trapezius`, `abs`, `obliques`, `biceps`, `triceps`, `forearm`, `deltoids`, `quadriceps`, `hamstring`, `gluteal`, `calves`, `adductors`, `abductors`, `neck`, `tibialis`.
+
+Соответствие primary → допустимые secondary (UX-правило, живёт на фронте):
+
+| primary    | secondary                                                          |
+|------------|--------------------------------------------------------------------|
+| chest      | chest                                                              |
+| back       | upper-back, lower-back, trapezius                                  |
+| legs       | quadriceps, hamstring, gluteal, calves, adductors, abductors, tibialis |
+| shoulders  | deltoids, trapezius                                                |
+| arms       | biceps, triceps, forearm                                           |
+| core       | abs, obliques                                                      |
+| cardio     | (пусто)                                                            |
+
 ### 3.1 `GET /api/exercises/system`
 
 Список системных упражнений.
@@ -590,7 +609,8 @@
     "created_by_user_id": null,
     "name": "Приседания со штангой",
     "description": "Базовое упражнение на ноги и ягодицы.",
-    "muscle_groups": ["квадрицепсы", "ягодицы", "бицепс бедра"],
+    "primary_muscle_groups": ["legs"],
+    "secondary_muscles": ["quadriceps", "gluteal", "hamstring"],
     "equipment": "штанга",
     "created_at": "2026-04-20T10:00:00+00:00",
     "updated_at": "2026-04-20T10:00:00+00:00"
@@ -623,7 +643,8 @@
     "created_by_user_id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
     "name": "Жим гантелей сидя",
     "description": "Контроль лопаток и плавное движение",
-    "muscle_groups": ["плечи", "трицепс"],
+    "primary_muscle_groups": ["shoulders"],
+    "secondary_muscles": ["deltoids", "triceps"],
     "equipment": "гантели",
     "created_at": "2026-04-16T12:15:00+00:00",
     "updated_at": "2026-04-16T12:15:00+00:00"
@@ -653,7 +674,8 @@
   "created_by_user_id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "name": "Жим гантелей сидя",
   "description": "Контроль лопаток и плавное движение",
-  "muscle_groups": ["плечи", "трицепс"],
+  "primary_muscle_groups": ["shoulders"],
+  "secondary_muscles": ["deltoids", "triceps"],
   "equipment": "гантели",
   "created_at": "2026-04-16T12:15:00+00:00",
   "updated_at": "2026-04-16T12:15:00+00:00"
@@ -682,7 +704,8 @@
 {
   "name": "Жим гантелей сидя",
   "description": "Контроль лопаток и плавное движение",
-  "muscle_groups": ["плечи", "трицепс"],
+  "primary_muscle_groups": ["shoulders"],
+  "secondary_muscles": ["deltoids", "triceps"],
   "equipment": "гантели"
 }
 ```
@@ -691,7 +714,8 @@
 
 - `name` — строка, 1..255
 - `description` — `string | null`, максимум 2000
-- `muscle_groups` — массив строк, 1..20 элементов, без дублей
+- `primary_muscle_groups` — массив строк, 1..10 элементов, без дублей. Только канонические значения (whitelist выше)
+- `secondary_muscles` — массив строк, 0..30 элементов, без дублей. По умолчанию `[]`
 - `equipment` — строка, 1..120
 
 **Response 201**
@@ -702,7 +726,8 @@
   "created_by_user_id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "name": "Жим гантелей сидя",
   "description": "Контроль лопаток и плавное движение",
-  "muscle_groups": ["плечи", "трицепс"],
+  "primary_muscle_groups": ["shoulders"],
+  "secondary_muscles": ["deltoids", "triceps"],
   "equipment": "гантели",
   "created_at": "2026-04-16T12:15:00+00:00",
   "updated_at": "2026-04-16T12:15:00+00:00"
@@ -713,7 +738,7 @@
 
 - `401` — нет/невалидный access-токен
 - `409` — у пользователя уже есть упражнение с таким именем
-- `422` — ошибка валидации
+- `422` — ошибка валидации (в т.ч. `primary_muscle_groups` вне whitelist)
 
 ---
 
@@ -733,7 +758,8 @@
 {
   "name": "Жим гантелей стоя",
   "description": "Контроль корпуса",
-  "muscle_groups": ["плечи", "трицепс"],
+  "primary_muscle_groups": ["shoulders"],
+  "secondary_muscles": ["deltoids"],
   "equipment": "гантели"
 }
 ```
@@ -742,7 +768,8 @@
 
 - `name` — `string | optional`, 1..255
 - `description` — `string | null | optional`, максимум 2000
-- `muscle_groups` — `string[] | optional`, 1..20 элементов, без дублей
+- `primary_muscle_groups` — `string[] | optional`, 1..10 элементов, без дублей, только из whitelist
+- `secondary_muscles` — `string[] | optional`, 0..30 элементов, без дублей
 - `equipment` — `string | optional`, 1..120
 
 **Response 200**
@@ -753,7 +780,8 @@
   "created_by_user_id": "8a2d0d8a-1be6-4f0a-b57e-ec3c6f6149a7",
   "name": "Жим гантелей стоя",
   "description": "Контроль корпуса",
-  "muscle_groups": ["плечи", "трицепс"],
+  "primary_muscle_groups": ["shoulders"],
+  "secondary_muscles": ["deltoids"],
   "equipment": "гантели",
   "created_at": "2026-04-16T12:15:00+00:00",
   "updated_at": "2026-04-18T10:00:00+00:00"
@@ -819,7 +847,7 @@
     "time": "09:00",
     "status": "planned",
     "exercises_count": 3,
-    "muscle_groups": ["грудь", "плечи"]
+    "muscle_groups": ["chest", "shoulders"]
   }
 ]
 ```
@@ -832,7 +860,7 @@
 - `time` — время тренировки (`HH:MM`), берётся из `planned_for`; `null` если время не задано
 - `status` — `"planned"` или `"completed"`
 - `exercises_count` — количество упражнений в тренировке
-- `muscle_groups` — уникальные группы мышц из всех упражнений тренировки
+- `muscle_groups` — уникальные `primary_muscle_groups` со всех упражнений тренировки (значения из канонического whitelist: `chest`, `back`, `legs`, `shoulders`, `arms`, `core`, `cardio`)
 
 **Логика статуса**
 
@@ -868,7 +896,10 @@
     "exercises": [
       {
         "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
-        "order_index": 1
+        "order_index": 1,
+        "target_sets": [
+          { "set_index": 1, "target_reps": 10, "target_weight_kg": 60 }
+        ]
       }
     ],
     "created_at": "2026-04-16T12:20:00+00:00",
@@ -920,10 +951,15 @@
   "description": "Легкая неделя, техника",
   "exercises": [
     {
-      "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89"
+      "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
+      "target_sets": null
     },
     {
-      "exercise_id": "6f7dd56f-8188-4e93-aa62-5e2e453de0db"
+      "exercise_id": "6f7dd56f-8188-4e93-aa62-5e2e453de0db",
+      "target_sets": [
+        { "set_index": 1, "target_reps": 10, "target_weight_kg": 60 },
+        { "set_index": 2, "target_reps": 8,  "target_weight_kg": 80 }
+      ]
     }
   ]
 }
@@ -935,7 +971,10 @@
 - `is_planned` — boolean
 - `planned_for` — `datetime | null`
 - `description` — `string | null`, максимум 2000
-- `exercises` — массив 1..100, каждый элемент: `{ "exercise_id": "UUID" }`
+- `exercises` — массив 1..100, каждый элемент: `{ "exercise_id": "UUID", "target_sets": WorkoutTargetSetItem[] | null }`
+- `target_sets[].set_index` — int `>= 1`, последовательные без пропусков
+- `target_sets[].target_reps` — `int | null`, `> 0`
+- `target_sets[].target_weight_kg` — `Decimal | null`, `>= 0`
 
 **Правила**
 
@@ -981,7 +1020,8 @@
   "description": "Техника + умеренный объем",
   "exercises": [
     {
-      "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89"
+      "exercise_id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
+      "target_sets": null
     }
   ]
 }
@@ -993,7 +1033,7 @@
 - `is_planned` — `boolean | optional`
 - `planned_for` — `datetime | null | optional`
 - `description` — `string | null | optional`, максимум 2000
-- `exercises` — `array | optional`, 1..100, без дублей по `exercise_id`
+- `exercises` — `array | optional`, 1..100, без дублей по `exercise_id`. Формат элемента — как в `POST /api/workouts` (с опциональным `target_sets`)
 
 **Правила**
 

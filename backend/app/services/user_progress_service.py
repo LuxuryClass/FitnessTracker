@@ -110,8 +110,8 @@ class UserProgressService:
                 previous_max = first_weight
                 difference = recent_max - first_weight
 
-            # Берём первую группу мышц для отображения
-            muscle_group = exercise.muscle_groups[0] if exercise.muscle_groups else "Неизвестно"
+            # Берём первую primary-группу мышц для отображения
+            muscle_group = exercise.primary_muscle_groups[0] if exercise.primary_muscle_groups else "Неизвестно"
 
             result.append(
                 RecentProgressResponse(
