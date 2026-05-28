@@ -6,6 +6,7 @@ import styles from './Styles.module.scss';
 import searchIcon from "/icons/Search.svg";
 import cn from 'classnames';
 import ExerciseCard from '@/Components/Common/ExerciseCard/ExerciseCard';
+import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
 import { useAuth } from '@/Auth';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { labelForSecondary, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
@@ -14,6 +15,13 @@ import { filterExercisesByCategory } from '../../exerciseFiltering';
 interface Filter {
   id: string;
   label: string;
+}
+
+interface Exercise {
+  id: string;
+  name: string;
+  secondary_muscles: string[];
+  equipment?: string | null;
 }
 
 const groupNames: Record<string, string> = {
@@ -39,15 +47,15 @@ const ExerciseSelectPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>(initialSearchQuery);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
-  // Инициализируем ОДИН раз при входе на страницу
   const [allSelectedExercises, setAllSelectedExercises] = useState<Record<string, string[]>>(() => {
     return (location.state as any)?.currentSelectedExercises || {};
   });
 
+  // Модалка
+  const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
+
   const groupName = groupId ? groupNames[groupId] || 'Упражнения' : 'Упражнения';
 
-  // Фильтры по подмышцам берём из канонического словаря — id фильтра совпадает
-  // с реальным ключом в `secondary_muscles` упражнения, лейбл — через i18n-словарь.
   const filters: Filter[] = useMemo(() => {
     const keys = PRIMARY_TO_SECONDARY[groupId ?? ''] ?? [];
     return keys.map(k => ({ id: k, label: labelForSecondary(k) }));
@@ -69,7 +77,6 @@ const ExerciseSelectPage = () => {
     }
 
     if (selectedFilters.length > 0) {
-      // Упражнение проходит, если совпадает хотя бы с одним из выбранных фильтров.
       const matchesAnyFilter = selectedFilters.some(filterKey =>
         ex.secondary_muscles.includes(filterKey)
       );
@@ -101,6 +108,10 @@ const ExerciseSelectPage = () => {
     });
   };
 
+  const handleExerciseClick = (exercise: Exercise) => {
+    setModalExercise(exercise);
+  };
+
   const handleBack = () => {
     navigate('/add', {
       state: {
@@ -113,8 +124,15 @@ const ExerciseSelectPage = () => {
   };
 
   const handleCreateExercise = () => {
-    // TODO: модалка/страница создания упражнения через POST /exercises (отдельная итерация).
     console.log('Создать упражнение');
+  };
+
+  const handleModalConfirm = (sets: { weight: number; reps: number }[], description: string) => {
+    console.log('Сохранено:', { sets, description, exercise: modalExercise });
+    if (modalExercise) {
+      handleToggleExercise(modalExercise.id);
+    }
+    setModalExercise(null);
   };
 
   return (
@@ -173,6 +191,7 @@ const ExerciseSelectPage = () => {
                 equipment={exercise.equipment ? [exercise.equipment] : []}
                 onToggle={handleToggleExercise}
                 isSelected={currentGroupSelected.includes(exercise.id)}
+                onClick={() => handleExerciseClick(exercise)}
               />
             ))
           ) : (
@@ -184,6 +203,19 @@ const ExerciseSelectPage = () => {
           )}
         </div>
       </div>
+
+      {modalExercise && (
+        <ExerciseModal
+          isOpen={!!modalExercise}
+          onClose={() => setModalExercise(null)}
+          name={modalExercise.name}
+          muscleGroup={groupId || ''}
+          targetMuscles={modalExercise.secondary_muscles.map(labelForSecondary)}
+          equipment={modalExercise.equipment ? [modalExercise.equipment] : []}
+          description=""
+          onConfirm={handleModalConfirm}
+        />
+      )}
     </div>
   );
 };
