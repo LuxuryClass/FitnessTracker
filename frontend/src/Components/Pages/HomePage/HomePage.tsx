@@ -13,6 +13,7 @@ import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
 import { useScheduleQuery } from '@/hooks/useScheduleQuery';
 import { useRecentProgressQuery } from '@/hooks/useRecentProgressQuery';
 import { useNextWorkoutQuery } from '@/hooks/useNextWorkoutQuery';
+import { labelForPrimary, labelsForPrimaryList } from '@/Utils/muscleGroups';
 
 const formatDate = (d: Date): string => {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -51,7 +52,7 @@ const HomePage = () => {
     return {
       id: item.exercise_id,
       title: item.exercise_name,
-      muscleGroup: item.muscle_group,
+      muscleGroup: labelForPrimary(item.muscle_group),
       difference: `${sign}${differenceNum}кг`,
     };
   });
@@ -89,11 +90,11 @@ const HomePage = () => {
             plannedFor={nextWorkout.planned_for}
             durationMinutes={nextWorkout.estimated_duration_minutes}
             exercisesCount={nextWorkout.exercises_count}
-            muscleGroups={nextWorkout.muscle_groups}
+            muscleGroups={labelsForPrimaryList(nextWorkout.muscle_groups)}
             exercises={nextWorkout.exercises.map((item: NextWorkoutExerciseItem): TodayWorkoutExercise => ({
               name: item.name,
               // На карточке показываем первую группу мышц упражнения — этого достаточно для краткой пометки.
-              muscleGroup: item.muscle_groups[0] ?? '',
+              muscleGroup: labelForPrimary(item.muscle_groups[0] ?? ''),
               setsCount: item.sets_count,
               targetRepsMin: item.target_reps_min,
               targetRepsMax: item.target_reps_max,
@@ -143,7 +144,7 @@ const HomePage = () => {
                 date={new Date(workout.date)}
                 time={workout.time ?? undefined}
                 exercisesCount={workout.exercises_count}
-                muscleGroups={workout.muscle_groups}
+                muscleGroups={labelsForPrimaryList(workout.muscle_groups)}
               />
             ))}
           </div>

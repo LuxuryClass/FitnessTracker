@@ -7,7 +7,7 @@ import { MuscleGroupCard } from '@/Components/Common/MuscleGroupCard/MuscleGroup
 import searchIcon from "/icons/Search.svg";
 import { useAuth } from '@/Auth';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
-import { filterExercisesByCategory } from '../../muscleGroupMapping';
+import { filterExercisesByCategory } from '../../exerciseFiltering';
 
 interface MuscleGroup {
   id: string;

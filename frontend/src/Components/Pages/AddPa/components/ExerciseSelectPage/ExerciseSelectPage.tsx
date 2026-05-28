@@ -8,7 +8,8 @@ import cn from 'classnames';
 import ExerciseCard from '@/Components/Common/ExerciseCard/ExerciseCard';
 import { useAuth } from '@/Auth';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
-import { filterExercisesByCategory, labelForSecondary } from '../../muscleGroupMapping';
+import { labelForSecondary } from '@/Utils/muscleGroups';
+import { filterExercisesByCategory } from '../../exerciseFiltering';
 
 interface Filter {
   id: string;

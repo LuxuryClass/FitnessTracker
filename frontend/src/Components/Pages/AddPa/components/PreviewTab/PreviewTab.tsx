@@ -4,7 +4,7 @@ import styles from './Styles.module.scss';
 import { ExerciseRow } from '../../../../Common/ExerciseRow/ExerciseRow';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
 import type { Exercise } from '@/Auth/authApi';
-import { labelForPrimary, labelForSecondary } from '../../muscleGroupMapping';
+import { labelForPrimary, labelForSecondary } from '@/Utils/muscleGroups';
 
 interface PreviewTabProps {
   workoutName: string;

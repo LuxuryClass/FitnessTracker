@@ -7,6 +7,7 @@ import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
 import styles from './Styles.module.scss';
 import { Link } from 'react-router-dom';
 import { useScheduleQuery } from '@/hooks/useScheduleQuery';
+import { labelsForPrimaryList } from '@/Utils/muscleGroups';
 
 const formatDate = (d: Date): string => {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -80,7 +81,7 @@ const SchedulePage = () => {
                   title={workout.title}
                   time={workout.time ?? undefined}
                   exercisesCount={workout.exercises_count}
-                  muscleGroups={workout.muscle_groups}
+                  muscleGroups={labelsForPrimaryList(workout.muscle_groups)}
                   date={new Date(workout.date)}
                   onClick={() => console.log('Открыть тренировку', workout.id)}
                 />
