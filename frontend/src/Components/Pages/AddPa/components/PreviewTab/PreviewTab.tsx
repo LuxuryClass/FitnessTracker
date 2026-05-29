@@ -4,7 +4,7 @@ import styles from './Styles.module.scss';
 import { ExerciseRow } from '../../../../Common/ExerciseRow/ExerciseRow';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
 import type { Exercise, ExerciseSet } from '@/Auth/authApi';
-import { labelForPrimary, labelForSecondary } from '@/Utils/muscleGroups';
+import { labelForPrimary, labelsForPrimaryList, labelsForSecondaryList } from '@/Utils/muscleGroups';
 
 // Минут на один подход — синхронизировано с backend (MINUTES_PER_SET в workout_service.py).
 const MINUTES_PER_SET = 5;
@@ -55,13 +55,15 @@ export const PreviewTab = ({
     return `${totalSets * MINUTES_PER_SET}`;
   }, [items, setsByExerciseId]);
 
-  // Суммарный тоннаж: вес × повторы по всем подходам всех упражнений.
+  // Суммарный тоннаж (тонны): сумма вес × повторы по всем подходам, делённая на 1000.
+  // Одна цифра после запятой, хвост «.0» убирается.
   const totalWeight = useMemo(() => {
-    const sum = items.reduce((acc, ex) => {
+    const kg = items.reduce((acc, ex) => {
       const sets = setsByExerciseId[ex.id] ?? [];
       return acc + sets.reduce((s, set) => s + set.weight * set.reps, 0);
     }, 0);
-    return `${sum}`;
+    const tons = (kg / 1000).toFixed(1);
+    return tons.endsWith('.0') ? tons.slice(0, -2) : tons;
   }, [items, setsByExerciseId]);
 
   const handleDragStart = (index: number) => {
@@ -100,14 +102,15 @@ export const PreviewTab = ({
       <div className={styles.exercisesSection}>
         <div className={styles.exercisesList}>
           {items.map((exercise, index) => {
-            const muscleLabel =
-              labelForSecondary(exercise.secondary_muscles[0] ?? '')
-              || labelForPrimary(exercise.primary_muscle_groups[0] ?? '');
+            const muscles = [
+              ...labelsForPrimaryList(exercise.primary_muscle_groups),
+              ...labelsForSecondaryList(exercise.secondary_muscles),
+            ];
             return (
               <ExerciseRow
                 key={exercise.id}
                 name={exercise.name}
-                muscleGroup={muscleLabel}
+                muscles={muscles}
                 sets={setsByExerciseId[exercise.id] ?? []}
                 index={index}
                 isDragging={dragIndex === index}

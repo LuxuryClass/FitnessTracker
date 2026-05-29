@@ -2,6 +2,7 @@ import { Button } from "@/Components/UI/Button/Button";
 import styles from "./Styles.module.scss";
 import cn from "classnames";
 import startImage from '/start-button.svg';
+import { formatSetsSummary } from "@/Utils/setsFormat";
 
 export interface TodayWorkoutExercise {
   name: string;
@@ -50,47 +51,14 @@ const formatHeaderTitle = (plannedFor: Date | string | undefined): string => {
   return `Тренировка на ${dd}.${mm}`;
 };
 
-const formatNumber = (value: number): string => {
-  return Number.isInteger(value) ? String(value) : String(value).replace(/\.0+$/, "");
-};
-
-// Формат вида «4 × 10 • 80кг» / «4 × 8–12 • 60–80кг» / «4 × 10» / «4 подхода».
-// Если `setsCount` отсутствует — возвращает null (метаданные не показываем вовсе).
-const formatSetsLabel = (exercise: TodayWorkoutExercise): string | null => {
-  if (exercise.setsCount === null) return null;
-
-  const parts: string[] = [];
-  parts.push(String(exercise.setsCount));
-
-  if (exercise.targetRepsMin !== null && exercise.targetRepsMax !== null) {
-    const repsText =
-      exercise.targetRepsMin === exercise.targetRepsMax
-        ? String(exercise.targetRepsMin)
-        : `${exercise.targetRepsMin}–${exercise.targetRepsMax}`;
-    parts[0] = `${parts[0]} × ${repsText}`;
-  } else {
-    // Без reps показываем «4 подхода» вместо просто «4».
-    parts[0] = `${exercise.setsCount} ${pluralizeSets(exercise.setsCount)}`;
-  }
-
-  if (exercise.targetWeightKgMin !== null && exercise.targetWeightKgMax !== null) {
-    const weightText =
-      exercise.targetWeightKgMin === exercise.targetWeightKgMax
-        ? `${formatNumber(exercise.targetWeightKgMin)}кг`
-        : `${formatNumber(exercise.targetWeightKgMin)}–${formatNumber(exercise.targetWeightKgMax)}кг`;
-    parts.push(weightText);
-  }
-
-  return parts.join(" • ");
-};
-
-const pluralizeSets = (count: number): string => {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-  if (mod10 === 1 && mod100 !== 11) return "подход";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "подхода";
-  return "подходов";
-};
+const formatSetsLabel = (exercise: TodayWorkoutExercise): string | null =>
+  formatSetsSummary({
+    setsCount: exercise.setsCount ?? 0,
+    repsMin: exercise.targetRepsMin,
+    repsMax: exercise.targetRepsMax,
+    weightMin: exercise.targetWeightKgMin,
+    weightMax: exercise.targetWeightKgMax,
+  });
 
 export const TodayWorkout = ({
   title,

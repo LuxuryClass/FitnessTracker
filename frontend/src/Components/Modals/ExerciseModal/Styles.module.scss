@@ -82,44 +82,12 @@ user-select: none;
 
 .name {
   @include text_h1();
-  cursor: pointer;
   text-align: start;
   word-break: break-word;
   overflow-wrap: break-word;
   display: block;
-  
-  &:hover { opacity: 0.8; }
-  
-  &:empty::after {
-    content: 'Название';
-    color: var(--Accent-grey-color);
-    opacity: 0.5;
-  }
 }
 
-.nameInput {
-  @include text_h1();
-  text-align: start;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--Primary-color);
-  color: #fff;
-  font-family: inherit;
-  padding: 0;
-  width: 100%;
-  box-sizing: border-box;
-  word-break: break-word;
-  overflow-wrap: hidden;
-  display: block;
-  overflow: hidden;
-  
-  &::placeholder {
-    color: var(--Accent-grey-color);
-    opacity: 0.5;
-  }
-  
-  &:focus { outline: none; }
-}
 .media {
   width: 100%;
   aspect-ratio: 16 / 9;

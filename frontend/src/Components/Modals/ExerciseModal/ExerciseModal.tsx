@@ -94,11 +94,6 @@ export const ExerciseModal = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Name editing
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState(name);
-  const nameInputRef = useRef<HTMLInputElement>(null);
-
   // ─── Open / Close ─────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
@@ -225,15 +220,6 @@ export const ExerciseModal = ({
     fileInputRef.current?.click();
   };
 
-  // ─── Name handlers ────────────────────────────────────
-  const handleNameClick = () => {
-    setIsEditingName(true);
-    setTimeout(() => nameInputRef.current?.focus(), 50);
-  };
-
-  const handleNameBlur = () => setIsEditingName(false);
-  const handleNameKeyDown = (e: React.KeyboardEvent) => e.key === 'Enter' && setIsEditingName(false);
-
   // ─── Render ───────────────────────────────────────────
   if (!isVisible) return null;
 
@@ -249,12 +235,7 @@ export const ExerciseModal = ({
             <div className={styles.badgeWrapper}>
               <MuscleGroupBadge groups={[muscleGroup]} />
             </div>
-            {isEditingName ? (
-              <input ref={nameInputRef} type="text" className={styles.nameInput} value={editedName}
-                onChange={e => setEditedName(e.target.value)} onBlur={handleNameBlur} onKeyDown={handleNameKeyDown} placeholder="Название" />
-            ) : (
-              <h3 className={styles.name} onClick={handleNameClick}>{editedName}</h3>
-            )}
+            <h3 className={styles.name}>{name}</h3>
           </div>
 
           {/* Media */}
@@ -265,7 +246,7 @@ export const ExerciseModal = ({
                   <video ref={videoRef} src={previewUrl} controls className={styles.mediaContent}
                     onClick={() => videoRef.current?.paused ? videoRef.current.play() : videoRef.current?.pause()} />
                 ) : (
-                  <img src={previewUrl} alt={editedName} className={styles.mediaContent} onClick={() => setIsFullscreen(true)} />
+                  <img src={previewUrl} alt={name} className={styles.mediaContent} onClick={() => setIsFullscreen(true)} />
                 )}
                 <button className={styles.editMediaBtn} onClick={handleEditClick}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15.2322 5.23223L18.7678 8.76777M16.7322 3.73223C17.7085 2.75592 19.2915 2.75592 20.2678 3.73223C21.2441 4.70854 21.2441 6.29146 20.2678 7.26777L6.5 21.0355H3V17.4645L16.7322 3.73223Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -290,7 +271,7 @@ export const ExerciseModal = ({
           {/* Fullscreen */}
           {isFullscreen && previewUrl && mediaType === 'image' && createPortal(
             <div className={styles.fullscreen} onClick={() => setIsFullscreen(false)}>
-              <img src={previewUrl} alt={editedName} className={styles.fullscreenImage} />
+              <img src={previewUrl} alt={name} className={styles.fullscreenImage} />
             </div>,
             document.body
           )}

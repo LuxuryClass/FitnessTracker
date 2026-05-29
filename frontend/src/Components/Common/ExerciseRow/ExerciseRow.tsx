@@ -3,10 +3,11 @@ import styles from './Styles.module.scss';
 import cn from 'classnames';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 import type { ExerciseSet } from '@/Auth/authApi';
+import { aggregateSets, formatSetsSummary } from '@/Utils/setsFormat';
 
 interface ExerciseRowProps {
   name: string;
-  muscleGroup: string;
+  muscles: string[];
   sets?: ExerciseSet[];
   index: number;
   isDragging: boolean;
@@ -18,7 +19,7 @@ interface ExerciseRowProps {
 
 const ExerciseRowComponent = ({
   name,
-  muscleGroup,
+  muscles,
   sets = [],
   isDragging,
   isOver,
@@ -26,11 +27,8 @@ const ExerciseRowComponent = ({
   onDragOver,
   onDragEnd,
 }: ExerciseRowProps) => {
-  // Находим подход с максимальным весом
-  const maxSet = useMemo(() => {
-    if (sets.length === 0) return null;
-    return sets.reduce((max, set) => set.weight > max.weight ? set : max, sets[0]);
-  }, [sets]);
+  // Агрегированная сводка подходов: «4 × 8–12 • 60–80кг».
+  const setsLabel = useMemo(() => formatSetsSummary(aggregateSets(sets)), [sets]);
 
   return (
     <div
@@ -52,15 +50,15 @@ const ExerciseRowComponent = ({
         </svg>
       </div>
       <div className={styles.info}>
-        <span className={styles.name}>{name}</span>
-        <div className={styles.right}>
-          {maxSet && (
+        <div className={styles.topRow}>
+          <span className={styles.name}>{name}</span>
+          {setsLabel && (
             <span className={styles.maxWeight}>
-              {maxSet.weight} × {maxSet.reps}
+              {setsLabel}
             </span>
           )}
-          <MuscleGroupBadge groups={[muscleGroup]} />
         </div>
+        <MuscleGroupBadge groups={muscles} />
       </div>
     </div>
   );

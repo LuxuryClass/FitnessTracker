@@ -64,8 +64,11 @@ const ExerciseSelectPage = () => {
 
   const filters: Filter[] = useMemo(() => {
     const keys = PRIMARY_TO_SECONDARY[groupId ?? ''] ?? [];
-    return keys.map(k => ({ id: k, label: labelForSecondary(k) }));
-  }, [groupId]);
+    return keys
+      .map(k => ({ id: k, label: labelForSecondary(k) }))
+      // Прячем чип, дублирующий название категории (напр. «Спина» в категории «Спина»).
+      .filter(f => f.label !== groupName);
+  }, [groupId, groupName]);
 
   useEffect(() => {
     setSelectedFilters([]);
