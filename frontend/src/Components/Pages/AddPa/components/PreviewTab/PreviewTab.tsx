@@ -3,12 +3,16 @@ import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/Mus
 import styles from './Styles.module.scss';
 import { ExerciseRow } from '../../../../Common/ExerciseRow/ExerciseRow';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
-import type { Exercise } from '@/Auth/authApi';
+import type { Exercise, ExerciseSet } from '@/Auth/authApi';
 import { labelForPrimary, labelForSecondary } from '@/Utils/muscleGroups';
+
+// Минут на один подход — синхронизировано с backend (MINUTES_PER_SET в workout_service.py).
+const MINUTES_PER_SET = 5;
 
 interface PreviewTabProps {
   workoutName: string;
   exercises: Exercise[];
+  setsByExerciseId: Record<string, ExerciseSet[]>;
   date?: string;
   time?: string;
   onReorder?: (exercises: Exercise[]) => void;
@@ -17,6 +21,7 @@ interface PreviewTabProps {
 export const PreviewTab = ({
   workoutName,
   exercises,
+  setsByExerciseId,
   date,
   time,
   onReorder,
@@ -41,11 +46,23 @@ export const PreviewTab = ({
 
   const exercisesCount = items.length;
 
-  // 5 минут на упражнение — грубая оценка до появления реальных подходов.
-  const duration = useMemo(() => `${items.length * 5}`, [items]);
+  // Оценка длительности как на бэкенде: сумма подходов × 5 минут (MINUTES_PER_SET).
+  const duration = useMemo(() => {
+    const totalSets = items.reduce(
+      (acc, ex) => acc + (setsByExerciseId[ex.id]?.length ?? 0),
+      0,
+    );
+    return `${totalSets * MINUTES_PER_SET}`;
+  }, [items, setsByExerciseId]);
 
-  // Реальной информации о весах нет, пока target_sets = null. Показываем 0.
-  const totalWeight = '0';
+  // Суммарный тоннаж: вес × повторы по всем подходам всех упражнений.
+  const totalWeight = useMemo(() => {
+    const sum = items.reduce((acc, ex) => {
+      const sets = setsByExerciseId[ex.id] ?? [];
+      return acc + sets.reduce((s, set) => s + set.weight * set.reps, 0);
+    }, 0);
+    return `${sum}`;
+  }, [items, setsByExerciseId]);
 
   const handleDragStart = (index: number) => {
     setDragIndex(index);
@@ -91,12 +108,7 @@ export const PreviewTab = ({
                 key={exercise.id}
                 name={exercise.name}
                 muscleGroup={muscleLabel}
-                // TODO: визуальный плейсхолдер; реальные подходы появятся, когда будет UI ввода подходов.
-                sets={[
-                  { weight: 60, reps: 10 },
-                  { weight: 80, reps: 8 },
-                  { weight: 100, reps: 5 },
-                ]}
+                sets={setsByExerciseId[exercise.id] ?? []}
                 index={index}
                 isDragging={dragIndex === index}
                 isOver={overIndex === index}

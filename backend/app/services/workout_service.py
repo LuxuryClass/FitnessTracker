@@ -33,8 +33,8 @@ from app.schemas.workout import (
 )
 
 # Грубая оценка времени на один подход (минут). Используется для
-# estimated_duration_minutes в карточке «ближайшая тренировка».
-MINUTES_PER_SET = 3
+# estimated_duration_minutes в карточке «ближайшая тренировка» и для превью на фронте.
+MINUTES_PER_SET = 5
 
 
 class WorkoutService:

@@ -2,16 +2,12 @@ import { memo, useMemo } from 'react';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
-
-interface Set {
-  weight: number;
-  reps: number;
-}
+import type { ExerciseSet } from '@/Auth/authApi';
 
 interface ExerciseRowProps {
   name: string;
   muscleGroup: string;
-  sets?: Set[];
+  sets?: ExerciseSet[];
   index: number;
   isDragging: boolean;
   isOver: boolean;

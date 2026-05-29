@@ -8,7 +8,7 @@ import ExercisesTabs from './components/ExercisesTabs/ExercisesTabs';
 import { PreviewTab } from './components/PreviewTab/PreviewTab';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { useCreateWorkoutMutation } from '@/hooks/useCreateWorkoutMutation';
-import type { Exercise, WorkoutCreatePayload } from '@/Auth/authApi';
+import type { Exercise, ExerciseSet, WorkoutCreatePayload } from '@/Auth/authApi';
 
 type TabType = 'settings' | 'exercises' | 'preview';
 
@@ -27,6 +27,7 @@ export interface WorkoutFormData {
   selectedTemplate: string | null;
   selectedExercises: Record<string, string[]>;
   exerciseOrder: string[];
+  exerciseSets: Record<string, ExerciseSet[]>;
 }
 
 const CreateWorkoutPage = () => {
@@ -36,6 +37,7 @@ const CreateWorkoutPage = () => {
   const passedStartType = (location.state as any)?.startType as string | undefined;
   const passedActiveTab = (location.state as any)?.activeTab as TabType | undefined;
   const returnedSelectedExercises = (location.state as any)?.selectedExercises as Record<string, string[]> | undefined;
+  const returnedExerciseSets = (location.state as any)?.exerciseSets as Record<string, ExerciseSet[]> | undefined;
   const returnedExerciseSearchQuery = (location.state as any)?.exerciseSearchQuery as string | undefined;
 
   const [activeTab, setActiveTab] = useState<TabType>('settings');
@@ -55,6 +57,7 @@ const CreateWorkoutPage = () => {
     selectedTemplate: null,
     selectedExercises: {},
     exerciseOrder: [],
+    exerciseSets: {},
   });
 
   useLayoutEffect(() => {
@@ -129,6 +132,16 @@ const CreateWorkoutPage = () => {
     }
   }, [returnedSelectedExercises]);
 
+  // Принимаем введённые подходы с экрана выбора (ключ — id упражнения).
+  useEffect(() => {
+    if (returnedExerciseSets) {
+      setFormData(prev => ({
+        ...prev,
+        exerciseSets: returnedExerciseSets,
+      }));
+    }
+  }, [returnedExerciseSets]);
+
   // Подхватываем поисковый запрос, который пользователь оставил на /exercises/:id.
   useEffect(() => {
     if (returnedExerciseSearchQuery !== undefined) {
@@ -176,6 +189,15 @@ const CreateWorkoutPage = () => {
   const handleSave = async () => {
     if (isSaveDisabled) return;
 
+    // Упражнение может оказаться в нескольких группах — дедупим по id,
+    // иначе бэкенд отклонит дубли exercise_id (422).
+    const seen = new Set<string>();
+    const uniqueExercises = orderedSelectedExercises.filter(ex => {
+      if (seen.has(ex.id)) return false;
+      seen.add(ex.id);
+      return true;
+    });
+
     const payload: WorkoutCreatePayload = {
       title: formData.workoutName.trim(),
       is_planned: formData.startType === 'schedule',
@@ -183,11 +205,19 @@ const CreateWorkoutPage = () => {
         ? new Date(`${formData.scheduleDate}T${formData.scheduleTime}:00`).toISOString()
         : null,
       description: formData.notes.trim() || null,
-      exercises: orderedSelectedExercises.map(ex => ({
-        exercise_id: ex.id,
-        // TODO: заполнить, когда появится UI ввода подходов в превью.
-        target_sets: null,
-      })),
+      exercises: uniqueExercises.map(ex => {
+        const sets = formData.exerciseSets[ex.id];
+        return {
+          exercise_id: ex.id,
+          target_sets: sets && sets.length > 0
+            ? sets.map((s, i) => ({
+                set_index: i + 1,
+                target_reps: s.reps > 0 ? s.reps : null,
+                target_weight_kg: s.weight,
+              }))
+            : null,
+        };
+      }),
     };
 
     try {
@@ -195,7 +225,6 @@ const CreateWorkoutPage = () => {
       navigate('/');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Не удалось сохранить тренировку';
-      // TODO: заменить на toast.
       alert(message);
     }
   };
@@ -208,6 +237,7 @@ const CreateWorkoutPage = () => {
         return (
           <ExercisesTabs
             selectedExercises={formData.selectedExercises}
+            exerciseSets={formData.exerciseSets}
             onExercisesChange={(updater) => updateFormData('selectedExercises', updater)}
             initialSearchQuery={exerciseSearchQuery}
             onSearchQueryChange={setExerciseSearchQuery}
@@ -220,6 +250,7 @@ const CreateWorkoutPage = () => {
             date={formData.startType === 'schedule' ? formData.scheduleDate : undefined}
             time={formData.startType === 'schedule' ? formData.scheduleTime : undefined}
             exercises={orderedSelectedExercises}
+            setsByExerciseId={formData.exerciseSets}
             onReorder={handlePreviewReorder}
           />
         );

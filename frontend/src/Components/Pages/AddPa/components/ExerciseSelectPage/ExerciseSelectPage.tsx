@@ -11,6 +11,7 @@ import { useAuth } from '@/Auth';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { labelForSecondary, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
 import { filterExercisesByCategory } from '../../exerciseFiltering';
+import type { ExerciseSet } from '@/Auth/authApi';
 
 interface Filter {
   id: string;
@@ -51,6 +52,11 @@ const ExerciseSelectPage = () => {
     return (location.state as any)?.currentSelectedExercises || {};
   });
 
+  // Подходы по упражнениям (ключ — id упражнения).
+  const [exerciseSets, setExerciseSets] = useState<Record<string, ExerciseSet[]>>(() => {
+    return (location.state as any)?.currentExerciseSets || {};
+  });
+
   // Модалка
   const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
 
@@ -86,7 +92,9 @@ const ExerciseSelectPage = () => {
     return true;
   });
 
-  const currentGroupSelected = allSelectedExercises[groupId || ''] || [];
+  // Выбор упражнения единый: id отмечен, если он выбран в любой группе.
+  const isExerciseSelected = (exerciseId: string) =>
+    Object.values(allSelectedExercises).some(ids => ids.includes(exerciseId));
 
   const handleToggleFilter = (filterId: string) => {
     setSelectedFilters(prev =>
@@ -96,14 +104,27 @@ const ExerciseSelectPage = () => {
 
   const handleToggleExercise = (exerciseId: string) => {
     setAllSelectedExercises(prev => {
-      const groupExercises = prev[groupId || ''] || [];
-      const newGroupExercises = groupExercises.includes(exerciseId)
-        ? groupExercises.filter(id => id !== exerciseId)
-        : [...groupExercises, exerciseId];
+      const isRemoving = Object.values(prev).some(ids => ids.includes(exerciseId));
 
+      if (isRemoving) {
+        // Снятие выбора убирает упражнение из всех групп — выбор единый.
+        const next: Record<string, string[]> = {};
+        for (const [group, ids] of Object.entries(prev)) {
+          next[group] = ids.filter(id => id !== exerciseId);
+        }
+        setExerciseSets(prevSets => {
+          if (!(exerciseId in prevSets)) return prevSets;
+          const { [exerciseId]: _removed, ...rest } = prevSets;
+          return rest;
+        });
+        return next;
+      }
+
+      // Добавляем в текущую группу.
+      const groupExercises = prev[groupId || ''] || [];
       return {
         ...prev,
-        [groupId || '']: newGroupExercises,
+        [groupId || '']: [...groupExercises, exerciseId],
       };
     });
   };
@@ -117,6 +138,7 @@ const ExerciseSelectPage = () => {
       state: {
         returnedGroupId: groupId,
         selectedExercises: allSelectedExercises,
+        exerciseSets,
         activeTab: 'exercises',
         exerciseSearchQuery: searchQuery,
       },
@@ -127,10 +149,17 @@ const ExerciseSelectPage = () => {
     console.log('Создать упражнение');
   };
 
-  const handleModalConfirm = (sets: { weight: number; reps: number }[], description: string) => {
-    console.log('Сохранено:', { sets, description, exercise: modalExercise });
+  const handleModalConfirm = (sets: ExerciseSet[], _description: string) => {
     if (modalExercise) {
-      handleToggleExercise(modalExercise.id);
+      const id = modalExercise.id;
+      setExerciseSets(prev => ({ ...prev, [id]: sets }));
+      // Подтверждение модалки всегда выбирает упражнение (не тоглит).
+      if (!isExerciseSelected(id)) {
+        setAllSelectedExercises(prev => ({
+          ...prev,
+          [groupId || '']: [...(prev[groupId || ''] || []), id],
+        }));
+      }
     }
     setModalExercise(null);
   };
@@ -190,7 +219,7 @@ const ExerciseSelectPage = () => {
                 targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
                 equipment={exercise.equipment ? [exercise.equipment] : []}
                 onToggle={handleToggleExercise}
-                isSelected={currentGroupSelected.includes(exercise.id)}
+                isSelected={isExerciseSelected(exercise.id)}
                 onClick={() => handleExerciseClick(exercise)}
               />
             ))
@@ -213,6 +242,7 @@ const ExerciseSelectPage = () => {
           targetMuscles={modalExercise.secondary_muscles.map(labelForSecondary)}
           equipment={modalExercise.equipment ? [modalExercise.equipment] : []}
           description=""
+          sets={exerciseSets[modalExercise.id]}
           onConfirm={handleModalConfirm}
         />
       )}

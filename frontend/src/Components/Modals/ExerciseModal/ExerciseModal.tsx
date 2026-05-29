@@ -4,13 +4,9 @@ import { Button } from '@/Components/UI/Button/Button';
 import { createPortal } from 'react-dom';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
+import type { ExerciseSet } from '@/Auth/authApi';
 
 // ─── Types ──────────────────────────────────────────────
-interface Set {
-  weight: number;
-  reps: number;
-}
-
 interface SetGroup {
   id: string;
   count: number;
@@ -28,17 +24,17 @@ interface ExerciseModalProps {
   imageUrl?: string;
   videoUrl?: string;
   description?: string;
-  sets?: Set[];
+  sets?: ExerciseSet[];
   onDescriptionChange?: (value: string) => void;
-  onConfirm?: (sets: Set[], description: string) => void;
+  onConfirm?: (sets: ExerciseSet[], description: string) => void;
 }
 
 // ─── Helpers ────────────────────────────────────────────
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-const groupConsecutiveSets = (sets: Set[]): SetGroup[] => {
+const groupConsecutiveSets = (sets: ExerciseSet[]): SetGroup[] => {
   const groups: SetGroup[] = [];
-  let current: Set[] = [];
+  let current: ExerciseSet[] = [];
 
   for (const set of sets) {
     if (current.length === 0 || (current[0].reps === set.reps && current[0].weight === set.weight)) {
@@ -83,7 +79,7 @@ export const ExerciseModal = ({
 
   // Mode & data
   const [mode, setMode] = useState<'collapsed' | 'expanded'>('collapsed');
-  const [allSets, setAllSets] = useState<Set[]>([]);
+  const [allSets, setAllSets] = useState<ExerciseSet[]>([]);
   const [groups, setGroups] = useState<SetGroup[]>([]);
 
   // Description

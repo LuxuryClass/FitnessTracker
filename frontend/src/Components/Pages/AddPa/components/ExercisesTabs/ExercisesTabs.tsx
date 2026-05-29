@@ -8,6 +8,7 @@ import searchIcon from "/icons/Search.svg";
 import { useAuth } from '@/Auth';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { filterExercisesByCategory } from '../../exerciseFiltering';
+import type { ExerciseSet } from '@/Auth/authApi';
 
 interface MuscleGroup {
   id: string;
@@ -17,6 +18,7 @@ interface MuscleGroup {
 
 interface ExercisesTabsProps {
   selectedExercises: Record<string, string[]>;
+  exerciseSets: Record<string, ExerciseSet[]>;
   onExercisesChange: (updater: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
   initialSearchQuery?: string;
   onSearchQueryChange?: (value: string) => void;
@@ -24,6 +26,7 @@ interface ExercisesTabsProps {
 
 const ExercisesTabs = ({
   selectedExercises,
+  exerciseSets,
   /*onExercisesChange*/
   initialSearchQuery = '',
   onSearchQueryChange,
@@ -78,6 +81,7 @@ const ExercisesTabs = ({
       state: {
         muscleGroup: group,
         currentSelectedExercises: selectedExercises,
+        currentExerciseSets: exerciseSets,
         exerciseSearchQuery: searchQuery,
       }
     });

@@ -186,6 +186,11 @@ export interface Exercise {
   updated_at: string;
 }
 
+export interface ExerciseSet {
+  weight: number;
+  reps: number;
+}
+
 export interface WorkoutTargetSetItem {
   set_index: number;
   target_reps: number | null;
