@@ -354,6 +354,8 @@ class WorkoutService:
         current_user: User,
     ) -> NextWorkoutResponse | None:
         now_utc = datetime.now(timezone.utc)
+        # Граница — начало сегодняшнего UTC-дня
+        start_of_today_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
 
         statement = (
             select(Workout)
@@ -361,7 +363,7 @@ class WorkoutService:
                 Workout.user_id == current_user.id,
                 Workout.is_planned.is_(True),
                 Workout.planned_for.is_not(None),
-                Workout.planned_for >= now_utc,
+                Workout.planned_for >= start_of_today_utc,
             )
             .order_by(Workout.planned_for.asc())
             .limit(1)

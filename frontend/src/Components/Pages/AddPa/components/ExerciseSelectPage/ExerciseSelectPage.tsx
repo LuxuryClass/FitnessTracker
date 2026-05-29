@@ -12,6 +12,7 @@ import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { labelForSecondary, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
 import { filterExercisesByCategory } from '../../exerciseFiltering';
 import type { ExerciseSet } from '@/Auth/authApi';
+import type { WorkoutFormSettings } from '../../CreateWorkoutPage';
 
 interface Filter {
   id: string;
@@ -56,6 +57,8 @@ const ExerciseSelectPage = () => {
   const [exerciseSets, setExerciseSets] = useState<Record<string, ExerciseSet[]>>(() => {
     return (location.state as any)?.currentExerciseSets || {};
   });
+
+  const formSettings = (location.state as any)?.currentFormSettings as WorkoutFormSettings | undefined;
 
   // Модалка
   const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
@@ -142,6 +145,7 @@ const ExerciseSelectPage = () => {
         returnedGroupId: groupId,
         selectedExercises: allSelectedExercises,
         exerciseSets,
+        formSettings,
         activeTab: 'exercises',
         exerciseSearchQuery: searchQuery,
       },

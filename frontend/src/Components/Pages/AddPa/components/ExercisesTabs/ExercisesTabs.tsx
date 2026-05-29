@@ -9,6 +9,7 @@ import { useAuth } from '@/Auth';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { filterExercisesByCategory } from '../../exerciseFiltering';
 import type { ExerciseSet } from '@/Auth/authApi';
+import type { WorkoutFormSettings } from '../../CreateWorkoutPage';
 
 interface MuscleGroup {
   id: string;
@@ -19,6 +20,7 @@ interface MuscleGroup {
 interface ExercisesTabsProps {
   selectedExercises: Record<string, string[]>;
   exerciseSets: Record<string, ExerciseSet[]>;
+  formSettings: WorkoutFormSettings;
   onExercisesChange: (updater: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
   initialSearchQuery?: string;
   onSearchQueryChange?: (value: string) => void;
@@ -27,6 +29,7 @@ interface ExercisesTabsProps {
 const ExercisesTabs = ({
   selectedExercises,
   exerciseSets,
+  formSettings,
   /*onExercisesChange*/
   initialSearchQuery = '',
   onSearchQueryChange,
@@ -82,6 +85,7 @@ const ExercisesTabs = ({
         muscleGroup: group,
         currentSelectedExercises: selectedExercises,
         currentExerciseSets: exerciseSets,
+        currentFormSettings: formSettings,
         exerciseSearchQuery: searchQuery,
       }
     });

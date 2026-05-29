@@ -30,6 +30,11 @@ export interface WorkoutFormData {
   exerciseSets: Record<string, ExerciseSet[]>;
 }
 
+// Подмножество настроек тренировки, которое надо прокидывать через navigate-state
+export type WorkoutFormSettings = Pick<WorkoutFormData,
+  'workoutName' | 'startType' | 'notes' | 'scheduleDate' | 'scheduleTime' | 'selectedTemplate'
+>;
+
 const CreateWorkoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -39,6 +44,7 @@ const CreateWorkoutPage = () => {
   const returnedSelectedExercises = (location.state as any)?.selectedExercises as Record<string, string[]> | undefined;
   const returnedExerciseSets = (location.state as any)?.exerciseSets as Record<string, ExerciseSet[]> | undefined;
   const returnedExerciseSearchQuery = (location.state as any)?.exerciseSearchQuery as string | undefined;
+  const returnedFormSettings = (location.state as any)?.formSettings as WorkoutFormSettings | undefined;
 
   const [activeTab, setActiveTab] = useState<TabType>('settings');
   // Поисковый запрос на сетке категорий — живёт в корне, чтобы переход в /exercises/:id
@@ -48,17 +54,17 @@ const CreateWorkoutPage = () => {
   const { data: allExercises = [] } = useExercisesQuery();
   const createWorkoutMutation = useCreateWorkoutMutation();
 
-  const [formData, setFormData] = useState<WorkoutFormData>({
-    workoutName: '',
-    startType: 'now',
-    notes: '',
-    scheduleDate: '',
-    scheduleTime: '19:30',
-    selectedTemplate: null,
+  const [formData, setFormData] = useState<WorkoutFormData>(() => ({
+    workoutName: returnedFormSettings?.workoutName ?? '',
+    startType: returnedFormSettings?.startType ?? 'now',
+    notes: returnedFormSettings?.notes ?? '',
+    scheduleDate: returnedFormSettings?.scheduleDate ?? '',
+    scheduleTime: returnedFormSettings?.scheduleTime ?? '19:30',
+    selectedTemplate: returnedFormSettings?.selectedTemplate ?? null,
     selectedExercises: {},
     exerciseOrder: [],
     exerciseSets: {},
-  });
+  }));
 
   useLayoutEffect(() => {
     const updateNavHeight = () => {
@@ -88,6 +94,7 @@ const CreateWorkoutPage = () => {
   }, []);
 
   useEffect(() => {
+    if (returnedFormSettings) return;
     const date = passedDate || new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -100,7 +107,7 @@ const CreateWorkoutPage = () => {
       scheduleDate: `${year}-${month}-${day}`,
       scheduleTime: `${hours}:${minutes}`,
     }));
-  }, [passedDate]);
+  }, [passedDate, returnedFormSettings]);
 
   useEffect(() => {
     if (passedActiveTab === 'exercises') {
@@ -251,6 +258,14 @@ const CreateWorkoutPage = () => {
           <ExercisesTabs
             selectedExercises={formData.selectedExercises}
             exerciseSets={formData.exerciseSets}
+            formSettings={{
+              workoutName: formData.workoutName,
+              startType: formData.startType,
+              notes: formData.notes,
+              scheduleDate: formData.scheduleDate,
+              scheduleTime: formData.scheduleTime,
+              selectedTemplate: formData.selectedTemplate,
+            }}
             onExercisesChange={(updater) => updateFormData('selectedExercises', updater)}
             initialSearchQuery={exerciseSearchQuery}
             onSearchQueryChange={setExerciseSearchQuery}
