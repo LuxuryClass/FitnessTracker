@@ -84,27 +84,27 @@ const HomePage = () => {
       <Header className={styles.header} userName={userName} userAvatar={userAvatar}/>
 
       {/* Блок "Ближайшая тренировка" */}
-      {!isAuthLoading && !isNextWorkoutPending && (
-        nextWorkout ? (
-          <TodayWorkout
-            title={nextWorkout.title}
-            plannedFor={nextWorkout.planned_for}
-            durationMinutes={nextWorkout.estimated_duration_minutes}
-            exercisesCount={nextWorkout.exercises_count}
-            muscleGroups={labelsForPrimaryList(nextWorkout.muscle_groups)}
-            exercises={nextWorkout.exercises.map((item: NextWorkoutExerciseItem): TodayWorkoutExercise => ({
-              name: item.name,
-              muscleGroup: labelForPrimary(item.muscle_groups[0] ?? ''),
-              setsCount: item.sets_count,
-              targetRepsMin: item.target_reps_min,
-              targetRepsMax: item.target_reps_max,
-              targetWeightKgMin: item.target_weight_kg_min !== null ? Number(item.target_weight_kg_min) : null,
-              targetWeightKgMax: item.target_weight_kg_max !== null ? Number(item.target_weight_kg_max) : null,
-            }))}
-          />
-        ) : (
-          <TodayWorkout isEmpty />
-        )
+      {isAuthLoading || isNextWorkoutPending ? (
+        <TodayWorkout isLoading />
+      ) : nextWorkout ? (
+        <TodayWorkout
+          title={nextWorkout.title}
+          plannedFor={nextWorkout.planned_for}
+          durationMinutes={nextWorkout.estimated_duration_minutes}
+          exercisesCount={nextWorkout.exercises_count}
+          muscleGroups={labelsForPrimaryList(nextWorkout.muscle_groups)}
+          exercises={nextWorkout.exercises.map((item: NextWorkoutExerciseItem): TodayWorkoutExercise => ({
+            name: item.name,
+            muscleGroup: labelForPrimary(item.muscle_groups[0] ?? ''),
+            setsCount: item.sets_count,
+            targetRepsMin: item.target_reps_min,
+            targetRepsMax: item.target_reps_max,
+            targetWeightKgMin: item.target_weight_kg_min !== null ? Number(item.target_weight_kg_min) : null,
+            targetWeightKgMax: item.target_weight_kg_max !== null ? Number(item.target_weight_kg_max) : null,
+          }))}
+        />
+      ) : (
+        <TodayWorkout isEmpty />
       )}
 
       {/* Блок "Миникарточки статистики" */}

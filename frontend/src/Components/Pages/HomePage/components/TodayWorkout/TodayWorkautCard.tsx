@@ -77,13 +77,31 @@ export const TodayWorkout = ({
   
   if (isLoading) {
     return (
-      <div className={styles.card}>
+      <div className={cn(className, styles.card, styles.card__notEmpty)}>
         <div className={styles.header}>
-          <h2 className={styles.title}>Тренировка на сегодня</h2>
+          <div className={cn(styles.skeleton, styles.skeleton__headerTitle)} />
+          <div className={cn(styles.skeleton, styles.skeleton__workoutName)} />
+          <div className={styles.meta}>
+            <div className={styles.meta__item_1_2}>
+              <div className={cn(styles.skeleton, styles.skeleton__metaItem)} />
+              <div className={cn(styles.skeleton, styles.skeleton__metaItem)} />
+            </div>
+            <div className={cn(styles.skeleton, styles.skeleton__metaGroups)} />
+          </div>
         </div>
-        <div className={styles.loaderWrapper}>
-          <div className={styles.spinner} />
+
+        <div className={styles.exercises}>
+          {[0, 1, 2].map(i => (
+            <div key={i} className={styles.exercise}>
+              <div className={styles.exerciseInfo}>
+                <div className={cn(styles.skeleton, styles.skeleton__exerciseName)} />
+                <div className={cn(styles.skeleton, styles.skeleton__exerciseDetails)} />
+              </div>
+            </div>
+          ))}
         </div>
+
+        <div className={cn(styles.skeleton, styles.skeleton__button)} />
       </div>
     );
   }
@@ -92,7 +110,7 @@ export const TodayWorkout = ({
     return (
       <div className={cn(className, styles.card, styles.card__empty)}>
         <h2 className={styles.header__title}>{headerTitle}</h2>
-        <p className={styles.card__empty_text}>Нет запланированных тренеровок</p>
+        <p className={styles.card__empty_text}>Нет запланированных тренировок</p>
       </div>
     );
   }
