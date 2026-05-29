@@ -3,7 +3,6 @@ from datetime import date, datetime, time, timezone
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, ForbiddenException, NotFoundException
@@ -11,7 +10,6 @@ from app.models.exercise import Exercise
 from app.models.workout import Workout
 from app.models.workout_exercise import WorkoutExercise
 from app.models.workout_exercise_target_set import WorkoutExerciseTargetSet
-from app.models.workout_session import WorkoutSession
 from app.models.user import User
 from app.repositories import (
     exercise_repository,
@@ -277,30 +275,9 @@ class WorkoutService:
         dt_from = datetime.combine(date_from, time.min, tzinfo=timezone.utc)
         dt_to = datetime.combine(date_to, time.max, tzinfo=timezone.utc)
 
-        statement = (
-            select(Workout, WorkoutExercise, Exercise, WorkoutSession.workout_id.label("completed_workout_id"))
-            .where(
-                Workout.user_id == current_user.id,
-                Workout.is_planned.is_(True),
-                Workout.planned_for.is_not(None),
-                Workout.planned_for >= dt_from,
-                Workout.planned_for <= dt_to,
-            )
-            .outerjoin(WorkoutExercise, WorkoutExercise.workout_id == Workout.id)
-            .outerjoin(Exercise, Exercise.id == WorkoutExercise.exercise_id)
-            .outerjoin(
-                WorkoutSession,
-                (WorkoutSession.workout_id == Workout.id)
-                & (WorkoutSession.user_id == current_user.id)
-                & (WorkoutSession.status == "completed")
-                & (WorkoutSession.completed_at.is_not(None))
-                & (WorkoutSession.completed_at >= dt_from)
-                & (WorkoutSession.completed_at <= dt_to),
-            )
-            .order_by(Workout.planned_for)
+        rows = await workout_repository.list_schedule_rows(
+            db, current_user.id, dt_from, dt_to
         )
-
-        rows = (await db.execute(statement)).all()
 
         workouts_order: list[UUID] = []
         workouts_map: dict[UUID, Workout] = {}
@@ -357,18 +334,9 @@ class WorkoutService:
         # Граница — начало сегодняшнего UTC-дня
         start_of_today_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        statement = (
-            select(Workout)
-            .where(
-                Workout.user_id == current_user.id,
-                Workout.is_planned.is_(True),
-                Workout.planned_for.is_not(None),
-                Workout.planned_for >= start_of_today_utc,
-            )
-            .order_by(Workout.planned_for.asc())
-            .limit(1)
+        workout = await workout_repository.find_first_planned_from(
+            db, current_user.id, start_of_today_utc
         )
-        workout = (await db.execute(statement)).scalar_one_or_none()
         if workout is None or workout.planned_for is None:
             return None
 
