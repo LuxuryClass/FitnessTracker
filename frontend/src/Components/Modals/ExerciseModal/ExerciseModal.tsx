@@ -25,6 +25,10 @@ interface ExerciseModalProps {
   videoUrl?: string;
   description?: string;
   sets?: ExerciseSet[];
+  canEditMedia?: boolean;
+  isMediaUploading?: boolean;
+  onUploadMedia?: (file: File) => Promise<boolean>;
+  onDeleteMedia?: () => Promise<boolean>;
   onDescriptionChange?: (value: string) => void;
   onConfirm?: (sets: ExerciseSet[], description: string) => void;
 }
@@ -64,6 +68,10 @@ export const ExerciseModal = ({
   videoUrl,
   description = '',
   sets: initialSets,
+  canEditMedia = false,
+  isMediaUploading = false,
+  onUploadMedia,
+  onDeleteMedia,
   onDescriptionChange,
   onConfirm,
 }: ExerciseModalProps) => {
@@ -230,13 +238,52 @@ export const ExerciseModal = ({
   };
 
   // ─── Media handlers ───────────────────────────────────
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const persistedPreviewUrl = imageUrl ?? videoUrl ?? null;
+  const persistedMediaType: 'image' | 'video' | null = imageUrl ? 'image' : videoUrl ? 'video' : null;
+  const localObjectUrlRef = useRef<string | null>(null);
+
+  const revokeLocalUrl = () => {
+    if (localObjectUrlRef.current) {
+      URL.revokeObjectURL(localObjectUrlRef.current);
+      localObjectUrlRef.current = null;
+    }
+  };
+
+  useEffect(() => revokeLocalUrl, []);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    e.target.value = '';
+    if (!file || !onUploadMedia) return;
+
+    // Мгновенное локальное превью, пока файл грузится на сервер.
+    revokeLocalUrl();
     const url = URL.createObjectURL(file);
+    localObjectUrlRef.current = url;
     setPreviewUrl(url);
     setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
-    e.target.value = '';
+
+    const ok = await onUploadMedia(file);
+    if (!ok) {
+      // Ошибка/отклонение — откатываем превью к сохранённому медиа.
+      revokeLocalUrl();
+      setPreviewUrl(persistedPreviewUrl);
+      setMediaType(persistedMediaType);
+    }
+  };
+
+  const handleDeleteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    revokeLocalUrl();
+    setPreviewUrl(null);
+    setMediaType(null);
+    if (onDeleteMedia) {
+      const ok = await onDeleteMedia();
+      if (!ok) {
+        setPreviewUrl(persistedPreviewUrl);
+        setMediaType(persistedMediaType);
+      }
+    }
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
@@ -272,24 +319,32 @@ export const ExerciseModal = ({
                 ) : (
                   <img src={previewUrl} alt={name} className={styles.mediaContent} onClick={() => setIsFullscreen(true)} />
                 )}
-                <button className={styles.editMediaBtn} onClick={handleEditClick}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15.2322 5.23223L18.7678 8.76777M16.7322 3.73223C17.7085 2.75592 19.2915 2.75592 20.2678 3.73223C21.2441 4.70854 21.2441 6.29146 20.2678 7.26777L6.5 21.0355H3V17.4645L16.7322 3.73223Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
-                <button className={styles.deleteMediaBtn} onClick={e => { e.stopPropagation(); setPreviewUrl(null); setMediaType(null); }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 6H5H21M8 6V4C8 2.89543 8.89543 2 10 2H14C15.1046 2 16 2.89543 16 4V6M19 6V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
+                {canEditMedia && (
+                  <>
+                    <button className={styles.editMediaBtn} onClick={handleEditClick} disabled={isMediaUploading}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15.2322 5.23223L18.7678 8.76777M16.7322 3.73223C17.7085 2.75592 19.2915 2.75592 20.2678 3.73223C21.2441 4.70854 21.2441 6.29146 20.2678 7.26777L6.5 21.0355H3V17.4645L16.7322 3.73223Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                    <button className={styles.deleteMediaBtn} onClick={handleDeleteClick} disabled={isMediaUploading}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 6H5H21M8 6V4C8 2.89543 8.89543 2 10 2H14C15.1046 2 16 2.89543 16 4V6M19 6V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <div className={styles.mediaPlaceholder}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="1.5"/></svg>
-                <span className={styles.mediaText}>Добавить фото или видео</span>
-                <button className={styles.uploadBtn} onClick={handleEditClick}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  Загрузить
-                </button>
+                <span className={styles.mediaText}>{canEditMedia ? 'Добавить фото или видео' : 'Нет фото или видео'}</span>
+                {canEditMedia && (
+                  <button className={styles.uploadBtn} onClick={handleEditClick} disabled={isMediaUploading}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    {isMediaUploading ? 'Загрузка…' : 'Загрузить'}
+                  </button>
+                )}
               </div>
             )}
-            <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileChange} className={styles.fileInput} />
+            {canEditMedia && (
+              <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileChange} className={styles.fileInput} disabled={isMediaUploading} />
+            )}
           </div>
 
           {/* Fullscreen */}

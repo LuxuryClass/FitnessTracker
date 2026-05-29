@@ -14,8 +14,12 @@ from app.core.config import settings
 from app.core.exceptions import BadRequestException
 
 MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024
+MAX_EXERCISE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+MAX_EXERCISE_VIDEO_SIZE_BYTES = 50 * 1024 * 1024
 AVATAR_URL_EXPIRES_SECONDS = 60 * 60 * 24 * 7  # 7 дней
+MEDIA_URL_EXPIRES_SECONDS = 60 * 60 * 24 * 7  # 7 дней
 AVATAR_CACHE_CONTROL = "public, max-age=31536000, immutable"
+MEDIA_CACHE_CONTROL = "public, max-age=31536000, immutable"
 S3_CLIENT_CONFIG = Config(
     signature_version="s3v4",
     s3={"addressing_style": "virtual"},
@@ -64,6 +68,11 @@ class StorageService:
         return f"avatars/{user_id}/{uuid4().hex}{extension}"
 
     @staticmethod
+    def _build_exercise_media_object_key(user_id: UUID, exercise_id: UUID, filename: str | None) -> str:
+        extension = Path(filename or "").suffix.lower()
+        return f"exercise-media/{user_id}/{exercise_id}/{uuid4().hex}{extension}"
+
+    @staticmethod
     def _extract_object_key(stored_avatar_value: str) -> str:
         normalized = stored_avatar_value.strip()
         if not normalized:
@@ -109,11 +118,83 @@ class StorageService:
         return object_key
 
     async def delete_avatar(self, stored_avatar_value: str | None, *, ignore_missing: bool = False) -> None:
+        await self._delete_object(
+            stored_avatar_value,
+            ignore_missing=ignore_missing,
+            error_message="Не удалось удалить старую аватарку из хранилища.",
+        )
+
+    async def build_avatar_access_url(self, stored_avatar_value: str | None) -> str | None:
+        return await self._build_access_url(
+            stored_avatar_value,
+            error_message="Не удалось сформировать ссылку для аватарки.",
+        )
+
+    async def upload_exercise_media(self, user_id: UUID, exercise_id: UUID, file: UploadFile) -> tuple[str, str]:
         self._ensure_configured()
-        if not stored_avatar_value:
+
+        content_type = file.content_type or ""
+        if content_type.startswith("image/"):
+            media_type = "image"
+            size_limit = MAX_EXERCISE_IMAGE_SIZE_BYTES
+            limit_message = "Размер изображения не должен превышать 5 MB."
+        elif content_type.startswith("video/"):
+            media_type = "video"
+            size_limit = MAX_EXERCISE_VIDEO_SIZE_BYTES
+            limit_message = "Размер видео не должен превышать 50 MB."
+        else:
+            raise BadRequestException("Разрешены только изображения (image/*) и видео (video/*).")
+
+        file_content = await file.read()
+        if not file_content:
+            raise BadRequestException("Файл медиа пустой.")
+
+        if len(file_content) > size_limit:
+            raise BadRequestException(limit_message)
+
+        object_key = self._build_exercise_media_object_key(
+            user_id=user_id, exercise_id=exercise_id, filename=file.filename
+        )
+
+        try:
+            async with self._create_client() as s3_client:
+                await s3_client.put_object(
+                    Bucket=settings.aws_s3_bucket_name,
+                    Key=object_key,
+                    Body=file_content,
+                    ContentType=content_type,
+                    CacheControl=MEDIA_CACHE_CONTROL,
+                )
+        except (ClientError, BotoCoreError) as exc:
+            raise BadRequestException("Не удалось загрузить медиа в хранилище.") from exc
+
+        return object_key, media_type
+
+    async def delete_exercise_media(self, stored_media_value: str | None, *, ignore_missing: bool = False) -> None:
+        await self._delete_object(
+            stored_media_value,
+            ignore_missing=ignore_missing,
+            error_message="Не удалось удалить старое медиа из хранилища.",
+        )
+
+    async def build_exercise_media_access_url(self, stored_media_value: str | None) -> str | None:
+        return await self._build_access_url(
+            stored_media_value,
+            error_message="Не удалось сформировать ссылку для медиа.",
+        )
+
+    async def _delete_object(
+        self,
+        stored_value: str | None,
+        *,
+        ignore_missing: bool,
+        error_message: str,
+    ) -> None:
+        self._ensure_configured()
+        if not stored_value:
             return
 
-        object_key = self._extract_object_key(stored_avatar_value)
+        object_key = self._extract_object_key(stored_value)
         if not object_key:
             return
 
@@ -127,17 +208,17 @@ class StorageService:
             error_code = str(exc.response.get("Error", {}).get("Code", ""))
             if ignore_missing and error_code in {"NoSuchKey", "404", "NotFound"}:
                 return
-            raise BadRequestException("Не удалось удалить старую аватарку из хранилища.") from exc
+            raise BadRequestException(error_message) from exc
         except BotoCoreError as exc:
-            raise BadRequestException("Не удалось удалить старую аватарку из хранилища.") from exc
+            raise BadRequestException(error_message) from exc
 
-    async def build_avatar_access_url(self, stored_avatar_value: str | None) -> str | None:
-        if not stored_avatar_value:
+    async def _build_access_url(self, stored_value: str | None, *, error_message: str) -> str | None:
+        if not stored_value:
             return None
         if not self._is_configured():
             return None
 
-        object_key = self._extract_object_key(stored_avatar_value)
+        object_key = self._extract_object_key(stored_value)
         if not object_key:
             return None
 
@@ -149,12 +230,12 @@ class StorageService:
                         "Bucket": settings.aws_s3_bucket_name,
                         "Key": object_key,
                     },
-                    ExpiresIn=AVATAR_URL_EXPIRES_SECONDS,
+                    ExpiresIn=MEDIA_URL_EXPIRES_SECONDS,
                 )
                 if inspect.isawaitable(presigned_url):
                     presigned_url = await presigned_url
         except (ClientError, BotoCoreError) as exc:
-            raise BadRequestException("Не удалось сформировать ссылку для аватарки.") from exc
+            raise BadRequestException(error_message) from exc
 
         return str(presigned_url)
 

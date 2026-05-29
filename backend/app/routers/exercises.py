@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Response, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -8,6 +8,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.schemas.exercise import ExerciseCreateRequest, ExerciseResponse, ExerciseUpdateRequest
 from app.services import exercise_service
+from app.services.storage_service import storage_service
 
 router = APIRouter(prefix="/exercises", tags=["Упражнения"])
 
@@ -73,3 +74,34 @@ async def delete_exercise(
 ) -> Response:
     await exercise_service.delete_exercise(db=db, current_user=current_user, exercise_id=exercise_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{exercise_id}/media", response_model=ExerciseResponse, status_code=status.HTTP_200_OK)
+async def upload_exercise_media(
+    exercise_id: UUID,
+    background_tasks: BackgroundTasks,
+    media: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ExerciseResponse:
+    exercise_response, old_media_to_delete = await exercise_service.upload_media(
+        db=db, current_user=current_user, exercise_id=exercise_id, file=media
+    )
+    if old_media_to_delete:
+        background_tasks.add_task(storage_service.delete_exercise_media, old_media_to_delete, ignore_missing=True)
+    return exercise_response
+
+
+@router.delete("/{exercise_id}/media", response_model=ExerciseResponse, status_code=status.HTTP_200_OK)
+async def delete_exercise_media(
+    exercise_id: UUID,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ExerciseResponse:
+    exercise_response, old_media_to_delete = await exercise_service.delete_media(
+        db=db, current_user=current_user, exercise_id=exercise_id
+    )
+    if old_media_to_delete:
+        background_tasks.add_task(storage_service.delete_exercise_media, old_media_to_delete, ignore_missing=True)
+    return exercise_response

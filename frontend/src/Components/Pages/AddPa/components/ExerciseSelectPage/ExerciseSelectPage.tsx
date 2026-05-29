@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/Components/UI/Button/Button';
 import { Input } from '@/Components/UI/Input/Input';
 import styles from './Styles.module.scss';
@@ -8,6 +9,8 @@ import cn from 'classnames';
 import ExerciseCard from '@/Components/Common/ExerciseCard/ExerciseCard';
 import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
 import { useAuth } from '@/Auth';
+import { ApiError, authApi, type Exercise as ApiExercise } from '@/Auth/authApi';
+import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { labelForSecondary, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
 import { filterExercisesByCategory } from '../../exerciseFiltering';
@@ -22,9 +25,15 @@ interface Filter {
 interface Exercise {
   id: string;
   name: string;
+  created_by_user_id: string | null;
   secondary_muscles: string[];
   equipment?: string | null;
+  media_url: string | null;
+  media_type: 'image' | 'video' | null;
 }
+
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
 
 const groupNames: Record<string, string> = {
   chest: 'Грудь',
@@ -42,7 +51,11 @@ const ExerciseSelectPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const callWithAuth = useAuthenticatedCall();
+  const queryClient = useQueryClient();
   const { data: allExercises = [] } = useExercisesQuery();
+
+  const [isMediaUploading, setIsMediaUploading] = useState(false);
 
   const initialSearchQuery = (location.state as any)?.exerciseSearchQuery ?? '';
 
@@ -171,6 +184,67 @@ const ExerciseSelectPage = () => {
     setModalExercise(null);
   };
 
+  // Патчим закэшированный список упражнений свежим объектом из ответа сервера.
+  const applyUpdatedExercise = (updated: ApiExercise) => {
+    queryClient.setQueryData<ApiExercise[]>(['exercises', user?.id], prev =>
+      prev ? prev.map(ex => (ex.id === updated.id ? updated : ex)) : prev,
+    );
+    setModalExercise(prev =>
+      prev && prev.id === updated.id
+        ? { ...prev, media_url: updated.media_url, media_type: updated.media_type }
+        : prev,
+    );
+  };
+
+  const handleUploadMedia = async (file: File): Promise<boolean> => {
+    if (!modalExercise) return false;
+
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    if (!isImage && !isVideo) {
+      alert('Разрешены только изображения и видео.');
+      return false;
+    }
+    if (isImage && file.size > MAX_IMAGE_SIZE_BYTES) {
+      alert('Размер изображения не должен превышать 5 MB.');
+      return false;
+    }
+    if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
+      alert('Размер видео не должен превышать 50 MB.');
+      return false;
+    }
+
+    const exerciseId = modalExercise.id;
+    setIsMediaUploading(true);
+    try {
+      const updated = await callWithAuth(token => authApi.uploadExerciseMedia(token, exerciseId, file));
+      applyUpdatedExercise(updated);
+      return true;
+    } catch (error) {
+      alert(error instanceof ApiError ? error.message : 'Не удалось загрузить медиа. Попробуйте позже.');
+      return false;
+    } finally {
+      setIsMediaUploading(false);
+    }
+  };
+
+  const handleDeleteMedia = async (): Promise<boolean> => {
+    if (!modalExercise) return false;
+
+    const exerciseId = modalExercise.id;
+    setIsMediaUploading(true);
+    try {
+      const updated = await callWithAuth(token => authApi.deleteExerciseMedia(token, exerciseId));
+      applyUpdatedExercise(updated);
+      return true;
+    } catch (error) {
+      alert(error instanceof ApiError ? error.message : 'Не удалось удалить медиа. Попробуйте позже.');
+      return false;
+    } finally {
+      setIsMediaUploading(false);
+    }
+  };
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -250,6 +324,12 @@ const ExerciseSelectPage = () => {
           equipment={modalExercise.equipment ? [modalExercise.equipment] : []}
           description=""
           sets={exerciseSets[modalExercise.id]}
+          imageUrl={modalExercise.media_type === 'image' ? modalExercise.media_url ?? undefined : undefined}
+          videoUrl={modalExercise.media_type === 'video' ? modalExercise.media_url ?? undefined : undefined}
+          canEditMedia={!!user && modalExercise.created_by_user_id === user.id}
+          isMediaUploading={isMediaUploading}
+          onUploadMedia={handleUploadMedia}
+          onDeleteMedia={handleDeleteMedia}
           onConfirm={handleModalConfirm}
         />
       )}
