@@ -2,6 +2,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 20px;
 
     a {
     text-decoration: none;
@@ -52,8 +55,8 @@
 // Экраны больше 393px — растягиваем пропорционально, но с ограничением
 @media (min-width: 394px) {
     .logo {
-        margin-top: calc(84 / 393 * 100vw);
-        width: min(calc(218 / 393 * 100vw), 300px);
+        margin-top: 30px;
+        width: min(calc(218 / 393 * 100vw), 280px);
     }
 
     .title {
@@ -63,6 +66,7 @@
     .buttons {
         gap: calc(20 / 393 * 100vw);
         max-width: 500px;
+        margin-top: 30px;
     }
 }
 

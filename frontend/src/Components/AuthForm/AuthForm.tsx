@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import { Input } from '@/Components/UI/Input/Input';
@@ -28,11 +28,19 @@ const buildDerivedName = (emailValue: string): string => {
 export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '' }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<LoginErrors | RegisterErrors>({ 
-    email: '', 
-    password: '', 
-    ...(type === 'register' && { name: '' }) 
+  const [errors, setErrors] = useState<LoginErrors | RegisterErrors>({
+    email: '',
+    password: '',
+    ...(type === 'register' && { name: '' })
   });
+
+  useEffect(() => {
+    const emailInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+    const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
+
+    if (emailInput) emailInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+  }, []);
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
@@ -72,7 +80,7 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
   }[type];
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>          
+    <form className={styles.form} onSubmit={handleSubmit} autoComplete="off">
       <div className={styles.form__inputs}>
         <Input
           type="text"
@@ -84,6 +92,8 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
           className={styles.form__inputs__input_wrapper}
           inputStyles={styles.form__inputs__input}
           icon={messageIcon}
+          autoComplete="off"
+          readOnly={true}
         />
 
         <Input
@@ -96,13 +106,15 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
           className={styles.form__inputs__input_wrapper}
           inputStyles={styles.form__inputs__input}
           icon={lockIcon}
+          autoComplete="off"
+          readOnly={true}
         />
       </div>
 
       {config.showForgotLink && (
         <Link className={styles.form__forgot} to="/forgot-password">Забыли пароль?</Link>
       )}
-      
+
       <Button
         type="submit"
         size="l"

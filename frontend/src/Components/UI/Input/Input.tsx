@@ -25,6 +25,8 @@ type InputProps = (
   error?: string;
   isRequired?: boolean;
   icon?: string;
+  autoComplete?: string;
+  readOnly?: boolean;
 };
 
 function InputComponent({
@@ -40,12 +42,23 @@ function InputComponent({
   isRequired,
   name,
   error,
-  icon, 
+  icon,
+  autoComplete,
+  readOnly,
 }: InputProps): JSX.Element {
   const [displayPassword, setDisplayPassword] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    const current = value !== null ? String(value) : '';
+    setHasStarted(current.length > 0);
+  }, [value]);
+
   const changeValue = (value: string) => {
+    const started = value.length > 0;
+    setHasStarted(started);
     if (type === 'number') {
       onChange(value === '' ? null : Number(value));
     } else {
@@ -90,8 +103,12 @@ function InputComponent({
           ref={inputRef}
           name={name}
           placeholder={placeholder}
+          autoComplete={autoComplete}
+          readOnly={readOnly}
+          onFocus={(e) => { e.currentTarget.removeAttribute('readOnly'); }}
+          data-started={hasStarted}
           className={cn(
-            styles.input__input, 
+            styles.input__input,
             inputStyles,
             icon && styles.input__input_with_icon // ← доп. класс для отступа
           )}
