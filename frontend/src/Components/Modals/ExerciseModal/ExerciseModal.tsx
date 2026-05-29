@@ -76,6 +76,9 @@ export const ExerciseModal = ({
   const startY = useRef(0);
   const startHeight = useRef(70);
   const isDragging = useRef(false);
+  const currentHeightRef = useRef(70);
+  const pendingFrameRef = useRef<number | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Mode & data
   const [mode, setMode] = useState<'collapsed' | 'expanded'>('collapsed');
@@ -99,6 +102,7 @@ export const ExerciseModal = ({
     if (isOpen) {
       setIsVisible(true);
       setHeightPercent(70);
+      currentHeightRef.current = 70;
       
       if (initialSets && initialSets.length > 0) {
         setMode('collapsed');
@@ -181,20 +185,40 @@ export const ExerciseModal = ({
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     isDragging.current = true;
     startY.current = e.touches[0].clientY;
-    startHeight.current = heightPercent;
-  }, [heightPercent]);
+    startHeight.current = currentHeightRef.current;
+    modalRef.current?.classList.add(styles.modal_dragging);
+  }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging.current) return;
-    const dy = startY.current - e.touches[0].clientY;
-    const delta = (dy / window.innerHeight) * 100;
-    setHeightPercent(Math.min(95, Math.max(30, startHeight.current + delta)));
+    const clientY = e.touches[0].clientY;
+    if (pendingFrameRef.current !== null) return;
+    pendingFrameRef.current = requestAnimationFrame(() => {
+      pendingFrameRef.current = null;
+      const dy = startY.current - clientY;
+      const delta = (dy / window.innerHeight) * 100;
+      const next = Math.min(95, Math.max(30, startHeight.current + delta));
+      currentHeightRef.current = next;
+      if (modalRef.current) {
+        modalRef.current.style.height = `${next}vh`;
+      }
+    });
   }, []);
 
   const handleTouchEnd = useCallback(() => {
     isDragging.current = false;
-    if (heightPercent < 35) onClose();
-  }, [heightPercent, onClose]);
+    if (pendingFrameRef.current !== null) {
+      cancelAnimationFrame(pendingFrameRef.current);
+      pendingFrameRef.current = null;
+    }
+    modalRef.current?.classList.remove(styles.modal_dragging);
+    const final = currentHeightRef.current;
+    if (final < 35) {
+      onClose();
+      return;
+    }
+    setHeightPercent(final);
+  }, [onClose]);
 
   // ─── Submit ───────────────────────────────────────────
   const handleConfirm = () => {
@@ -226,7 +250,7 @@ export const ExerciseModal = ({
   return (
     <>
       <div className={cn(styles.overlay, isAnimating && styles.overlay_visible)} onClick={onClose} />
-      <div className={cn(styles.modal, isAnimating && styles.modal_open)} style={{ height: `${heightPercent}vh` }}>
+      <div ref={modalRef} className={cn(styles.modal, isAnimating && styles.modal_open)} style={{ height: `${heightPercent}vh` }}>
         <div className={styles.handle} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} />
         
         <div className={styles.content}>

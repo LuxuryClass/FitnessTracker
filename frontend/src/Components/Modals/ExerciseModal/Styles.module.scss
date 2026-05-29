@@ -22,9 +22,8 @@
   transform: translateX(-50%) translateY(100%);
   width: 100%;
   max-width: 420px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.04) 100%);
-  backdrop-filter: blur(40px);
-  box-shadow: 0px 1px 2px 0px #FFFFFF33 inset;
+  background: rgba(20, 22, 18, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-top: 2px solid var(--Primary-color);
   border-radius: clamp(20px, 24/393 * 100vw, 28px) clamp(20px, 24/393 * 100vw, 28px) 0 0;
   padding: clamp(12px, 16/393 * 100vw, 20px) clamp(14px, 20/393 * 100vw, 24px) clamp(20px, 32/393 * 100vw, 40px);
@@ -32,12 +31,16 @@
   display: flex;
   flex-direction: column;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: height;
+  contain: layout paint;
 user-select: none;
   -webkit-user-select: none;
-  
-  &_open { 
-    transform: translateX(-50%) translateY(0); 
+
+  &_open {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  &_dragging {
+    will-change: height;
   }
 }
 

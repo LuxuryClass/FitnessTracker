@@ -181,9 +181,22 @@ const CreateWorkoutPage = () => {
     }));
   }, []);
 
+  // Эффективное название: введённое пользователем, либо «Тренировка DD.MM»
+  // от даты тренировки (scheduleDate для планируемой, сегодня для «сейчас»).
+  const effectiveTitle = useMemo(() => {
+    const trimmed = formData.workoutName.trim();
+    if (trimmed) return trimmed;
+    const baseDate =
+      formData.startType === 'schedule' && formData.scheduleDate
+        ? new Date(`${formData.scheduleDate}T00:00:00`)
+        : new Date();
+    const dd = String(baseDate.getDate()).padStart(2, '0');
+    const mm = String(baseDate.getMonth() + 1).padStart(2, '0');
+    return `Тренировка ${dd}.${mm}`;
+  }, [formData.workoutName, formData.startType, formData.scheduleDate]);
+
   const isSaveDisabled =
-    formData.workoutName.trim().length === 0
-    || orderedSelectedExercises.length === 0
+    orderedSelectedExercises.length === 0
     || createWorkoutMutation.isPending;
 
   const handleSave = async () => {
@@ -199,7 +212,7 @@ const CreateWorkoutPage = () => {
     });
 
     const payload: WorkoutCreatePayload = {
-      title: formData.workoutName.trim(),
+      title: effectiveTitle,
       is_planned: formData.startType === 'schedule',
       planned_for: formData.startType === 'schedule'
         ? new Date(`${formData.scheduleDate}T${formData.scheduleTime}:00`).toISOString()
@@ -246,7 +259,7 @@ const CreateWorkoutPage = () => {
       case 'preview':
         return (
           <PreviewTab
-            workoutName={formData.workoutName}
+            workoutName={effectiveTitle}
             date={formData.startType === 'schedule' ? formData.scheduleDate : undefined}
             time={formData.startType === 'schedule' ? formData.scheduleTime : undefined}
             exercises={orderedSelectedExercises}
