@@ -27,8 +27,8 @@ interface ExerciseModalProps {
   sets?: ExerciseSet[];
   canEditMedia?: boolean;
   isMediaUploading?: boolean;
-  onUploadMedia?: (file: File) => Promise<boolean>;
-  onDeleteMedia?: () => Promise<boolean>;
+  onUploadMedia?: (file: File) => void;
+  onDeleteMedia?: () => void;
   onDescriptionChange?: (value: string) => void;
   onConfirm?: (sets: ExerciseSet[], description: string) => void;
 }
@@ -238,52 +238,21 @@ export const ExerciseModal = ({
   };
 
   // ─── Media handlers ───────────────────────────────────
-  const persistedPreviewUrl = imageUrl ?? videoUrl ?? null;
-  const persistedMediaType: 'image' | 'video' | null = imageUrl ? 'image' : videoUrl ? 'video' : null;
-  const localObjectUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    setPreviewUrl(imageUrl || videoUrl || null);
+    setMediaType(imageUrl ? 'image' : videoUrl ? 'video' : null);
+  }, [imageUrl, videoUrl]);
 
-  const revokeLocalUrl = () => {
-    if (localObjectUrlRef.current) {
-      URL.revokeObjectURL(localObjectUrlRef.current);
-      localObjectUrlRef.current = null;
-    }
-  };
-
-  useEffect(() => revokeLocalUrl, []);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !onUploadMedia) return;
-
-    // Мгновенное локальное превью, пока файл грузится на сервер.
-    revokeLocalUrl();
-    const url = URL.createObjectURL(file);
-    localObjectUrlRef.current = url;
-    setPreviewUrl(url);
-    setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
-
-    const ok = await onUploadMedia(file);
-    if (!ok) {
-      // Ошибка/отклонение — откатываем превью к сохранённому медиа.
-      revokeLocalUrl();
-      setPreviewUrl(persistedPreviewUrl);
-      setMediaType(persistedMediaType);
-    }
+    if (!file) return;
+    onUploadMedia?.(file);
   };
 
-  const handleDeleteClick = async (e: React.MouseEvent) => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    revokeLocalUrl();
-    setPreviewUrl(null);
-    setMediaType(null);
-    if (onDeleteMedia) {
-      const ok = await onDeleteMedia();
-      if (!ok) {
-        setPreviewUrl(persistedPreviewUrl);
-        setMediaType(persistedMediaType);
-      }
-    }
+    onDeleteMedia?.();
   };
 
   const handleEditClick = (e: React.MouseEvent) => {

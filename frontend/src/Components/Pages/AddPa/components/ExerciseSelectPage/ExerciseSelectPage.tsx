@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/Components/UI/Button/Button';
@@ -56,6 +56,21 @@ const ExerciseSelectPage = () => {
   const { data: allExercises = [] } = useExercisesQuery();
 
   const [isMediaUploading, setIsMediaUploading] = useState(false);
+  const [pendingMedia, setPendingMedia] = useState<{
+    exerciseId: string;
+    url: string;
+    type: 'image' | 'video';
+  } | null>(null);
+  const pendingMediaRef = useRef<typeof pendingMedia>(null);
+  pendingMediaRef.current = pendingMedia;
+
+  useEffect(() => {
+    return () => {
+      if (pendingMediaRef.current) {
+        URL.revokeObjectURL(pendingMediaRef.current.url);
+      }
+    };
+  }, []);
 
   const initialSearchQuery = (location.state as any)?.exerciseSearchQuery ?? '';
 
@@ -196,53 +211,84 @@ const ExerciseSelectPage = () => {
     );
   };
 
-  const handleUploadMedia = async (file: File): Promise<boolean> => {
-    if (!modalExercise) return false;
+  const clearPendingMedia = () => {
+    setPendingMedia(prev => {
+      if (prev) URL.revokeObjectURL(prev.url);
+      return null;
+    });
+  };
+
+  const handleUploadMedia = (file: File): void => {
+    if (!modalExercise) return;
 
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
     if (!isImage && !isVideo) {
       alert('Разрешены только изображения и видео.');
-      return false;
+      return;
     }
     if (isImage && file.size > MAX_IMAGE_SIZE_BYTES) {
       alert('Размер изображения не должен превышать 5 MB.');
-      return false;
+      return;
     }
     if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
       alert('Размер видео не должен превышать 50 MB.');
-      return false;
+      return;
     }
 
     const exerciseId = modalExercise.id;
+    setPendingMedia(prev => {
+      if (prev) URL.revokeObjectURL(prev.url);
+      return { exerciseId, url: URL.createObjectURL(file), type: isVideo ? 'video' : 'image' };
+    });
     setIsMediaUploading(true);
-    try {
-      const updated = await callWithAuth(token => authApi.uploadExerciseMedia(token, exerciseId, file));
-      applyUpdatedExercise(updated);
-      return true;
-    } catch (error) {
-      alert(error instanceof ApiError ? error.message : 'Не удалось загрузить медиа. Попробуйте позже.');
-      return false;
-    } finally {
-      setIsMediaUploading(false);
-    }
+
+    void (async () => {
+      try {
+        const updated = await callWithAuth(token => authApi.uploadExerciseMedia(token, exerciseId, file));
+        applyUpdatedExercise(updated);
+      } catch (error) {
+        alert(error instanceof ApiError ? error.message : 'Не удалось загрузить медиа. Попробуйте позже.');
+      } finally {
+        clearPendingMedia();
+        setIsMediaUploading(false);
+      }
+    })();
   };
 
-  const handleDeleteMedia = async (): Promise<boolean> => {
-    if (!modalExercise) return false;
+  const handleDeleteMedia = (): void => {
+    if (!modalExercise) return;
 
     const exerciseId = modalExercise.id;
+    clearPendingMedia();
     setIsMediaUploading(true);
-    try {
-      const updated = await callWithAuth(token => authApi.deleteExerciseMedia(token, exerciseId));
-      applyUpdatedExercise(updated);
-      return true;
-    } catch (error) {
-      alert(error instanceof ApiError ? error.message : 'Не удалось удалить медиа. Попробуйте позже.');
-      return false;
-    } finally {
-      setIsMediaUploading(false);
+
+    void (async () => {
+      try {
+        const updated = await callWithAuth(token => authApi.deleteExerciseMedia(token, exerciseId));
+        applyUpdatedExercise(updated);
+      } catch (error) {
+        alert(error instanceof ApiError ? error.message : 'Не удалось удалить медиа. Попробуйте позже.');
+      } finally {
+        setIsMediaUploading(false);
+      }
+    })();
+  };
+
+  const getModalImageUrl = (): string | undefined => {
+    if (!modalExercise) return undefined;
+    if (pendingMedia && pendingMedia.exerciseId === modalExercise.id) {
+      return pendingMedia.type === 'image' ? pendingMedia.url : undefined;
     }
+    return modalExercise.media_type === 'image' ? modalExercise.media_url ?? undefined : undefined;
+  };
+
+  const getModalVideoUrl = (): string | undefined => {
+    if (!modalExercise) return undefined;
+    if (pendingMedia && pendingMedia.exerciseId === modalExercise.id) {
+      return pendingMedia.type === 'video' ? pendingMedia.url : undefined;
+    }
+    return modalExercise.media_type === 'video' ? modalExercise.media_url ?? undefined : undefined;
   };
 
   return (
@@ -324,8 +370,8 @@ const ExerciseSelectPage = () => {
           equipment={modalExercise.equipment ? [modalExercise.equipment] : []}
           description=""
           sets={exerciseSets[modalExercise.id]}
-          imageUrl={modalExercise.media_type === 'image' ? modalExercise.media_url ?? undefined : undefined}
-          videoUrl={modalExercise.media_type === 'video' ? modalExercise.media_url ?? undefined : undefined}
+          imageUrl={getModalImageUrl()}
+          videoUrl={getModalVideoUrl()}
           canEditMedia={!!user && modalExercise.created_by_user_id === user.id}
           isMediaUploading={isMediaUploading}
           onUploadMedia={handleUploadMedia}
