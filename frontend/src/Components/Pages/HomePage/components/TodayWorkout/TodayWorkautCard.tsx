@@ -23,6 +23,7 @@ interface TodayWorkoutProps {
   exercises?: TodayWorkoutExercise[];
   onStart?: () => void;
   isEmpty?: boolean;
+  isLoading?: boolean;
   className?: string;
 }
 
@@ -69,15 +70,29 @@ export const TodayWorkout = ({
   exercises,
   onStart,
   isEmpty = false,
+  isLoading = false,
   className,
 }: TodayWorkoutProps) => {
   const headerTitle = formatHeaderTitle(plannedFor);
+  
+  if (isLoading) {
+    return (
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Тренировка на сегодня</h2>
+        </div>
+        <div className={styles.loaderWrapper}>
+          <div className={styles.spinner} />
+        </div>
+      </div>
+    );
+  }
 
   if (isEmpty || !title || !exercises || exercises.length === 0) {
     return (
       <div className={cn(className, styles.card, styles.card__empty)}>
-        <h2 className={styles.title}>{headerTitle}</h2>
-        <p className={styles.emptyText}>Тренировок нет</p>
+        <h2 className={styles.header__title}>{headerTitle}</h2>
+        <p className={styles.card__empty_text}>Нет запланированных тренеровок</p>
       </div>
     );
   }

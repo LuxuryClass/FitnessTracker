@@ -76,6 +76,7 @@ const HomePage = () => {
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
     .slice(0, 5);
 
+    
   return (
     <main className={styles.page}>
 
@@ -93,7 +94,6 @@ const HomePage = () => {
             muscleGroups={labelsForPrimaryList(nextWorkout.muscle_groups)}
             exercises={nextWorkout.exercises.map((item: NextWorkoutExerciseItem): TodayWorkoutExercise => ({
               name: item.name,
-              // На карточке показываем первую группу мышц упражнения — этого достаточно для краткой пометки.
               muscleGroup: labelForPrimary(item.muscle_groups[0] ?? ''),
               setsCount: item.sets_count,
               targetRepsMin: item.target_reps_min,
