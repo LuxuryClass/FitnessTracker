@@ -7,13 +7,13 @@
     height: 100%;
     min-height: 100vh;
     min-height: 100dvh;
+    overflow: hidden;
 }
 
 .back__button {
-    padding: 14px;
     position: absolute;
     left: 0;
-    top: 58px;
+    top: var(--padding-top);
 }
 
 .logo {
@@ -108,7 +108,7 @@
     }
 
     .back__button {
-        top: calc(58 / 393 * 100vw);
+        top: calc(16 / 393 * 100vw);
         padding: calc(14 / 393 * 100vw);
     }
 
@@ -156,7 +156,7 @@
     }
 
     .back__button {
-        top: min(calc(58 / 393 * 100vw), 80px);
+        top: min(calc(16 / 393 * 100vw), 20px);
     }
 
     .logo {
@@ -194,7 +194,7 @@
     }
 
     .back__button {
-        top: 20px;
+        top: 12px;
     }
 
     .logo {
