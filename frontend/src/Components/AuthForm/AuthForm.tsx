@@ -42,6 +42,18 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
     if (passwordInput) passwordInput.value = '';
   }, []);
 
+  useEffect(() => {
+    if (serverError && type === 'login') {
+      const displayError = serverError.includes('NetworkError') 
+        ? 'Неверный email или пароль' 
+        : serverError;
+      setErrors(prev => ({
+        ...prev,
+        email: displayError
+      }));
+    }
+  }, [serverError, type]);
+
   const handleEmailChange = (value: string) => {
     setEmail(value);
     clearFieldError(errors, 'email', setErrors);
@@ -125,8 +137,6 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
       >
         {isSubmitting ? 'Подождите...' : config.buttonText}
       </Button>
-
-      {serverError && <p className={styles.form__server_error}>{serverError}</p>}
     </form>
   );
 };
