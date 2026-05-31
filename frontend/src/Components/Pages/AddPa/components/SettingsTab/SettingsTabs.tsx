@@ -10,7 +10,7 @@ type StartType = 'now' | 'schedule';
 
 const startTabs = [
   { id: 'now' as StartType, label: 'Сейчас' },
-  { id: 'schedule' as StartType, label: 'Запланировать' },
+  { id: 'schedule' as StartType, label: 'Выбрать дату' },
 ];
 
 interface SettingsTabProps {
@@ -57,7 +57,7 @@ export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
       </div>
 
       <div className={cn(styles.section, styles.scheduleSection)}>
-        <h3 className={styles.sectionTitle}>Начать сейчас или запланировать</h3>
+        <h3 className={styles.sectionTitle}>Начать сейчас или выбрать дату</h3>
         <TabsGroup 
           tabs={startTabs} 
           activeTab={formData.startType} 
@@ -66,7 +66,7 @@ export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
 
         <div className={cn(styles.scheduleDropdown, scheduleDropdownOpen && styles.scheduleDropdown_open)}>
           <div className={styles.scheduleDropdownInner}>
-            <h4 className={styles.scheduleLabel}>Запланировать на</h4>
+            <h4 className={styles.scheduleLabel}>Своя дата</h4>
             <div className={styles.scheduleInputs}>
               <div className={styles.dateInputWrapper}>
                 <input

@@ -12,7 +12,7 @@ interface TabsGroupProps<T extends string> {
   activeTab: T;
   onChange: (tabId: T) => void;
   className?: string;
-  variant?: 'primary' | 'dark';
+  type?: 'primary' | 'dark';
 }
 
 export const TabsGroup = <T extends string>({
@@ -20,7 +20,7 @@ export const TabsGroup = <T extends string>({
   activeTab,
   onChange,
   className,
-  variant = 'primary',
+  type = 'primary',
 }: TabsGroupProps<T>) => {
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabsRef = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -64,19 +64,19 @@ export const TabsGroup = <T extends string>({
   }, [tabs, updateIndicator]);
 
   return (
-    <div ref={containerRef} className={cn(styles.tabs, styles[`tabs_${variant}`], className)}>
+    <div ref={containerRef} className={cn(styles.tabs, styles[`tabs_${type}`], className)}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
           ref={(el) => { tabsRef.current[tab.id] = el; }}
-          className={cn(styles.tab, styles[`tab_${variant}`], activeTab === tab.id && styles.tab_active)}
+          className={cn(styles.tab, styles[`tab_${type}`], activeTab === tab.id && styles.tab_active)}
           onClick={() => onChange(tab.id)}
         >
           {tab.label}
         </button>
       ))}
       <div
-        className={cn(styles.indicator, styles[`indicator_${variant}`])}
+        className={cn(styles.indicator, styles[`indicator_${type}`])}
         style={{
           left: `${indicatorStyle.left}px`,
           width: `${indicatorStyle.width}px`,

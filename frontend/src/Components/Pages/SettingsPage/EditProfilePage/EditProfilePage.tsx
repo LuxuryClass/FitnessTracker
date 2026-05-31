@@ -198,7 +198,7 @@ const EditProfilePage = () => {
             tabs={genderTabs}
             activeTab={formData.gender}
             onChange={(id) => handleChange('gender', id)}
-            variant="dark"
+            type="dark"
           />
         </div>
 

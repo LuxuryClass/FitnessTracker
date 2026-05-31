@@ -181,7 +181,7 @@ const ExerciseSelectPage = () => {
   };
 
   const handleCreateExercise = () => {
-    console.log('Создать упражнение');
+    navigate("/createExercise");
   };
 
   const handleModalConfirm = (sets: ExerciseSet[], _description: string) => {

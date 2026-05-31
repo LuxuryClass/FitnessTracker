@@ -90,9 +90,9 @@ const ExercisesTabs = ({
     });
   };
 
-  const handleAddExercise = () => {
+  const handleCreateExercise = () => {
     // TODO: реализовать создание упражнения через POST /exercises (отдельная итерация).
-    console.log('Добавить своё упражнение');
+    navigate("/createExercise");
   };
 
   return (
@@ -107,7 +107,7 @@ const ExercisesTabs = ({
   <Button 
     size="s" 
     color="primary" 
-    onClick={handleAddExercise}
+    onClick={handleCreateExercise}
     className={styles.addButton}
   >
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

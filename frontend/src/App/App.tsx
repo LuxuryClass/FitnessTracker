@@ -14,6 +14,7 @@ import NotificationsPage from '@/Components/Pages/SettingsPage/NotificationsPage
 import PrivacyPage from '@/Components/Pages/SettingsPage/PrivacyPage/PrivacyPage';
 import SchedulePage from '@/Components/Pages/ShedulePage/ShedulePage';
 import ExerciseSelectPage from '@/Components/Pages/AddPa/components/ExerciseSelectPage/ExerciseSelectPage';
+import CreateExercisePage from '@/Components/Pages/CreateExercisePage/CreateExercisePage';
 
 export function App() {
   return (
@@ -34,7 +35,8 @@ export function App() {
               <Route path="/progress" />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
-
+            
+            <Route path="/createExercise" element={<CreateExercisePage />} />
             <Route path="/exercises/:groupId" element={<ExerciseSelectPage />} />
             <Route path="/edit-profile" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
