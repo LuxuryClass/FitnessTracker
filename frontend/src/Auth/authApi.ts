@@ -182,6 +182,8 @@ export interface Exercise {
   primary_muscle_groups: string[];
   secondary_muscles: string[];
   equipment: string | null;
+  media_url: string | null;
+  media_type: 'image' | 'video' | null;
   created_at: string;
   updated_at: string;
 }
@@ -320,6 +322,23 @@ export const authApi = {
   async getSystemExercises(accessToken: string): Promise<Exercise[]> {
     return request<Exercise[]>("/exercises/system", {
       method: "GET",
+      accessToken,
+    });
+  },
+
+  async uploadExerciseMedia(accessToken: string, exerciseId: string, file: File): Promise<Exercise> {
+    const formData = new FormData();
+    formData.append("media", file);
+    return request<Exercise>(`/exercises/${exerciseId}/media`, {
+      method: "POST",
+      accessToken,
+      body: formData,
+    });
+  },
+
+  async deleteExerciseMedia(accessToken: string, exerciseId: string): Promise<Exercise> {
+    return request<Exercise>(`/exercises/${exerciseId}/media`, {
+      method: "DELETE",
       accessToken,
     });
   },

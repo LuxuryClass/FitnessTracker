@@ -85,6 +85,12 @@
   border: 1px solid var(--Accent-grey-color);
 }
 
+.muscleTagPrimary {
+  background-color: var(--Primary-color);
+  border-color: var(--Primary-color);
+  color: #080A00;
+}
+
 .actionButton {
   position: absolute;
   right: 0;

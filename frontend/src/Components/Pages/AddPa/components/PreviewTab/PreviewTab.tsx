@@ -102,15 +102,12 @@ export const PreviewTab = ({
       <div className={styles.exercisesSection}>
         <div className={styles.exercisesList}>
           {items.map((exercise, index) => {
-            const muscles = [
-              ...labelsForPrimaryList(exercise.primary_muscle_groups),
-              ...labelsForSecondaryList(exercise.secondary_muscles),
-            ];
             return (
               <ExerciseRow
                 key={exercise.id}
                 name={exercise.name}
-                muscles={muscles}
+                muscleGroups={labelsForPrimaryList(exercise.primary_muscle_groups)}
+                targetMuscles={labelsForSecondaryList(exercise.secondary_muscles)}
                 sets={setsByExerciseId[exercise.id] ?? []}
                 index={index}
                 isDragging={dragIndex === index}

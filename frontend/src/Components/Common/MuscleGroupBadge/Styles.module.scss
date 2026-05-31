@@ -15,6 +15,13 @@
   white-space: nowrap;
 }
 
+.groupPrimary {
+  background-color: var(--Primary-color);
+  color: #080A00;
+  border-radius: 8px;
+  padding: 1px 8px;
+}
+
 .separator {
   opacity: 1;
   color: #fff;

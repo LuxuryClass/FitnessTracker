@@ -29,7 +29,7 @@ const MuscleGroupCardComponent = ({
       )}
       {icon && <img src={icon} alt={name} className={styles.icon} />}
       <span className={styles.name}>{name}</span>
-      <span className={styles.count}>{exercisesCount} упражнений</span>
+      <span className={styles.count}>{exercisesCount} упр</span>
     </div>
   );
 };

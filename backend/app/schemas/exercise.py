@@ -167,6 +167,8 @@ class ExerciseResponse(BaseModel):
     primary_muscle_groups: list[str]
     secondary_muscles: list[str]
     equipment: str | None
+    media_url: str | None = None
+    media_type: str | None = None
     created_at: datetime
     updated_at: datetime
 

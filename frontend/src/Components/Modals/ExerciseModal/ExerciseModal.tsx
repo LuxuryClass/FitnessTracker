@@ -18,13 +18,17 @@ interface ExerciseModalProps {
   isOpen: boolean;
   onClose: () => void;
   name: string;
-  muscleGroup: string;
+  muscleGroups?: string[];
   targetMuscles?: string[];
   equipment?: string[];
   imageUrl?: string;
   videoUrl?: string;
   description?: string;
   sets?: ExerciseSet[];
+  canEditMedia?: boolean;
+  isMediaUploading?: boolean;
+  onUploadMedia?: (file: File) => void;
+  onDeleteMedia?: () => void;
   onDescriptionChange?: (value: string) => void;
   onConfirm?: (sets: ExerciseSet[], description: string) => void;
 }
@@ -57,13 +61,17 @@ export const ExerciseModal = ({
   isOpen,
   onClose,
   name,
-  muscleGroup,
+  muscleGroups = [],
   targetMuscles = [],
   equipment = [],
   imageUrl,
   videoUrl,
   description = '',
   sets: initialSets,
+  canEditMedia = false,
+  isMediaUploading = false,
+  onUploadMedia,
+  onDeleteMedia,
   onDescriptionChange,
   onConfirm,
 }: ExerciseModalProps) => {
@@ -230,13 +238,21 @@ export const ExerciseModal = ({
   };
 
   // ─── Media handlers ───────────────────────────────────
+  useEffect(() => {
+    setPreviewUrl(imageUrl || videoUrl || null);
+    setMediaType(imageUrl ? 'image' : videoUrl ? 'video' : null);
+  }, [imageUrl, videoUrl]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
     e.target.value = '';
+    if (!file) return;
+    onUploadMedia?.(file);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDeleteMedia?.();
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
@@ -247,6 +263,10 @@ export const ExerciseModal = ({
   // ─── Render ───────────────────────────────────────────
   if (!isVisible) return null;
 
+  // Вторичные мышцы без дублей с группами
+  const primarySet = new Set(muscleGroups);
+  const secondaryMuscles = targetMuscles.filter(m => !primarySet.has(m));
+
   return (
     <>
       <div className={cn(styles.overlay, isAnimating && styles.overlay_visible)} onClick={onClose} />
@@ -256,9 +276,6 @@ export const ExerciseModal = ({
         <div className={styles.content}>
           {/* Header */}
           <div className={styles.header}>
-            <div className={styles.badgeWrapper}>
-              <MuscleGroupBadge groups={[muscleGroup]} />
-            </div>
             <h3 className={styles.name}>{name}</h3>
           </div>
 
@@ -272,24 +289,32 @@ export const ExerciseModal = ({
                 ) : (
                   <img src={previewUrl} alt={name} className={styles.mediaContent} onClick={() => setIsFullscreen(true)} />
                 )}
-                <button className={styles.editMediaBtn} onClick={handleEditClick}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15.2322 5.23223L18.7678 8.76777M16.7322 3.73223C17.7085 2.75592 19.2915 2.75592 20.2678 3.73223C21.2441 4.70854 21.2441 6.29146 20.2678 7.26777L6.5 21.0355H3V17.4645L16.7322 3.73223Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
-                <button className={styles.deleteMediaBtn} onClick={e => { e.stopPropagation(); setPreviewUrl(null); setMediaType(null); }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 6H5H21M8 6V4C8 2.89543 8.89543 2 10 2H14C15.1046 2 16 2.89543 16 4V6M19 6V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
+                {canEditMedia && (
+                  <>
+                    <button className={styles.editMediaBtn} onClick={handleEditClick} disabled={isMediaUploading}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15.2322 5.23223L18.7678 8.76777M16.7322 3.73223C17.7085 2.75592 19.2915 2.75592 20.2678 3.73223C21.2441 4.70854 21.2441 6.29146 20.2678 7.26777L6.5 21.0355H3V17.4645L16.7322 3.73223Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                    <button className={styles.deleteMediaBtn} onClick={handleDeleteClick} disabled={isMediaUploading}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 6H5H21M8 6V4C8 2.89543 8.89543 2 10 2H14C15.1046 2 16 2.89543 16 4V6M19 6V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <div className={styles.mediaPlaceholder}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="1.5"/></svg>
-                <span className={styles.mediaText}>Добавить фото или видео</span>
-                <button className={styles.uploadBtn} onClick={handleEditClick}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  Загрузить
-                </button>
+                <span className={styles.mediaText}>{canEditMedia ? 'Добавить фото или видео' : 'Нет фото или видео'}</span>
+                {canEditMedia && (
+                  <button className={styles.uploadBtn} onClick={handleEditClick} disabled={isMediaUploading}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    {isMediaUploading ? 'Загрузка…' : 'Загрузить'}
+                  </button>
+                )}
               </div>
             )}
-            <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileChange} className={styles.fileInput} />
+            {canEditMedia && (
+              <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileChange} className={styles.fileInput} disabled={isMediaUploading} />
+            )}
           </div>
 
           {/* Fullscreen */}
@@ -301,10 +326,24 @@ export const ExerciseModal = ({
           )}
 
           {/* Tags */}
-          {(targetMuscles.length > 0 || equipment.length > 0) && (
+          {(muscleGroups.length > 0 || secondaryMuscles.length > 0 || equipment.length > 0) && (
             <div className={styles.tagsRow}>
-              <span className={styles.sectionLabel}>Оборудование:</span>
-              {equipment.length > 0 && <MuscleGroupBadge groups={equipment} className={styles.tag} />}
+              {(muscleGroups.length > 0 || secondaryMuscles.length > 0) && (
+                <div className={styles.tagGroup}>
+                  <span className={styles.sectionLabel}>Мышцы:</span>
+                  <MuscleGroupBadge
+                    groups={[...muscleGroups, ...secondaryMuscles]}
+                    primaryGroups={muscleGroups}
+                    className={styles.tag}
+                  />
+                </div>
+              )}
+              {equipment.length > 0 && (
+                <div className={styles.tagGroup}>
+                  <span className={styles.sectionLabel}>Оборудование:</span>
+                  <MuscleGroupBadge groups={equipment} className={styles.tag} />
+                </div>
+              )}
             </div>
           )}
 

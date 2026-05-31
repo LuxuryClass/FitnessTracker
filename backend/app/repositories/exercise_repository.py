@@ -78,6 +78,18 @@ class ExerciseRepository:
         await db.flush()
         return exercise
 
+    async def update_media(
+        self,
+        db: AsyncSession,
+        exercise: Exercise,
+        media_object_key: str | None,
+        media_type: str | None,
+    ) -> Exercise:
+        exercise.media_object_key = media_object_key
+        exercise.media_type = media_type
+        await db.flush()
+        return exercise
+
     async def delete(self, db: AsyncSession, exercise: Exercise) -> None:
         await db.delete(exercise)
         await db.flush()
