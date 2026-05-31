@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
-import { Input } from '@/Components/UI/Input/Input';
 import styles from './Styles.module.scss';
 import { MuscleGroupCard } from '@/Components/Common/MuscleGroupCard/MuscleGroupCard';
-import searchIcon from "/icons/Search.svg";
 import { useAuth } from '@/Auth';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { filterExercisesByCategory } from '../../exerciseFiltering';
 import type { ExerciseSet } from '@/Auth/authApi';
 import type { WorkoutFormSettings } from '../../CreateWorkoutPage';
+import { SearchBar } from '@/Components/UI/Search/Search';
 
 interface MuscleGroup {
   id: string;
@@ -98,29 +97,25 @@ const ExercisesTabs = ({
 
   return (
     <div className={styles.page}>
-      <div className={styles.searchRow}>
-        <div className={styles.searchWrapper}>
-          <Input
-            type="text"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            placeholder="Поиск"
-            className={styles.searchInput}
-          />
-          <img src={searchIcon} alt="поиск" className={styles.searchIcon} />
-        </div>
-        <Button
-          size="s"
-          color="primary"
-          onClick={handleAddExercise}
-          className={styles.addButton}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          Создать упражнение
-        </Button>
-      </div>
+<div className={styles.searchRow}>
+  <SearchBar
+    value={searchQuery} 
+    onChange={handleSearchChange} 
+    placeholder="Поиск"
+    className={styles.search}
+  />
+  <Button 
+    size="s" 
+    color="primary" 
+    onClick={handleAddExercise}
+    className={styles.addButton}
+  >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+    Создать упражнение
+  </Button>
+</div>
 
       <div className={styles.grid}>
         {filteredGroups.map(group => (

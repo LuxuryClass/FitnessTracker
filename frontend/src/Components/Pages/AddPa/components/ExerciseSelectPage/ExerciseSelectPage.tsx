@@ -2,9 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/Components/UI/Button/Button';
-import { Input } from '@/Components/UI/Input/Input';
 import styles from './Styles.module.scss';
-import searchIcon from "/icons/Search.svg";
 import cn from 'classnames';
 import ExerciseCard from '@/Components/Common/ExerciseCard/ExerciseCard';
 import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
@@ -16,6 +14,7 @@ import { labelForSecondary, labelForPrimary, PRIMARY_TO_SECONDARY } from '@/Util
 import { filterExercisesByCategory } from '../../exerciseFiltering';
 import type { ExerciseSet } from '@/Auth/authApi';
 import type { WorkoutFormSettings } from '../../CreateWorkoutPage';
+import { SearchBar } from '@/Components/UI/Search/Search';
 
 interface Filter {
   id: string;
@@ -302,16 +301,12 @@ const ExerciseSelectPage = () => {
       <div className={styles.content}>
         <div className={styles.content__header}>
           <div className={styles.searchRow}>
-            <div className={styles.searchWrapper}>
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={setSearchQuery}
+              <SearchBar
+                value={searchQuery} 
+                onChange={setSearchQuery} 
                 placeholder="Поиск"
-                className={styles.searchInput}
+                className={styles.search}
               />
-              <img src={searchIcon} alt="поиск" className={styles.searchIcon} />
-            </div>
             <Button size="s" color="primary" onClick={handleCreateExercise} className={styles.addButton}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
