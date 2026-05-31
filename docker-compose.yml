@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     container_name: fitness-db
     environment:
-      POSTGRES_DB: fitness_tracker
+      POSTGRES_DB: flame_fitness
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d fitness_tracker"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flame_fitness"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -39,7 +39,7 @@ services:
     environment:
       APP_NAME: "API планировщика тренировок"
       API_PREFIX: "/api"
-      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fitness_tracker"
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/flame_fitness"
       REDIS_URL: "redis://redis:6379/0"
       CELERY_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
@@ -65,7 +65,7 @@ services:
     environment:
       APP_NAME: "API планировщика тренировок"
       API_PREFIX: "/api"
-      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fitness_tracker"
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/flame_fitness"
       REDIS_URL: "redis://redis:6379/0"
       CELERY_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
@@ -90,7 +90,7 @@ services:
     environment:
       APP_NAME: "API планировщика тренировок"
       API_PREFIX: "/api"
-      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fitness_tracker"
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/flame_fitness"
       REDIS_URL: "redis://redis:6379/0"
       CELERY_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"

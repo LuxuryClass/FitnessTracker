@@ -188,19 +188,10 @@ const CreateWorkoutPage = () => {
     }));
   }, []);
 
-  // Эффективное название: введённое пользователем, либо «Тренировка DD.MM»
-  // от даты тренировки (scheduleDate для планируемой, сегодня для «сейчас»).
+  // Эффективное название: введённое пользователем, либо «Тренировка» по умолчанию.
   const effectiveTitle = useMemo(() => {
-    const trimmed = formData.workoutName.trim();
-    if (trimmed) return trimmed;
-    const baseDate =
-      formData.startType === 'schedule' && formData.scheduleDate
-        ? new Date(`${formData.scheduleDate}T00:00:00`)
-        : new Date();
-    const dd = String(baseDate.getDate()).padStart(2, '0');
-    const mm = String(baseDate.getMonth() + 1).padStart(2, '0');
-    return `Тренировка ${dd}.${mm}`;
-  }, [formData.workoutName, formData.startType, formData.scheduleDate]);
+    return formData.workoutName.trim() || 'Тренировка';
+  }, [formData.workoutName]);
 
   const isSaveDisabled =
     orderedSelectedExercises.length === 0

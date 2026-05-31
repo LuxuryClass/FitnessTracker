@@ -18,7 +18,7 @@ interface ExerciseModalProps {
   isOpen: boolean;
   onClose: () => void;
   name: string;
-  muscleGroup: string;
+  muscleGroups?: string[];
   targetMuscles?: string[];
   equipment?: string[];
   imageUrl?: string;
@@ -61,7 +61,7 @@ export const ExerciseModal = ({
   isOpen,
   onClose,
   name,
-  muscleGroup,
+  muscleGroups = [],
   targetMuscles = [],
   equipment = [],
   imageUrl,
@@ -263,6 +263,10 @@ export const ExerciseModal = ({
   // ─── Render ───────────────────────────────────────────
   if (!isVisible) return null;
 
+  // Вторичные мышцы без дублей с группами
+  const primarySet = new Set(muscleGroups);
+  const secondaryMuscles = targetMuscles.filter(m => !primarySet.has(m));
+
   return (
     <>
       <div className={cn(styles.overlay, isAnimating && styles.overlay_visible)} onClick={onClose} />
@@ -272,9 +276,6 @@ export const ExerciseModal = ({
         <div className={styles.content}>
           {/* Header */}
           <div className={styles.header}>
-            <div className={styles.badgeWrapper}>
-              <MuscleGroupBadge groups={[muscleGroup]} />
-            </div>
             <h3 className={styles.name}>{name}</h3>
           </div>
 
@@ -325,10 +326,24 @@ export const ExerciseModal = ({
           )}
 
           {/* Tags */}
-          {(targetMuscles.length > 0 || equipment.length > 0) && (
+          {(muscleGroups.length > 0 || secondaryMuscles.length > 0 || equipment.length > 0) && (
             <div className={styles.tagsRow}>
-              <span className={styles.sectionLabel}>Оборудование:</span>
-              {equipment.length > 0 && <MuscleGroupBadge groups={equipment} className={styles.tag} />}
+              {(muscleGroups.length > 0 || secondaryMuscles.length > 0) && (
+                <div className={styles.tagGroup}>
+                  <span className={styles.sectionLabel}>Мышцы:</span>
+                  <MuscleGroupBadge
+                    groups={[...muscleGroups, ...secondaryMuscles]}
+                    primaryGroups={muscleGroups}
+                    className={styles.tag}
+                  />
+                </div>
+              )}
+              {equipment.length > 0 && (
+                <div className={styles.tagGroup}>
+                  <span className={styles.sectionLabel}>Оборудование:</span>
+                  <MuscleGroupBadge groups={equipment} className={styles.tag} />
+                </div>
+              )}
             </div>
           )}
 

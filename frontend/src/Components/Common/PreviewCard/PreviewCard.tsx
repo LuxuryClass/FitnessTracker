@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 import styles from './Styles.module.scss';
 
 interface PreviewCardProps {
@@ -73,7 +72,9 @@ const PreviewCardComponent = ({
 
       {muscleGroups.length > 0 && (
         <div className={styles.groups}>
-          <MuscleGroupBadge groups={muscleGroups} />
+          {muscleGroups.map((group, index) => (
+            <span key={index} className={styles.muscleTag}>{group}</span>
+          ))}
         </div>
       )}
     </div>

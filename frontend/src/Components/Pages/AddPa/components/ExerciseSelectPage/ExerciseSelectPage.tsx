@@ -12,7 +12,7 @@ import { useAuth } from '@/Auth';
 import { ApiError, authApi, type Exercise as ApiExercise } from '@/Auth/authApi';
 import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
-import { labelForSecondary, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
+import { labelForSecondary, labelForPrimary, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
 import { filterExercisesByCategory } from '../../exerciseFiltering';
 import type { ExerciseSet } from '@/Auth/authApi';
 import type { WorkoutFormSettings } from '../../CreateWorkoutPage';
@@ -26,6 +26,7 @@ interface Exercise {
   id: string;
   name: string;
   created_by_user_id: string | null;
+  primary_muscle_groups: string[];
   secondary_muscles: string[];
   equipment?: string | null;
   media_url: string | null;
@@ -343,6 +344,7 @@ const ExerciseSelectPage = () => {
                 key={exercise.id}
                 id={exercise.id}
                 name={exercise.name}
+                muscleGroups={exercise.primary_muscle_groups.map(labelForPrimary)}
                 targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
                 equipment={exercise.equipment ? [exercise.equipment] : []}
                 onToggle={handleToggleExercise}
@@ -365,7 +367,7 @@ const ExerciseSelectPage = () => {
           isOpen={!!modalExercise}
           onClose={() => setModalExercise(null)}
           name={modalExercise.name}
-          muscleGroup={groupId || ''}
+          muscleGroups={modalExercise.primary_muscle_groups.map(labelForPrimary)}
           targetMuscles={modalExercise.secondary_muscles.map(labelForSecondary)}
           equipment={modalExercise.equipment ? [modalExercise.equipment] : []}
           description=""

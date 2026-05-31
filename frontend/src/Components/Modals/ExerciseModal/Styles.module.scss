@@ -77,12 +77,6 @@ user-select: none;
   text-align: left;
 }
 
-.badgeWrapper {
-  float: right;
-  margin-left: 8px;
-  margin-bottom: 4px;
-}
-
 .name {
   @include text_h1();
   text-align: start;
@@ -221,6 +215,17 @@ user-select: none;
   justify-content: start;
   align-items: start;
   flex-wrap: wrap;
+  gap: clamp(8px, 12/393 * 100vw, 16px);
+}
+
+.tagGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+
+  .sectionLabel {
+    margin-bottom: clamp(4px, 6/393 * 100vw, 8px);
+  }
 }
 
 .tag {

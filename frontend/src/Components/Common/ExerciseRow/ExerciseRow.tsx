@@ -7,7 +7,8 @@ import { aggregateSets, formatSetsSummary } from '@/Utils/setsFormat';
 
 interface ExerciseRowProps {
   name: string;
-  muscles: string[];
+  muscleGroups: string[];
+  targetMuscles: string[];
   sets?: ExerciseSet[];
   index: number;
   isDragging: boolean;
@@ -19,7 +20,8 @@ interface ExerciseRowProps {
 
 const ExerciseRowComponent = ({
   name,
-  muscles,
+  muscleGroups,
+  targetMuscles,
   sets = [],
   isDragging,
   isOver,
@@ -29,6 +31,9 @@ const ExerciseRowComponent = ({
 }: ExerciseRowProps) => {
   // Агрегированная сводка подходов: «4 × 8–12 • 60–80кг».
   const setsLabel = useMemo(() => formatSetsSummary(aggregateSets(sets)), [sets]);
+
+  const primarySet = new Set(muscleGroups);
+  const secondaryMuscles = targetMuscles.filter(m => !primarySet.has(m));
 
   return (
     <div
@@ -58,7 +63,12 @@ const ExerciseRowComponent = ({
             </span>
           )}
         </div>
-        <MuscleGroupBadge groups={muscles} />
+        {(muscleGroups.length > 0 || secondaryMuscles.length > 0) && (
+          <MuscleGroupBadge
+            groups={[...muscleGroups, ...secondaryMuscles]}
+            primaryGroups={muscleGroups}
+          />
+        )}
       </div>
     </div>
   );

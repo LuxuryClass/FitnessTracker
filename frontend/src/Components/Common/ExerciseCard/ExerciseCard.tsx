@@ -4,6 +4,7 @@ import cn from 'classnames';
 interface ExerciseCardProps {
   id: string;
   name: string;
+  muscleGroups?: string[];
   targetMuscles: string[];
   equipment?: string[];
   imageUrl?: string;
@@ -13,21 +14,25 @@ interface ExerciseCardProps {
   className?: string;
 }
 
-const ExerciseCard = ({ 
-  id, 
-  name, 
-  targetMuscles, 
+const ExerciseCard = ({
+  id,
+  name,
+  muscleGroups = [],
+  targetMuscles,
   equipment = [],
   imageUrl,
   onClick,
-  onToggle, 
+  onToggle,
   isSelected = false,
-  className 
+  className
 }: ExerciseCardProps) => {
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggle?.(id);
   };
+
+  const primarySet = new Set(muscleGroups);
+  const secondaryMuscles = targetMuscles.filter(m => !primarySet.has(m));
 
   return (
     <div className={cn(styles.card, className, isSelected && styles.selected)} onClick={onClick}>
@@ -60,8 +65,13 @@ const ExerciseCard = ({
           
           {/* Мышцы */}
           <div className={styles.muscles}>
-            {targetMuscles.map((muscle, index) => (
-              <span key={index} className={styles.muscleTag}>
+            {muscleGroups.map((group, index) => (
+              <span key={`primary-${index}`} className={cn(styles.muscleTag, styles.muscleTagPrimary)}>
+                {group}
+              </span>
+            ))}
+            {secondaryMuscles.map((muscle, index) => (
+              <span key={`secondary-${index}`} className={styles.muscleTag}>
                 {muscle}
               </span>
             ))}
