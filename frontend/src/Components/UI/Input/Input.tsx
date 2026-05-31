@@ -83,9 +83,9 @@ function InputComponent({
 
   return (
     <div>
-      {(label || disabled) && (
+      {label && (
         <div className={styles.input__labelBlock}>
-          <p className={styles.input__label}>{label ? label : placeholder}</p>
+          <p className={styles.input__label}>{label}</p>
           {isRequired && <span className={styles.input__required}>*</span>}
         </div>
       )}

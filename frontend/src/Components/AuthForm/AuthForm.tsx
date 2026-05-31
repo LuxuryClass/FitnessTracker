@@ -34,13 +34,13 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
     ...(type === 'register' && { name: '' })
   });
 
-  useEffect(() => {
-    const emailInput = document.querySelector('input[type="text"]') as HTMLInputElement;
-    const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
+  // useEffect(() => {
+  //   const emailInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+  //   const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
 
-    if (emailInput) emailInput.value = '';
-    if (passwordInput) passwordInput.value = '';
-  }, []);
+  //   if (emailInput) emailInput.value = '';
+  //   if (passwordInput) passwordInput.value = '';
+  // }, []);
 
   useEffect(() => {
     if (serverError && type === 'login') {
@@ -66,18 +66,22 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const derivedName = buildDerivedName(email);
-    
+
     const newErrors = type === 'login' 
       ? validateLoginForm(email, password)
       : validateRegisterForm(email, password, derivedName);
-    
+
     setErrors(newErrors);
-    
+
     if (!isFormValid(newErrors)) return;
-    
+
     await onSubmit({ email, password, ...(type === 'register' && { name: derivedName }) });
+    
+    if (type === 'login') {
+      setEmail('');
+      setPassword('');
+    }
   };
 
   const config = {
@@ -105,7 +109,6 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
           inputStyles={styles.form__inputs__input}
           icon={messageIcon}
           autoComplete="off"
-          readOnly={true}
         />
 
         <Input
@@ -119,7 +122,6 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
           inputStyles={styles.form__inputs__input}
           icon={lockIcon}
           autoComplete="off"
-          readOnly={true}
         />
       </div>
 
