@@ -1,18 +1,23 @@
 .form {
     margin-top: 28px;
+    margin-bottom: 100px;
     width: 100%;
     gap: 20px;
     justify-self: end;
+    overflow: visible;
+    box-sizing: border-box;
 
     &__inputs{
         display: flex;
         flex-direction: column;
         gap: 20px;
         margin-bottom: 12px;
+        overflow: visible;
 
     &__input_wrapper {
         width: 100%;
         height: 50px;
+        overflow: visible;
     }
 
     &__input {
@@ -37,11 +42,12 @@
         &:-webkit-autofill:focus,
         &:-webkit-autofill:active {
             -webkit-box-shadow: 0 0 0 30px var(--Accent-2-color) inset !important;
-            -webkit-text-fill-color: #fff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            font-size: 16px !important;
         }
 
-        &:-webkit-autofill::first-line {
-            font-size: 0;
+        &:-webkit-autofill::placeholder {
+            -webkit-text-fill-color: #9b9b9e !important;
         }
     }
 

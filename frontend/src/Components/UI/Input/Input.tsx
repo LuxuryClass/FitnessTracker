@@ -27,6 +27,7 @@ type InputProps = (
   icon?: string;
   autoComplete?: string;
   readOnly?: boolean;
+  errorTrigger?: number;
 };
 
 function InputComponent({
@@ -45,16 +46,33 @@ function InputComponent({
   icon,
   autoComplete,
   readOnly,
+  errorTrigger = 0,
 }: InputProps): JSX.Element {
   const [displayPassword, setDisplayPassword] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const [hasStarted, setHasStarted] = useState(false);
+  const [shouldShake, setShouldShake] = useState(false);
 
   useEffect(() => {
     const current = value !== null ? String(value) : '';
     setHasStarted(current.length > 0);
   }, [value]);
+
+  // Триггер анимации при изменении ошибки
+  useEffect(() => {
+    if (error) {
+      setShouldShake(true);
+      
+      // Сбрасываем класс анимации после завершения, чтобы можно было переиграть
+      const timer = setTimeout(() => {
+        setShouldShake(false);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [error, errorTrigger]);
 
   const changeValue = (value: string) => {
     const started = value.length > 0;
@@ -90,8 +108,15 @@ function InputComponent({
         </div>
       )}
       <div
+        ref={containerRef}
         style={pseudoContent ? ({ '--pseudoContent': `"${pseudoContent}"` } as React.CSSProperties) : {}}
-        className={cn(styles.input, className, error && styles.input_error, type === 'number' && styles.input_number)}
+        className={cn(
+          styles.input,
+          className,
+          error && styles.input_error,
+          shouldShake && styles.input_shake,
+          type === 'number' && styles.input_number
+        )}
       >
         {/* Иконка слева (картинка) */}
         {icon && <img src={icon} className={styles.input__icon} alt="" />}

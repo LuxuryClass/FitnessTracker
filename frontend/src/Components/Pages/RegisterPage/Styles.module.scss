@@ -7,7 +7,7 @@
     height: 100%;
     min-height: 100vh;
     min-height: 100dvh;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .back__button {
@@ -86,10 +86,13 @@
 
 .footer {
     position: absolute;
-    bottom: 32px;
+    bottom: 20px;
     text-align: center;
     width: 100%;
     left: 0;
+    padding: 0 20px;
+    box-sizing: border-box;
+    font-size: 14px;
 
     &__signin_link {
         color: var(--Primary-color);

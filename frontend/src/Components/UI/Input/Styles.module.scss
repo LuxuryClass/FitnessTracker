@@ -1,10 +1,28 @@
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-8px);
+  }
+  80% {
+    transform: translateX(8px);
+  }
+}
+
 .input {
   position: relative;
   background-color: #fff;
   display: flex;
   align-items: center;
   border: none;
-  overflow: hidden;
+  overflow: visible;
   background-color: transparent;
 
   &_error {
@@ -12,11 +30,10 @@
       border-color: var(--error-color) !important;
       background-color: var(--error-background-color) !important;
     }
+  }
 
-    .input__input[data-started="true"] {
-      background-color: var(--Accent-2-color) !important;
-      border-color: var(--Primary-color) !important;
-    }
+  &_shake {
+    animation: shake 0.5s ease-in-out;
   }
 
   &_check {

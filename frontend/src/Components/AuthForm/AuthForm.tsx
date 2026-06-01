@@ -33,6 +33,7 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
     password: '',
     ...(type === 'register' && { name: '' })
   });
+  const [submitAttempts, setSubmitAttempts] = useState(0);
 
 
   useEffect(() => {
@@ -67,6 +68,7 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
       : validateRegisterForm(email, password, derivedName);
     
     setErrors(newErrors);
+    setSubmitAttempts(prev => prev + 1);
     
     if (!isFormValid(newErrors)) return;
     
@@ -98,6 +100,7 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
           inputStyles={styles.form__inputs__input}
           icon={messageIcon}
           autoComplete="off"
+          errorTrigger={submitAttempts}
         />
 
         <Input
@@ -111,6 +114,7 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
           inputStyles={styles.form__inputs__input}
           icon={lockIcon}
           autoComplete="off"
+          errorTrigger={submitAttempts}
         />
       </div>
 
