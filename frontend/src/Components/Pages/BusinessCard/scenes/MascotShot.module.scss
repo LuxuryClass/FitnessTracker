@@ -1,0 +1,135 @@
+@use '_tokens.scss' as *;
+
+// One knob per stage: --m is the size multiplier, --b the shared base width.
+// Every dimension below is derived from --w (= b*m) via calc(), so changing a
+// stage's size = changing one number. Stage 1 < Stage 2 < Stage 3.
+.mascot {
+  --b: 300px;            // shared base width (shrink this to scale all three)
+  --m: 0.88;             // default / stage-2 multiplier
+  --w: calc(var(--b) * var(--m));
+  --halo: 0.9;           // aura size relative to --w (per-stage below)
+  --ped: 1;              // pedestal size relative to --w (per-stage below)
+
+  position: relative;
+  width: var(--w);
+  height: calc(var(--w) * 1.136);
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  // gentle idle float — each stage offset so the three don't bob in lockstep
+  animation: float 5.4s ease-in-out infinite;
+  will-change: transform;
+
+  &[data-stage='1'] { --m: 0.78; }                       // чуть меньше второй
+  &[data-stage='2'] { --m: 0.88; animation-delay: -1.8s; }
+  &[data-stage='3'] { --m: 1.56; --halo: 0.6; --ped: 0.62; animation-delay: -3.4s; } // аура и платформа поменьше
+}
+
+// soft lime aura that bleeds behind the figure; stronger at the later stages
+.halo {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--w) * 0.106);
+  width: calc(var(--w) * var(--halo));
+  height: calc(var(--w) * var(--halo));
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(201, 248, 74, 0.34) 0%,
+    rgba(159, 218, 22, 0.16) 38%,
+    rgba(159, 218, 22, 0) 70%
+  );
+  filter: blur(2px);
+  z-index: 0;
+  animation: pulse 4.6s ease-in-out infinite;
+}
+
+.mascot[data-stage='1'] .halo { opacity: 0.7; }
+.mascot[data-stage='2'] .halo { opacity: 0.85; }
+.mascot[data-stage='3'] .halo { opacity: 1; }
+
+.figure {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: var(--w);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  filter: drop-shadow(0 25px 35px rgba(0, 0, 0, 0.5));
+}
+
+.img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.silhouette {
+  width: calc(var(--w) * 0.59);
+  height: auto;
+  filter: drop-shadow(0 0 25px rgba(159, 218, 22, 0.35));
+}
+
+.tag {
+  @include kicker;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: $ash-dim;
+  white-space: nowrap;
+}
+
+// soft contact shadow on the ground under the mascot's feet
+.shadow {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--w) * 0.02);
+  transform: translateX(-50%);
+  width: calc(var(--w) * 0.6 * var(--ped));
+  height: calc(var(--w) * 0.1 * var(--ped));
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.28) 45%,
+    rgba(0, 0, 0, 0) 75%
+  );
+  filter: blur(2px);
+  z-index: 1;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: inherit; }
+  50% { transform: translateX(-50%) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot,
+  .halo {
+    animation: none;
+  }
+}
+
+// short screens: just shrink the shared base — all stages follow proportionally
+@media (max-height: 760px) {
+  .mascot { --b: 250px; }
+}

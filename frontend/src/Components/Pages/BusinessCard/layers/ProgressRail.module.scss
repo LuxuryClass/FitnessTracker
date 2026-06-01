@@ -1,0 +1,71 @@
+.rail {
+  position: absolute;
+  top: 0;
+  right: 6px;
+  width: 14px;
+  height: 100%;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+
+  &[data-visible='false'] {
+    opacity: 0;
+  }
+}
+
+.track,
+.fill {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 84%;
+  border-radius: 2px;
+}
+
+.track {
+  background: #14160f;
+}
+
+.fill {
+  background: linear-gradient(#c9f84a, #9fda16);
+  transform-origin: top center;
+  transform: translateX(-50%) scaleY(0);
+  box-shadow: 0 0 6px rgba(159, 218, 22, 0.7);
+}
+
+.ticks {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 84%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tick {
+  pointer-events: auto;
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #5c5e55;
+  cursor: pointer;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+
+  &[data-active='true'] {
+    background: #9fda16;
+    box-shadow: 0 0 8px rgba(159, 218, 22, 0.9);
+    transform: scale(1.4);
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}

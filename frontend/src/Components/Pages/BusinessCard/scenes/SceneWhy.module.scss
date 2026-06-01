@@ -1,0 +1,194 @@
+@use '_tokens.scss' as *;
+
+.scene {
+  @include scene;
+  height: 84vh;
+  justify-content: center;
+  gap: 30px;
+  padding: 0 24px;
+  --op: 1;
+}
+
+.frost {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  @include frost(40px, 0.28, 5px);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: var(--op);
+  will-change: transform;
+}
+
+.kicker { @include kicker; color: $lime-core; }
+
+.title {
+  font-family: $display;
+  font-weight: 600;
+  font-size: 33px;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: $off-white;
+  max-width: 330px;
+}
+
+.em {
+  position: relative;
+  color: $lime-core;
+  white-space: nowrap;
+}
+
+.body {
+  position: relative;
+  opacity: var(--op);
+}
+
+// the ignition thread — a vertical line the fire travels down
+.thread {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 9px;
+  width: 2px;
+  border-radius: 2px;
+  background: rgba(159, 218, 22, 0.12);
+  --draw: 0;
+}
+
+.threadFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(180deg, $lime-hot, $lime-core 40%, $lime-deep);
+  box-shadow: 0 0 10px rgba(159, 218, 22, 0.6);
+  transform-origin: top center;
+  transform: scaleY(var(--draw));
+}
+
+.ember {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, $lime-hot 0%, $lime-core 45%, rgba(159, 218, 22, 0) 72%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  will-change: transform;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-left: 38px;
+  will-change: transform;
+}
+
+.row {
+  position: relative;
+  --lit: 0;
+  // unlit -> dim + slightly slid; lit -> full + in place
+  opacity: calc(0.34 + var(--lit) * 0.66);
+  transform: translateX(calc((1 - var(--lit)) * 10px));
+  transition: opacity 0.1s linear, transform 0.1s linear;
+  padding: 4px 0;
+}
+
+// node sits on the thread (thread left:9 + widthःfix → align center at 10px)
+.node {
+  position: absolute;
+  left: -38px;
+  top: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // shift so the node center lands on the thread (10px from body left)
+  margin-left: 0;
+  transform: translateX(0);
+}
+
+.nodeCore {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2c2f24;
+  box-shadow: 0 0 0 0 rgba(159, 218, 22, 0);
+  // lit state
+  background: color-mix(in srgb, $lime-core calc(var(--lit) * 100%), #2c2f24);
+  box-shadow: 0 0 calc(var(--lit) * 12px) rgba(159, 218, 22, calc(var(--lit) * 0.9));
+  transition: background 0.15s linear, box-shadow 0.15s linear;
+}
+
+.nodeRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(159, 218, 22, calc(var(--lit) * 0.5));
+  transform: scale(calc(0.6 + var(--lit) * 0.4));
+  transition: transform 0.15s linear, border-color 0.15s linear;
+}
+
+.rowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rowTitle {
+  font-family: $display;
+  font-weight: 600;
+  font-size: 19px;
+  line-height: 1.15;
+  color: $off-white;
+}
+
+.rowText {
+  font-family: $text;
+  font-size: 14px;
+  line-height: 1.45;
+  color: $ash;
+  max-width: 320px;
+}
+
+// the hero reason — the brand's core idea, given weight
+.hero {
+  .nodeCore {
+    width: 12px;
+    height: 12px;
+  }
+  .rowTitle {
+    font-size: 24px;
+    color: $lime-core;
+  }
+  .rowText {
+    color: $off-white;
+  }
+  &::before {
+    content: '';
+    position: absolute;
+    left: -52px;
+    top: -6px;
+    width: 120px;
+    height: 70px;
+    background: radial-gradient(ellipse at left center, rgba(159, 218, 22, calc(var(--lit) * 0.14)), transparent 70%);
+    pointer-events: none;
+  }
+}
+
+@media (max-height: 760px) {
+  .title { font-size: 28px; }
+  .list { gap: 10px; }
+  .rowText { font-size: 13px; }
+}

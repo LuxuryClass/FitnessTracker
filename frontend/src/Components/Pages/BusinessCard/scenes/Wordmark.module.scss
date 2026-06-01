@@ -1,0 +1,24 @@
+@use '_tokens.scss' as *;
+
+.wordmark {
+  font-family: $display;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  color: $off-white;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+// The `a` carries the brand accent: when lit, the glyph itself tints to Lime
+// Core (a flat colored letter — no glowing orb behind it).
+.a {
+  position: relative;
+  display: inline-block;
+  color: $off-white;
+  transition: color 0.55s ease;
+}
+
+.aLit {
+  color: $lime-core;
+}

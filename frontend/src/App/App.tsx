@@ -3,6 +3,7 @@ import '../Styles/index.scss';
 // import styles from './Styles.module.scss';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { EnterPage } from '@/Components/Pages/EnterPage/EnterPage';
+import BusinessCard from '@/Components/Pages/BusinessCard';
 import LoginPage from '@/Components/Pages/LoginPage/LoginPage';
 import SigninPage from '@/Components/Pages/RegisterPage/RegisterPage';
 import { NavigationPanel } from '@/Components/Common/Navigation/Navigation';
@@ -22,6 +23,7 @@ export function App() {
       <BrowserRouter basename="/">
         <Routes>
           <Route element={<GuestOnlyRoute />}>
+            <Route path="/enter-new" element={<BusinessCard />} />
             <Route path="/enter" element={<EnterPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<SigninPage />} />

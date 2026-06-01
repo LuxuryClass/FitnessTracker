@@ -1,0 +1,23 @@
+.ribbon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: screen;
+  overflow: visible;
+}
+
+.ribbonGlowPath {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.95;
+}
+
+.shimmer {
+  fill: #c9f84a;
+  opacity: 0.9;
+  filter: blur(2px);
+  mix-blend-mode: screen;
+}

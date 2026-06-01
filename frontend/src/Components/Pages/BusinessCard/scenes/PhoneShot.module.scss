@@ -1,0 +1,89 @@
+@use '_tokens.scss' as *;
+
+.frame {
+  position: relative;
+  width: 256px;
+  height: 540px;
+  border-radius: 44px;
+  padding: 10px;
+  background: linear-gradient(160deg, #2a2d22 0%, #14160f 60%);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(244, 246, 238, 0.08),
+    0 30px 60px rgba(0, 0, 0, 0.55);
+}
+
+.notch {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 78px;
+  height: 18px;
+  border-radius: 12px;
+  background: #0b0d07;
+  z-index: 3;
+}
+
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 32px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #20231a 0%, #0b0d07 100%);
+}
+
+.inner {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.shot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(159, 218, 22, 0.08), transparent 60%),
+    repeating-linear-gradient(
+      135deg,
+      rgba(244, 246, 238, 0.02) 0 10px,
+      rgba(244, 246, 238, 0.04) 10px 20px
+    );
+  border: 1px dashed rgba(159, 218, 22, 0.25);
+  border-radius: 32px;
+}
+
+.phName {
+  font-family: $display;
+  font-weight: 600;
+  font-size: 15px;
+  color: $off-white;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.phHint {
+  @include kicker;
+  font-size: 10px;
+  color: $ash-dim;
+}
+
+@media (max-height: 760px) {
+  .frame {
+    width: 208px;
+    height: 424px;
+  }
+}

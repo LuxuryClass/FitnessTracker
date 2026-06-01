@@ -1,0 +1,45 @@
+@use '_tokens.scss' as *;
+
+.scene {
+  @include scene;
+  height: 45vh;
+  align-items: center;
+  scroll-snap-align: end;
+}
+
+.inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+  will-change: transform, opacity;
+}
+
+.mark {
+  opacity: 0.95;
+}
+
+.outro {
+  font-family: $text;
+  font-size: 16px;
+  line-height: 1.45;
+  color: $ash;
+  max-width: 300px;
+}
+
+.legal {
+  font-family: $text;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: $ash-dim;
+  margin-top: 6px;
+}

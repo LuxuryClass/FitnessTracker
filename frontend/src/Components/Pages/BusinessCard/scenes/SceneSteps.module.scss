@@ -1,0 +1,159 @@
+@use '_tokens.scss' as *;
+
+.scene {
+  position: relative;
+  // 2 viewports of scroll runway = one screen of horizontal paging
+  height: 200vh;
+  z-index: 5;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+// Frost the bright ribbon behind the cards, matching SceneWhy's @include frost.
+// Pinned to the (non-moving) sticky box and WITHOUT will-change, so Chromium
+// keeps the backdrop valid when you scroll back up — putting blur on the
+// moving/will-change track is exactly what made it drop out before.
+.frost {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  // backdrop-filter: blur(2.5px);
+  // -webkit-backdrop-filter: blur(2.5px);
+  background: radial-gradient(
+    90% 67% at 50% 50%,
+    rgba(11, 13, 7, 0.42) 0%,
+    rgba(11, 13, 7, 0.22) 50%,
+    rgba(11, 13, 7, 0) 100%
+  );
+  // feather the blur boundary so it dissolves into the void instead of
+  // showing a hard rectangular edge. The gradient must reach full transparency
+  // WELL INSIDE the box (here by ~70%), otherwise the blur is clipped at the
+  // box edge and the feather never completes — that was the visible hard line.
+  // Smaller radius here = smaller blur zone too.
+  mask-image: radial-gradient(
+    90% 67% at 50% 50%,
+    #000 0%,
+    #000 30%,
+    transparent 70%
+  );
+  -webkit-mask-image: radial-gradient(
+    90% 67% at 50% 50%,
+    #000 0%,
+    #000 30%,
+    transparent 70%
+  );
+}
+
+.header {
+  position: absolute;
+  top: 14vh;
+  left: 24px;
+  z-index: 2;
+}
+
+.kicker { @include kicker; color: $lime-core; }
+
+.track {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 18px;
+  padding: 0 24px;
+  width: max-content;
+  will-change: transform;
+  // leave headroom so the mascots standing on the cards aren't clipped
+  // (tallest is the stage-3 mascot, ~475px above its card)
+  padding-top: 220px;
+}
+
+.panel {
+  position: relative;
+  flex: 0 0 auto;
+  width: 300px;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  padding: 36px 30px;
+  border-radius: 28px;
+  background: linear-gradient(160deg, #1e211a, #14160f);
+  border: 1px solid rgba(244, 246, 238, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  will-change: transform, opacity;
+}
+
+// mascot stands on the top edge of the card, breaking the frame
+.mascotMount {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 75px);
+  transform: translateX(-50%);
+  z-index: 6;
+  pointer-events: none;
+}
+
+.bigN {
+  font-family: $display;
+  font-weight: 700;
+  font-size: 120px;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  background: linear-gradient(160deg, $lime-hot, $lime-deep);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 24px rgba(159, 218, 22, 0.3));
+}
+
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panelTitle {
+  font-family: $display;
+  font-weight: 600;
+  font-size: 30px;
+  color: $off-white;
+}
+
+.panelText {
+  font-family: $text;
+  font-size: 16px;
+  line-height: 1.5;
+  color: $ash;
+}
+
+// reduced motion: stack vertically, no hijack
+.stacked {
+  height: auto;
+
+  .sticky {
+    position: static;
+    height: auto;
+    padding: 8vh 0;
+    overflow: visible;
+  }
+  .track {
+    flex-direction: column;
+    transform: none !important;
+    padding-top: 0;
+    gap: 240px;
+  }
+  .panel {
+    width: 100%;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

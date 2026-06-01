@@ -1,0 +1,154 @@
+@use '_tokens.scss' as *;
+
+.scene {
+  @include scene;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.content {
+  position: relative;
+  margin-top: 8vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  will-change: transform, opacity;
+  @include frost(48px, 0.4, 5px);
+}
+
+.kicker {
+  @include kicker;
+}
+
+.mark {
+  margin-top: -4px;
+}
+
+.tagline {
+  font-family: $text;
+  font-size: 18px;
+  line-height: 1.45;
+  color: $ash;
+  max-width: 300px;
+  margin-top: 2px;
+}
+
+.taglineKey {
+  color: $off-white;
+  position: relative;
+  white-space: nowrap;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, $lime-deep, $lime-core);
+    box-shadow: 0 0 8px rgba(159, 218, 22, 0.6);
+  }
+}
+
+// horizontal numbered strip on a lime bar: 01 Планируй · 02 Собирай · ...
+.flow {
+  display: flex;
+  align-items: stretch;
+  margin-top: 14px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(100deg, $lime-deep 0%, $lime-core 55%, $lime-hot 100%);
+  box-shadow: 0 10px 28px rgba(159, 218, 22, 0.22);
+}
+
+.flowItem {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 8px 10px;
+
+  & + .flowItem::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 1px;
+    background: rgba(11, 13, 7, 0.18);
+  }
+}
+
+.flowNum {
+  font-family: $display;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: rgba(11, 13, 7, 0.55);
+}
+
+.flowLabel {
+  font-family: $display;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  color: $ink-base;
+  white-space: nowrap;
+}
+
+.hint {
+  position: absolute;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: hintBreath 2.4s ease-in-out infinite;
+  transition: opacity 0.3s ease;
+}
+
+.hintLabel {
+  @include kicker;
+  font-size: 10px;
+  color: $ash-dim;
+}
+
+// cold-open entrance: stage instruments
+.scene:not(.reduced) {
+  .kicker {
+    animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+  }
+  .mark {
+    animation: fadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  }
+  .tagline {
+    animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+  }
+  .pill:nth-child(1) { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both; }
+  .pill:nth-child(2) { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.78s both; }
+  .pill:nth-child(3) { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.86s both; }
+  .pill:nth-child(4) { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.94s both; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hintBreath {
+  0%, 100% { transform: translate(-50%, 0); opacity: 0.9; }
+  50% { transform: translate(-50%, 8px); opacity: 0.4; }
+}
+
+@media (max-height: 760px) {
+  .content { margin-top: 6vh; gap: 14px; }
+  .mark { font-size: 76px; }
+}

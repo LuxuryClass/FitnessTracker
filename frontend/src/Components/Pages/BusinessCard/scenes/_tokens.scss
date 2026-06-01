@@ -1,0 +1,102 @@
+@use 'sass:math';
+
+// Flame business-card tokens
+$ink-base: #0b0d07;
+$ink-raise: #14160f;
+$lime-core: #9fda16;
+$lime-hot: #c9f84a;
+$lime-deep: #5b7d0b;
+$off-white: #f4f6ee;
+$ash: #a1a29f;
+$ash-dim: #5c5e55;
+
+$display: 'Clash Display', 'Space Grotesk', sans-serif;
+$text: 'Inter', sans-serif;
+
+@mixin kicker {
+  font-family: $text;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: $ash;
+}
+
+@mixin scene {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 28px;
+  z-index: 5;
+  scroll-snap-align: center;
+}
+
+// Soft dark halo behind bare text so the bright ribbon is dimmed exactly where
+// content sits, but stays sharp everywhere else. Pure radial gradient for the
+// dim; when $blur > 0 the ribbon is also softened under the text via a
+// backdrop blur that is feathered with a matching radial mask, so it dissolves
+// smoothly into the void with NO hard rectangular edge.
+@mixin frost($pad: 56px, $dim: 0.42, $blur: 0) {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -$pad;
+    z-index: -1;
+    background: radial-gradient(
+      130% 120% at 50% 50%,
+      rgba(11, 13, 7, $dim) 0%,
+      rgba(11, 13, 7, calc($dim * 0.6)) 38%,
+      rgba(11, 13, 7, 0) 78%
+    );
+    pointer-events: none;
+
+    @if $blur > 0 {
+      backdrop-filter: blur($blur);
+      -webkit-backdrop-filter: blur($blur);
+      // Feather a fixed $pad-wide band at every edge, independent of box aspect
+      // ratio. A radial mask scales its falloff with the box, so in a tall block
+      // (e.g. SceneWhy) it kills blur on the top/bottom rows. Two linear masks
+      // (X and Y) intersected stay opaque across the whole content area and fade
+      // out only inside the $pad inset — where there's no text — so every row is
+      // blurred and the ::before clip never shows as a hard edge.
+      mask-image:
+        linear-gradient(
+          to right,
+          transparent 0,
+          #000 #{$pad},
+          #000 calc(100% - #{$pad}),
+          transparent 100%
+        ),
+        linear-gradient(
+          to bottom,
+          transparent 0,
+          #000 #{$pad},
+          #000 calc(100% - #{$pad}),
+          transparent 100%
+        );
+      mask-composite: intersect;
+      -webkit-mask-image:
+        linear-gradient(
+          to right,
+          transparent 0,
+          #000 #{$pad},
+          #000 calc(100% - #{$pad}),
+          transparent 100%
+        ),
+        linear-gradient(
+          to bottom,
+          transparent 0,
+          #000 #{$pad},
+          #000 calc(100% - #{$pad}),
+          transparent 100%
+        );
+      -webkit-mask-composite: source-in;
+    }
+  }
+}
+
