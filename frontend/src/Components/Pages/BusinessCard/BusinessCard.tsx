@@ -7,7 +7,7 @@ import { useReducedMotion } from './engine/hooks';
 import { LightRibbon, ribbonX } from './layers/LightRibbon';
 import { ProgressRail } from './layers/ProgressRail';
 import { TopBar } from './layers/TopBar';
-import { GrainOverlay } from './layers/GrainOverlay';
+// import { GrainOverlay } from './layers/GrainOverlay';
 import { SparkField } from './layers/SparkField';
 import { Scene1Spark } from './scenes/Scene1Spark';
 import { SceneWhy } from './scenes/SceneWhy';
@@ -122,7 +122,7 @@ function CardInner({ reducedMotion }: { reducedMotion: boolean }) {
         {!reducedMotion && (
           <SparkField ribbonXAt={ribbonXAt} enabled={!reducedMotion} />
         )}
-        <GrainOverlay animate={!reducedMotion} />
+        {/* <GrainOverlay animate={!reducedMotion} /> */}
       </div>
       <ProgressRail onJump={jumpToScene} />
       <TopBar />
