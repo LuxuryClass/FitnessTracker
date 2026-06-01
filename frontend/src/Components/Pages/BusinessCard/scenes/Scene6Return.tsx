@@ -10,6 +10,8 @@ export function Scene6Return({ reducedMotion }: { reducedMotion: boolean }) {
   const ref = useScrollFrame((s, el) => {
     if (reducedMotion) return;
     const p = sceneProgress(el, s);
+    // сцена полностью вне вьюпорта — не трогаем DOM, чтобы не грязнить стиль
+    if (p <= 0 || p >= 1) return;
     const gather = clamp(p / 0.6);
     if (contentRef.current) {
       const rise = (1 - gather) * 16;

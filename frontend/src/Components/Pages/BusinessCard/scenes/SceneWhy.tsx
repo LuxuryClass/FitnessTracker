@@ -52,6 +52,7 @@ export function SceneWhy({ reducedMotion }: { reducedMotion: boolean }) {
   const threadRef = useRef<HTMLDivElement>(null);
   const emberRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const listHRef = useRef<{ epoch: number; h: number } | null>(null);
   const [, force] = useState(0);
 
   const ref = useScrollFrame((s, el) => {
@@ -62,6 +63,8 @@ export function SceneWhy({ reducedMotion }: { reducedMotion: boolean }) {
       return;
     }
     const p = sceneProgress(el, s);
+    // сцена полностью вне вьюпорта — не трогаем DOM, чтобы не грязнить стиль
+    if (p <= 0 || p >= 1) return;
     const drift = (p - 0.5) * s.vh;
     if (headRef.current) headRef.current.style.transform = `translateY(${-drift * 0.1}px)`;
     if (listRef.current) listRef.current.style.transform = `translateY(${-drift * -0.04}px)`;
@@ -72,22 +75,25 @@ export function SceneWhy({ reducedMotion }: { reducedMotion: boolean }) {
     if (threadRef.current) threadRef.current.style.setProperty('--draw', `${fire}`);
 
     const n = REASONS.length;
-    let lastLitCenter = 0;
     rowRefs.current.forEach((row, i) => {
       if (!row) return;
       // each node lights as the fire front passes its position
       const at = (i + 0.5) / n;
       const lit = clamp((fire - at) * 6 + 0.5); // soft step around `at`
       row.style.setProperty('--lit', `${lit}`);
-      if (lit > 0.5) lastLitCenter = row.offsetTop + row.offsetHeight / 2;
     });
 
     // ember rides the fire front down the thread
     if (emberRef.current && listRef.current) {
-      const total = listRef.current.offsetHeight;
-      emberRef.current.style.transform = `translateY(${fire * total}px)`;
+      // высота списка меняется только на ресайзе — кэшируем по эпохе,
+      // чтобы не читать offsetHeight (рефлоу) каждый кадр
+      let lh = listHRef.current;
+      if (!lh || lh.epoch !== s.epoch) {
+        lh = { epoch: s.epoch, h: listRef.current.offsetHeight };
+        listHRef.current = lh;
+      }
+      emberRef.current.style.transform = `translateY(${fire * lh.h}px)`;
       emberRef.current.style.opacity = fire > 0.02 && fire < 0.98 ? '1' : '0';
-      void lastLitCenter;
     }
   });
 

@@ -37,19 +37,36 @@ const STEPS: {
 export function SceneSteps({ reducedMotion }: { reducedMotion: boolean }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Геометрия панелей (vw, центры, полуширины) меняется только на ресайзе,
+  // поэтому кэшируем её по эпохе и не читаем layout каждый кадр.
+  const geomRef = useRef<{
+    epoch: number;
+    vw: number;
+    centers: number[];
+    halfW: number[];
+    lefts: number[];
+  } | null>(null);
 
   const ref = useScrollFrame((s, el) => {
     if (reducedMotion) return;
     const p = sceneProgress(el, s);
+    // сцена полностью вне вьюпорта — не трогаем DOM, чтобы не грязнить стиль
+    if (p <= 0 || p >= 1) return;
     const track = trackRef.current;
     const panels = panelRefs.current.filter(Boolean) as HTMLDivElement[];
     if (!track || panels.length === 0) return;
 
-    const vw = el.clientWidth;
-    // READ phase — offsetLeft/Width don't change with transforms, so these
-    // are stable and cause no reflow. centerFor = translateX that centers a panel.
-    const centers = panels.map((panel) => vw / 2 - (panel.offsetLeft + panel.offsetWidth / 2));
-    const halfW = panels.map((panel) => panel.offsetWidth / 2);
+    // Чтения layout только при смене эпохи (ресайз), иначе берём из кэша.
+    let g = geomRef.current;
+    if (!g || g.epoch !== s.epoch || g.centers.length !== panels.length) {
+      const vw = el.clientWidth;
+      const lefts = panels.map((panel) => panel.offsetLeft);
+      const halfW = panels.map((panel) => panel.offsetWidth / 2);
+      const centers = panels.map((_, i) => vw / 2 - (lefts[i] + halfW[i]));
+      g = { epoch: s.epoch, vw, centers, halfW, lefts };
+      geomRef.current = g;
+    }
+    const { vw, centers, halfW, lefts } = g;
 
     // pan only while the scene is actually pinned (p in ~[0.33,0.67] for a
     // 200vh scene). Dwell on the first/last panel at each end of the window.
@@ -60,15 +77,14 @@ export function SceneSteps({ reducedMotion }: { reducedMotion: boolean }) {
     const frac = f - i0;
     const tx = centers[i0] + (centers[i1] - centers[i0]) * frac;
 
-    // WRITE phase — all DOM writes together, no interleaved reads (no reflow).
+    // Фаза записи — только записи в DOM, без чтений между ними (без рефлоу).
     track.style.transform = `translateX(${tx}px)`;
 
-    // per-panel focus: centered panel stays solid, neighbours only gently dim.
-    // Panel center on screen = its layout center + the track's tx. Derived
-    // analytically instead of getBoundingClientRect() (which forced a sync
-    // reflow on every panel, every frame).
+    // Фокус по панелям: центральная — чёткая, соседи мягко гаснут.
+    // Центр панели на экране = её layout-центр + tx трека. Считаем
+    // аналитически, без getBoundingClientRect.
     panels.forEach((panel, idx) => {
-      const cx = panel.offsetLeft + halfW[idx] + tx;
+      const cx = lefts[idx] + halfW[idx] + tx;
       const dist = Math.abs(cx - vw / 2) / vw;
       const focus = clamp(1 - dist * 1.15);
       panel.style.opacity = `${0.74 + focus * 0.38}`;

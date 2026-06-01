@@ -22,6 +22,7 @@ export interface ScrollState {
   max: number; // max scrollable distance
   progress: number; // global 0..1
   dir: number; // last scroll direction (+1 down / -1 up)
+  epoch: number; // bumped on resize; invalidates cached element geometry
 }
 
 type Subscriber = (s: ScrollState) => void;
@@ -53,6 +54,7 @@ export function ScrollEngineProvider({
     max: 0,
     progress: 0,
     dir: 1,
+    epoch: 0,
   });
   const rafRef = useRef<number>(0);
 
@@ -72,6 +74,7 @@ export function ScrollEngineProvider({
     const measure = () => {
       stateRef.current.vh = el.clientHeight;
       stateRef.current.max = Math.max(1, el.scrollHeight - el.clientHeight);
+      stateRef.current.epoch++;
     };
     measure();
 
@@ -151,22 +154,45 @@ export function useScrollFrame(
 }
 
 /**
- * Local scene progress: 0 when the scene top reaches viewport bottom,
- * 1 when the scene bottom reaches viewport top. Clamped.
+ * Локальный прогресс сцены: 0 когда верх сцены у нижнего края вьюпорта,
+ * 1 когда низ сцены у верхнего края. Зажат в [0,1].
+ *
+ * Позиция сцены в координатах контента стабильна при скролле — меняется только
+ * на ресайзе. Поэтому измеряем один раз за эпоху (getBoundingClientRect +
+ * текущий скролл = top в координатах контента), а дальше считаем top
+ * относительно вьюпорта арифметикой. Это убирает покадровый
+ * getBoundingClientRect, который вперемешку с записью стилей у подписчиков
+ * вызывал полный рефлоу layout каждый кадр в каждой сцене.
  */
+interface SceneGeom {
+  epoch: number;
+  top: number; // top в координатах контента (не зависит от скролла)
+  height: number;
+}
+const geomCache = new WeakMap<HTMLElement, SceneGeom>();
+
+function geomOf(el: HTMLElement, s: ScrollState): SceneGeom {
+  let g = geomCache.get(el);
+  if (!g || g.epoch !== s.epoch) {
+    const rect = el.getBoundingClientRect();
+    g = { epoch: s.epoch, top: rect.top + s.raw, height: rect.height };
+    geomCache.set(el, g);
+  }
+  return g;
+}
+
 export function sceneProgress(el: HTMLElement, s: ScrollState): number {
-  const rect = el.getBoundingClientRect();
-  // rect is relative to the scroller viewport (the scroller fills the shell)
-  const start = s.vh; // top at bottom edge
-  const end = -rect.height; // bottom at top edge
-  const cur = rect.top;
+  const g = geomOf(el, s);
+  const cur = g.top - s.raw; // top относительно вьюпорта, без чтения layout
+  const start = s.vh; // верх у нижнего края
+  const end = -g.height; // низ у верхнего края
   const p = (start - cur) / (start - end);
   return Math.min(1, Math.max(0, p));
 }
 
-/** How far the element's center is from viewport center, in px (signed). */
+/** Насколько центр элемента смещён от центра вьюпорта, в px (со знаком). */
 export function centerOffset(el: HTMLElement, s: ScrollState): number {
-  const rect = el.getBoundingClientRect();
-  const elCenter = rect.top + rect.height / 2;
+  const g = geomOf(el, s);
+  const elCenter = (g.top - s.raw) + g.height / 2;
   return elCenter - s.vh / 2;
 }

@@ -25,6 +25,8 @@ export function Scene1Spark({ reducedMotion }: { reducedMotion: boolean }) {
     // is displaced on load.
     const sc = s.scroll;
     const vh = s.vh || 1;
+    // прокрутили больше чем на экран — сцена вне вьюпорта, не трогаем DOM
+    if (sc > vh * 1.05) return;
     const t = Math.min(1, sc / vh); // 0 at top, 1 after one viewport
 
     // content drifts up a hair faster than native + fades as it leaves

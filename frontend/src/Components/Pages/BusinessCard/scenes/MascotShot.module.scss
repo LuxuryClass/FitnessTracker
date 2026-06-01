@@ -18,13 +18,13 @@
   align-items: flex-end;
   justify-content: center;
   pointer-events: none;
-  // gentle idle float — each stage offset so the three don't bob in lockstep
-  animation: float 5.4s ease-in-out infinite;
+  // собственный слой: при масштабировании карточки тень/ореол композятся, а не
+  // пере-растеризуются. Бесконечный float убран — он грязнил стиль каждый кадр.
   will-change: transform;
 
   &[data-stage='1'] { --m: 0.78; }                       // чуть меньше второй
-  &[data-stage='2'] { --m: 0.88; animation-delay: -1.8s; }
-  &[data-stage='3'] { --m: 1.56; --halo: 0.6; --ped: 0.62; animation-delay: -3.4s; } // аура и платформа поменьше
+  &[data-stage='2'] { --m: 0.88; }
+  &[data-stage='3'] { --m: 1.56; --halo: 0.6; --ped: 0.62; } // аура и платформа поменьше
 }
 
 // soft lime aura that bleeds behind the figure; stronger at the later stages
@@ -44,7 +44,6 @@
   );
   filter: blur(2px);
   z-index: 0;
-  animation: pulse 4.6s ease-in-out infinite;
 }
 
 .mascot[data-stage='1'] .halo { opacity: 0.7; }
@@ -110,23 +109,6 @@
   );
   filter: blur(2px);
   z-index: 1;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-18px); }
-}
-
-@keyframes pulse {
-  0%, 100% { transform: translateX(-50%) scale(1); opacity: inherit; }
-  50% { transform: translateX(-50%) scale(1.08); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mascot,
-  .halo {
-    animation: none;
-  }
 }
 
 // short screens: just shrink the shared base — all stages follow proportionally

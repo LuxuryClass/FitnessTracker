@@ -36,6 +36,8 @@ export function FeatureScene({
   const ref = useScrollFrame((s, el) => {
     if (reducedMotion) return;
     const p = sceneProgress(el, s);
+    // сцена полностью вне вьюпорта — не трогаем DOM, чтобы не грязнить стиль
+    if (p <= 0 || p >= 1) return;
     const drift = (p - 0.5) * s.vh;
     const dir = flip ? -1 : 1;
 
