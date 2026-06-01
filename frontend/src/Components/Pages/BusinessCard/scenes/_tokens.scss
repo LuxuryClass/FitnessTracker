@@ -50,52 +50,53 @@ $text: 'Inter', sans-serif;
     background: radial-gradient(
       130% 120% at 50% 50%,
       rgba(11, 13, 7, $dim) 0%,
-      rgba(11, 13, 7, calc($dim * 0.6)) 38%,
-      rgba(11, 13, 7, 0) 78%
+      rgba(11, 13, 7, calc($dim * 0.72)) 32%,
+      rgba(11, 13, 7, calc($dim * 0.36)) 56%,
+      rgba(11, 13, 7, calc($dim * 0.12)) 78%,
+      rgba(11, 13, 7, 0) 100%
     );
     pointer-events: none;
+
+    // Растушёвка прямоугольного края: радиальный градиент обрезается коробкой
+    // ::before на ненулевой плотности, поэтому виден жёсткий край. Две линейные
+    // маски (по X и Y), пересечённые, гасят альфу в полосе шириной $pad у каждой
+    // грани — край растворяется. Статичная маска, без пере-блюра каждый кадр.
+    mask-image:
+      linear-gradient(
+        to right,
+        transparent 0,
+        #000 #{$pad},
+        #000 calc(100% - #{$pad}),
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 #{$pad},
+        #000 calc(100% - #{$pad}),
+        transparent 100%
+      );
+    mask-composite: intersect;
+    -webkit-mask-image:
+      linear-gradient(
+        to right,
+        transparent 0,
+        #000 #{$pad},
+        #000 calc(100% - #{$pad}),
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 #{$pad},
+        #000 calc(100% - #{$pad}),
+        transparent 100%
+      );
+    -webkit-mask-composite: source-in;
 
     @if $blur > 0 {
       backdrop-filter: blur($blur);
       -webkit-backdrop-filter: blur($blur);
-      // Feather a fixed $pad-wide band at every edge, independent of box aspect
-      // ratio. A radial mask scales its falloff with the box, so in a tall block
-      // (e.g. SceneWhy) it kills blur on the top/bottom rows. Two linear masks
-      // (X and Y) intersected stay opaque across the whole content area and fade
-      // out only inside the $pad inset — where there's no text — so every row is
-      // blurred and the ::before clip never shows as a hard edge.
-      mask-image:
-        linear-gradient(
-          to right,
-          transparent 0,
-          #000 #{$pad},
-          #000 calc(100% - #{$pad}),
-          transparent 100%
-        ),
-        linear-gradient(
-          to bottom,
-          transparent 0,
-          #000 #{$pad},
-          #000 calc(100% - #{$pad}),
-          transparent 100%
-        );
-      mask-composite: intersect;
-      -webkit-mask-image:
-        linear-gradient(
-          to right,
-          transparent 0,
-          #000 #{$pad},
-          #000 calc(100% - #{$pad}),
-          transparent 100%
-        ),
-        linear-gradient(
-          to bottom,
-          transparent 0,
-          #000 #{$pad},
-          #000 calc(100% - #{$pad}),
-          transparent 100%
-        );
-      -webkit-mask-composite: source-in;
     }
   }
 }

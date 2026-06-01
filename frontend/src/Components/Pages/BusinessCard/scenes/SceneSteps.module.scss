@@ -17,39 +17,19 @@
   overflow: hidden;
 }
 
-// Frost the bright ribbon behind the cards, matching SceneWhy's @include frost.
-// Pinned to the (non-moving) sticky box and WITHOUT will-change, so Chromium
-// keeps the backdrop valid when you scroll back up — putting blur on the
-// moving/will-change track is exactly what made it drop out before.
+// Лёгкая тёмная вуаль вместо backdrop-blur: притемняет яркую зелёную ленту под
+// карточками, чтобы текст читался. Обычный радиальный градиент, растушёванный к
+// краям — без жёсткой рамки и без покадрового пере-блюра.
 .frost {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  // backdrop-filter: blur(2.5px);
-  // -webkit-backdrop-filter: blur(2.5px);
   background: radial-gradient(
     90% 67% at 50% 50%,
-    rgba(11, 13, 7, 0.42) 0%,
-    rgba(11, 13, 7, 0.22) 50%,
+    rgba(11, 13, 7, 0.78) 0%,
+    rgba(11, 13, 7, 0.55) 42%,
     rgba(11, 13, 7, 0) 100%
-  );
-  // feather the blur boundary so it dissolves into the void instead of
-  // showing a hard rectangular edge. The gradient must reach full transparency
-  // WELL INSIDE the box (here by ~70%), otherwise the blur is clipped at the
-  // box edge and the feather never completes — that was the visible hard line.
-  // Smaller radius here = smaller blur zone too.
-  mask-image: radial-gradient(
-    90% 67% at 50% 50%,
-    #000 0%,
-    #000 30%,
-    transparent 70%
-  );
-  -webkit-mask-image: radial-gradient(
-    90% 67% at 50% 50%,
-    #000 0%,
-    #000 30%,
-    transparent 70%
   );
 }
 

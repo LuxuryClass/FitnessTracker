@@ -17,7 +17,7 @@
   align-items: center;
   gap: 16px;
   will-change: transform, opacity;
-  @include frost(48px, 0.4, 5px);
+  @include frost(48px, 0.9);
 }
 
 .kicker {

@@ -57,7 +57,7 @@
   gap: 16px;
   opacity: var(--op);
   will-change: transform;
-  @include frost(28px, 0.3, 5px);
+  @include frost(28px, 0.9);
 }
 
 .flip .text {
@@ -135,6 +135,7 @@
 
 .stage {
   position: relative;
+  z-index: 8; // выше .text (z7) и его вуали frost, чтобы затемнение не падало на скриншот
   flex: 0 0 auto;
   width: 232px;
   display: flex;
