@@ -2,7 +2,7 @@
 
 .scene {
   @include scene;
-  height: 45vh;
+  height: 100vh;
   align-items: center;
   scroll-snap-align: end;
 }

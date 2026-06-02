@@ -1,14 +1,13 @@
 .page {
     @include flex-center();
+    @include scrollable();
     flex-direction: column;
     padding-top: var(--padding-top);
     justify-content: start;
     position: relative;
-    height: 100%;
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
     box-sizing: border-box;
-    overflow: visible;
 }
 
 .back__button {
