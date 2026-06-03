@@ -1,7 +1,7 @@
 import { Button } from "@/Components/UI/Button/Button";
 import styles from "./Styles.module.scss";
 import cn from "classnames";
-import startImage from '/start-button.svg';
+import startImage from '/icons/StartButton.svg';
 import { formatSetsSummary } from "@/Utils/setsFormat";
 
 export interface TodayWorkoutExercise {
@@ -25,6 +25,7 @@ interface TodayWorkoutProps {
   isEmpty?: boolean;
   isLoading?: boolean;
   className?: string;
+  workoutId?: string; 
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;

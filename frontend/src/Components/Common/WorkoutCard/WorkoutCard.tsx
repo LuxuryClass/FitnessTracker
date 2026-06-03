@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 import styles from './Styles.module.scss';
-import exercisesIcon from '/icons/exercisesCounter.svg';
+import exercisesIcon from '/public/icons/ExerciseCounter_Grey.svg';
 
 interface WorkoutCardProps {
   title: string;

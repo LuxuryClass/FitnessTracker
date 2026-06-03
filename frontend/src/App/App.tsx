@@ -16,6 +16,8 @@ import PrivacyPage from '@/Components/Pages/SettingsPage/PrivacyPage/PrivacyPage
 import SchedulePage from '@/Components/Pages/ShedulePage/ShedulePage';
 import ExerciseSelectPage from '@/Components/Pages/AddPa/components/ExerciseSelectPage/ExerciseSelectPage';
 import CreateExercisePage from '@/Components/Pages/CreateExercisePage/CreateExercisePage';
+import { SessionPreviewPage } from '@/Components/Pages/SessionPreviewPage/SessionPreviewPage';
+import SessionMainPage from '@/Components/Pages/SessionMainPage/SessionMainPage';
 
 export function App() {
   return (
@@ -39,12 +41,18 @@ export function App() {
             </Route>
             
             <Route path="/createExercise" element={<CreateExercisePage />} />
+
             <Route path="/exercises/:groupId" element={<ExerciseSelectPage />} />
             <Route path="/edit-profile" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
 
             <Route path="/schedule" element={<SchedulePage />} />
+
+            <Route path="/workout/:workoutId" element={<SessionPreviewPage />} />
+            <Route path="/workout/test" element={<SessionPreviewPage />} />
+            <Route path="/session/:workoutId" element={<SessionMainPage />} />
+
           </Route>
         </Routes>
       </BrowserRouter>

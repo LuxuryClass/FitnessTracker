@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Styles.module.scss';
 import logo from '/masscot-main.png';
-import arrowBack from '/ArrowBack.svg';
+import arrowBack from '/icons/ArrowBack.svg';
 import { Button } from '@/Components/UI/Button/Button';
 import { AuthForm } from '@/Components/AuthForm/AuthForm';
 import { ApiError, useAuth } from '@/Auth';

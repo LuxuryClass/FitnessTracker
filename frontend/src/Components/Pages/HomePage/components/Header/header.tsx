@@ -1,8 +1,8 @@
 import { memo } from "react";
 import styles from "./Styles.module.scss";
 import { Button } from "@/Components/UI/Button/Button";
-import activBell from "/Bell_Active.svg";
-import basicBell from "/Bell.svg";
+import activBell from "/icons/Bell_Active.svg";
+import basicBell from "/icons/Bell.svg";
 import cn from "classnames";
 import { Link, useNavigate } from "react-router-dom";
 

@@ -16,6 +16,7 @@ interface ExerciseRowProps {
   onDragStart: () => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragEnd: () => void;
+  onClick?: () => void;
 }
 
 const ExerciseRowComponent = ({
@@ -28,6 +29,7 @@ const ExerciseRowComponent = ({
   onDragStart,
   onDragOver,
   onDragEnd,
+  onClick,
 }: ExerciseRowProps) => {
   // Агрегированная сводка подходов: «4 × 8–12 • 60–80кг».
   const setsLabel = useMemo(() => formatSetsSummary(aggregateSets(sets)), [sets]);
@@ -46,6 +48,7 @@ const ExerciseRowComponent = ({
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
+      onClick={onClick}
     >
       <div className={styles.handle}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

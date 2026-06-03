@@ -1,0 +1,107 @@
+.page {
+  padding-top: var(--padding-top);
+  display: flex;
+  flex-direction: column;
+  height: 100vh
+}
+
+.title {
+  @include text_h1();
+  margin-bottom: 16px;
+}
+
+.stats {
+  display: flex;
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.timer {
+  flex: 1;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
+  gap: 4px;
+  border-right: 2px solid var(--Accent-grey-color);
+  min-width: 50%;
+}
+
+.timerRow {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+
+  img {
+    width: 44px;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+.timerValue {
+  @include text_h1();
+  line-height: 35px;
+  text-align: start;
+  align-self: end;
+  font-weight: 400;
+  color: var(--Primary-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.timerLabel {
+  @include text_h2();
+  font-weight: 400;
+  padding-left: 7px;
+  color: var(--Primary-color);
+}
+
+.progress {
+  flex: 1;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: end;
+  gap: clamp(6px, 2vw, 8px);
+}
+
+.progressCounter {
+  font-size: clamp(16px, 5.5vw, 22px);
+  font-weight: 700;
+  color: #fff;
+  text-align: right;
+}
+
+.progressBar {
+  width: 85%;
+  height: 7px;
+  background: var(--Accent-grey-color);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--Primary-color);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.content {
+  flex: 1;
+  @include scrollable();
+  padding-bottom: 40px;
+}
+
+.exerciseList {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 2vw, 8px);
+}
+
+.completeBtn {
+  position: sticky;
+  bottom: 20px;
+}

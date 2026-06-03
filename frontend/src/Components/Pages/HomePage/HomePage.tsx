@@ -14,6 +14,7 @@ import { useScheduleQuery } from '@/hooks/useScheduleQuery';
 import { useRecentProgressQuery } from '@/hooks/useRecentProgressQuery';
 import { useNextWorkoutQuery } from '@/hooks/useNextWorkoutQuery';
 import { labelForPrimary, labelsForPrimaryList } from '@/Utils/muscleGroups';
+import { useNavigate } from 'react-router-dom';
 
 const formatDate = (d: Date): string => {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -76,10 +77,12 @@ const HomePage = () => {
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
     .slice(0, 5);
 
-    
+  const navigate = useNavigate();
+
   return (
     <main className={styles.page}>
 
+      <button onClick={() => {navigate("/workout/test")}}> тест сессия</button>
       {/* Блок "Шапка" */}
       <Header className={styles.header} userName={userName} userAvatar={userAvatar}/>
 
@@ -102,6 +105,8 @@ const HomePage = () => {
             targetWeightKgMin: item.target_weight_kg_min !== null ? Number(item.target_weight_kg_min) : null,
             targetWeightKgMax: item.target_weight_kg_max !== null ? Number(item.target_weight_kg_max) : null,
           }))}
+          workoutId={nextWorkout.id}
+          onStart={() => navigate(`/workout/${nextWorkout.id}`)}
         />
       ) : (
         <TodayWorkout isEmpty />
