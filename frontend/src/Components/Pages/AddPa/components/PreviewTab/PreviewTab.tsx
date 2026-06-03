@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
 import styles from './Styles.module.scss';
-import { ExerciseRow } from '../../../../Common/ExerciseRow/ExerciseRow';
+import { DefaultExerciseRow } from '../../../../Common/DefaultExerciseRow/DefaultExerciseRow';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
 import type { Exercise, ExerciseSet } from '@/Auth/authApi';
 import { labelForPrimary, labelsForPrimaryList, labelsForSecondaryList } from '@/Utils/muscleGroups';
@@ -103,7 +103,7 @@ export const PreviewTab = ({
         <div className={styles.exercisesList}>
           {items.map((exercise, index) => {
             return (
-              <ExerciseRow
+              <DefaultExerciseRow
                 key={exercise.id}
                 name={exercise.name}
                 muscleGroups={labelsForPrimaryList(exercise.primary_muscle_groups)}

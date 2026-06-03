@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, /* useParams */ } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
-import { ExerciseRow } from '@/Components/Common/ExerciseRow/ExerciseRow';
 import styles from './Styles.module.scss';
+import { SessionExerciseRow } from '@/Components/Common/SessionExerciseRow/SessionExerciseRow';
 
 interface Exercise {
   id: string;
@@ -14,7 +14,7 @@ interface Exercise {
 
 const SessionMainPage = () => {
   const navigate = useNavigate();
-  const { workoutId } = useParams<{ workoutId: string }>();
+  // const { workoutId } = useParams<{ workoutId: string }>();
 
   const [exercises, setExercises] = useState<Exercise[]>([
     { id: '1', name: 'Жим лёжа', muscleGroup: 'Грудь', sets: [{ weight: 80, reps: 10 }, { weight: 90, reps: 8 }] },
@@ -84,29 +84,23 @@ const SessionMainPage = () => {
       <div className={styles.content}>
         <div className={styles.exerciseList}>
           {exercises.map((exercise, index) => (
-            <ExerciseRow
-              key={exercise.id}
+            <SessionExerciseRow
               name={exercise.name}
-              muscleGroups={[exercise.muscleGroup]}
-              targetMuscles={[]}
+              muscleGroup={exercise.muscleGroup}
               sets={exercise.sets}
               index={index}
-              isDragging={false}
-              isOver={false}
-              onDragStart={() => {}}
-              onDragOver={() => {}}
-              onDragEnd={() => {}}
-              onClick={() => toggleExercise(exercise.id)}
-            //   completed={exercise.completed}
+              completed={exercise.completed}
+              onComplete={() => toggleExercise(exercise.id)}
+              onImageClick={() => {}}
             />
           ))}
         </div>
-      </div>
-
       {/* Complete Button */}
       <Button size="l" color="primary" fullWidth onClick={handleComplete} className={styles.completeBtn}>
         Завершить тренировку
       </Button>
+      </div>
+
     </div>
   );
 };

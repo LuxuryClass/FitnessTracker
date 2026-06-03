@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
-import { ExerciseRow } from '@/Components/Common/ExerciseRow/ExerciseRow';
+import { DefaultExerciseRow } from '@/Components/Common/DefaultExerciseRow/DefaultExerciseRow';
 import styles from './Styles.module.scss';
 import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
 
@@ -93,7 +93,7 @@ const WorkoutSessionPage = () => {
           <span className={styles.sectionLabel}>Упражнения в тренировке</span>
           <div className={styles.exerciseList}>
             {workout.exercises.map((exercise, index) => (
-            <ExerciseRow
+            <DefaultExerciseRow
             key={exercise.id}
             name={exercise.name}
             muscleGroups={[exercise.muscleGroup]}

@@ -5,7 +5,7 @@ import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGro
 import type { ExerciseSet } from '@/Auth/authApi';
 import { aggregateSets, formatSetsSummary } from '@/Utils/setsFormat';
 
-interface ExerciseRowProps {
+interface DefaultExerciseRowProps {
   name: string;
   muscleGroups: string[];
   targetMuscles: string[];
@@ -19,7 +19,7 @@ interface ExerciseRowProps {
   onClick?: () => void;
 }
 
-const ExerciseRowComponent = ({
+const DefaultExerciseRowComponent = ({
   name,
   muscleGroups,
   targetMuscles,
@@ -30,7 +30,7 @@ const ExerciseRowComponent = ({
   onDragOver,
   onDragEnd,
   onClick,
-}: ExerciseRowProps) => {
+}: DefaultExerciseRowProps) => {
   // Агрегированная сводка подходов: «4 × 8–12 • 60–80кг».
   const setsLabel = useMemo(() => formatSetsSummary(aggregateSets(sets)), [sets]);
 
@@ -77,4 +77,4 @@ const ExerciseRowComponent = ({
   );
 };
 
-export const ExerciseRow = memo(ExerciseRowComponent);
+export const DefaultExerciseRow = memo(DefaultExerciseRowComponent);

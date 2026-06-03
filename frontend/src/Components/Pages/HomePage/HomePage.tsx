@@ -82,7 +82,8 @@ const HomePage = () => {
   return (
     <main className={styles.page}>
 
-      <button onClick={() => {navigate("/workout/test")}}> тест сессия</button>
+      {/* <button onClick={() => {navigate("/workout/test")}}> тест сессия</button> */}
+      
       {/* Блок "Шапка" */}
       <Header className={styles.header} userName={userName} userAvatar={userAvatar}/>
 
