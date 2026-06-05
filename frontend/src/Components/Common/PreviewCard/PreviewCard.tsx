@@ -50,13 +50,13 @@ const PreviewCardComponent = ({
         <div className={styles.metaDetailed}>
           {duration && (
             <div className={styles.metaDetailedItem}>
-              <img src="/public/icons/Clock.svg" />
+              <img src="/icons/Clock.svg" />
               <span>~{duration} мин</span>
             </div>
           )}
           {exercisesCount !== undefined && (
             <div className={styles.metaDetailedItem}>
-              <img src="/public/icons/ExerciseCounter_White.svg"/>
+              <img src="/icons/ExerciseCounter_White.svg"/>
               <span>{exercisesCount} упражнений</span>
             </div>
           )}

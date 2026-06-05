@@ -10,13 +10,13 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: false,
       includeAssets: [
-        'icons/apple-touch-icon.png',
-        'icons/favicon-16x16.png',
-        'icons/favicon-32x32.png',
-        'icons/pwa-192x192.png',
-        'icons/pwa-512x512.png',
-        'icons/maskable-icon-192x192.png',
-        'icons/maskable-icon-512x512.png',
+        '/logo/apple-touch-icon.png',
+        '/logo/favicon-16x16.png',
+        '/logo/favicon-32x32.png',
+        '/logo/pwa-192x192.png',
+        '/logo/pwa-512x512.png',
+        '/logo/maskable-icon-192x192.png',
+        '/logo/maskable-icon-512x512.png',
       ],
       manifest: {
         name: 'FlameFitness',
@@ -29,23 +29,23 @@ export default defineConfig({
         scope: '/',
         icons: [
           {
-            src: 'icons/pwa-192x192.png',
+            src: '/logo/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: 'icons/pwa-512x512.png',
+            src: '/logo/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
           },
           {
-            src: 'icons/maskable-icon-192x192.png',
+            src: '/logo/maskable-icon-192x192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'maskable',
           },
           {
-            src: 'icons/maskable-icon-512x512.png',
+            src: '/logo/maskable-icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',

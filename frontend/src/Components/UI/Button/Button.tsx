@@ -53,7 +53,7 @@ function ButtonComponent({
       )}
     >
       {size === 'back' ? (
-        <img src="/public/icons/ArrowBack.svg" alt="Назад" />
+        <img src="/icons/ArrowBack.svg" alt="Назад" />
       ) : (
         children
       )}

@@ -115,7 +115,7 @@ const WorkoutSessionPage = () => {
       {/* Start Button */}
       <Button size="l" color="primary" fullWidth onClick={handleStart} className={styles.startBtn}>
         Начать
-        <img src="/public/icons/StartButton.svg"/>
+        <img src="/icons/StartButton.svg"/>
       </Button>
 
       {modalExercise && (
