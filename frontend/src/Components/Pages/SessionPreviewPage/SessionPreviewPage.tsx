@@ -1,63 +1,169 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/Components/UI/Button/Button';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
 import { DefaultExerciseRow } from '@/Components/Common/DefaultExerciseRow/DefaultExerciseRow';
 import styles from './Styles.module.scss';
 import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
+import { useAuth } from '@/Auth';
+import {
+  ApiError,
+  authApi,
+  type Exercise as CatalogExercise,
+  type ExerciseSet,
+  type Workout,
+  type WorkoutExerciseCreateItem,
+} from '@/Auth/authApi';
+import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
+import { useWorkoutQuery } from '@/hooks/useWorkoutQuery';
+import { useExercisesQuery } from '@/hooks/useExercisesQuery';
+import { labelForPrimary, labelForSecondary } from '@/Utils/muscleGroups';
 
-interface Exercise {
-  id: string;
+// Зеркало MINUTES_PER_SET бэкенда
+const MINUTES_PER_SET = 5;
+
+interface PreviewExercise {
+  exerciseId: string;
   name: string;
-  muscleGroup: string;
-  sets?: { weight: number; reps: number }[];
+  muscleGroups: string[];
+  targetMuscles: string[];
+  equipment: string[];
+  imageUrl?: string;
+  videoUrl?: string;
+  sets: ExerciseSet[];
 }
 
 const WorkoutSessionPage = () => {
   const navigate = useNavigate();
   const { workoutId } = useParams<{ workoutId: string }>();
+  const { user } = useAuth();
+  const callWithAuth = useAuthenticatedCall();
+  const queryClient = useQueryClient();
 
-  const [notes, setNotes] = useState('');
-  const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
+  const { data: workout } = useWorkoutQuery(workoutId);
+  const { data: catalog, isPending: isCatalogPending } = useExercisesQuery();
 
-  // Моковые данные
-  const workout = {
-    title: 'День жимов',
-    date: '2026-06-01',
-    time: '19:30',
-    duration: '75',
-    totalWeight: '120',
-    exercisesCount: 5,
-    muscleGroups: ['Грудь', 'Плечи', 'Трицепс'],
-    exercises: [
-      { id: '1', name: 'Жим лёжа', muscleGroup: 'Грудь', sets: [{ weight: 80, reps: 10 }, { weight: 90, reps: 8 }] },
-      { id: '2', name: 'Жим гантелей', muscleGroup: 'Грудь', sets: [{ weight: 30, reps: 12 }] },
-      { id: '3', name: 'Махи гантелями', muscleGroup: 'Плечи', sets: [{ weight: 12, reps: 15 }] },
-      { id: '4', name: 'Разгибания на блоке', muscleGroup: 'Трицепс', sets: [{ weight: 25, reps: 12 }] },
-      { id: '5', name: 'Отжимания от брусьев', muscleGroup: 'Грудь', sets: [{ weight: 0, reps: 15 }] },
-    ],
-    description: "здесь могла быть ваша реклама",
+  const [modalExercise, setModalExercise] = useState<PreviewExercise | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
+
+  const catalogById = useMemo(() => {
+    const map = new Map<string, CatalogExercise>();
+    for (const ex of catalog ?? []) map.set(ex.id, ex);
+    return map;
+  }, [catalog]);
+
+  // Маппим, только когда загружены и тренировка, и каталог — каждое упражнение
+  // тренировки гарантированно есть в каталоге.
+  const exercises = useMemo<PreviewExercise[]>(() => {
+    if (!workout || isCatalogPending) return [];
+    return [...workout.exercises]
+      .sort((a, b) => a.order_index - b.order_index)
+      .flatMap(item => {
+        const info = catalogById.get(item.exercise_id);
+        if (!info) return [];
+        const firstMedia = info.media[0];
+        return [{
+          exerciseId: item.exercise_id,
+          name: info.name,
+          muscleGroups: info.primary_muscle_groups.map(labelForPrimary),
+          targetMuscles: info.secondary_muscles.map(labelForSecondary),
+          equipment: info.equipment,
+          imageUrl: firstMedia?.type === 'image' ? firstMedia.url : undefined,
+          videoUrl: firstMedia?.type === 'video' ? firstMedia.url : undefined,
+          sets: item.target_sets.map(set => ({
+            weight: Number(set.target_weight_kg ?? 0),
+            reps: set.target_reps ?? 0,
+          })),
+        }];
+      });
+  }, [workout, isCatalogPending, catalogById]);
+
+  const muscleGroups = useMemo(() => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const ex of exercises) {
+      for (const group of ex.muscleGroups) {
+        if (!seen.has(group)) {
+          seen.add(group);
+          result.push(group);
+        }
+      }
+    }
+    return result;
+  }, [exercises]);
+
+  const totalTargetSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+  const duration = totalTargetSets > 0 ? String(totalTargetSets * MINUTES_PER_SET) : undefined;
+
+  const handleStart = () => {
+    if (!workoutId || isStarting) return;
+    setIsStarting(true);
+
+    void (async () => {
+      try {
+        await callWithAuth(token => authApi.startWorkoutSession(token, workoutId));
+        navigate(`/session/${workoutId}`);
+      } catch (error) {
+        alert(error instanceof ApiError ? error.message : 'Не удалось начать тренировку. Попробуйте позже.');
+        setIsStarting(false);
+      }
+    })();
   };
 
-    const handleStart = () => {
-    navigate(`/session/${workoutId || 'test'}`);
-    };
-
-  const handleExerciseClick = (exercise: Exercise) => {
+  const handleExerciseClick = (exercise: PreviewExercise) => {
     setModalExercise(exercise);
   };
 
-  const handleModalConfirm = (sets: { weight: number; reps: number }[], description: string) => {
-    console.log('Сохранено:', { sets, description, exercise: modalExercise });
+  const handleModalConfirm = (sets: ExerciseSet[], _description: string) => {
+    const edited = modalExercise;
     setModalExercise(null);
+    if (!workout || !workoutId || !edited) return;
+
+    const payloadExercises: WorkoutExerciseCreateItem[] = [...workout.exercises]
+      .sort((a, b) => a.order_index - b.order_index)
+      .map(item => ({
+        exercise_id: item.exercise_id,
+        target_sets: item.exercise_id === edited.exerciseId
+          ? (sets.length > 0
+              ? sets.map((set, i) => ({
+                  set_index: i + 1,
+                  target_reps: set.reps > 0 ? set.reps : null,
+                  target_weight_kg: set.weight,
+                }))
+              : null)
+          : (item.target_sets.length > 0 ? item.target_sets : null),
+      }));
+
+    void (async () => {
+      try {
+        const updated = await callWithAuth(token =>
+          authApi.updateWorkout(token, workoutId, { exercises: payloadExercises }),
+        );
+        queryClient.setQueryData<Workout>(['workout', user?.id, workoutId], updated);
+      } catch (error) {
+        alert(error instanceof ApiError ? error.message : 'Не удалось сохранить подходы. Попробуйте позже.');
+      }
+    })();
   };
 
+  // Пока тренировка не загружена — рендерим только шапку, иначе обращения к workout.* упадут
+  if (!workout) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.header}>
+          <Button size="back" onClick={() => navigate(-1)} />
+          <h1 className={styles.title}>Тренировка сегодня</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
       {/* Header */}
       <div className={styles.header}>
-        <Button size="back" />
+        <Button size="back" onClick={() => navigate(-1)} />
         <h1 className={styles.title}>Тренировка сегодня</h1>
       </div>
 
@@ -66,38 +172,23 @@ const WorkoutSessionPage = () => {
         <PreviewCard
         type="sessionPreview"
         title={workout.title}
-        duration={workout.duration}
-        totalWeight={workout.totalWeight}
-        exercisesCount={workout.exercisesCount}
-        date={workout.date}
-        time={workout.time}
-        muscleGroups={workout.muscleGroups}
+        duration={duration}
+        exercisesCount={exercises.length}
+        muscleGroups={muscleGroups}
         description={workout.description || undefined}
         onEdit={() => console.log('Редактировать')}
         />
-
-        {/* Notes */}
-        <div className={styles.section}>
-          <span className={styles.sectionLabel}>Заметки к тренировке</span>
-          <textarea
-            className={styles.textarea}
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Добавьте заметки к этой тренировке..."
-            rows={3}
-          />
-        </div>
 
         {/* Exercise List */}
         <div className={styles.section}>
           <span className={styles.sectionLabel}>Упражнения в тренировке</span>
           <div className={styles.exerciseList}>
-            {workout.exercises.map((exercise, index) => (
+            {exercises.map((exercise, index) => (
             <DefaultExerciseRow
-            key={exercise.id}
+            key={exercise.exerciseId}
             name={exercise.name}
-            muscleGroups={[exercise.muscleGroup]}
-            targetMuscles={[]}
+            muscleGroups={exercise.muscleGroups}
+            targetMuscles={exercise.targetMuscles}
             sets={exercise.sets}
             index={index}
             isDragging={false}
@@ -113,8 +204,8 @@ const WorkoutSessionPage = () => {
       </div>
 
       {/* Start Button */}
-      <Button size="l" color="primary" fullWidth onClick={handleStart} className={styles.startBtn}>
-        Начать
+      <Button size="l" color="primary" fullWidth onClick={handleStart} disabled={isStarting} className={styles.startBtn}>
+        {isStarting ? 'Запускаем...' : 'Начать'}
         <img src="/icons/StartButton.svg"/>
       </Button>
 
@@ -123,8 +214,11 @@ const WorkoutSessionPage = () => {
           isOpen={!!modalExercise}
           onClose={() => setModalExercise(null)}
           name={modalExercise.name}
-          muscleGroups={[modalExercise.muscleGroup]}
-          equipment={[]}
+          muscleGroups={modalExercise.muscleGroups}
+          targetMuscles={modalExercise.targetMuscles}
+          equipment={modalExercise.equipment}
+          imageUrl={modalExercise.imageUrl}
+          videoUrl={modalExercise.videoUrl}
           description=""
           sets={modalExercise.sets}
           onConfirm={handleModalConfirm}

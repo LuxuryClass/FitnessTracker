@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { startOfMonth } from 'date-fns';
 import { Button } from '@/Components/UI/Button/Button';
 import { MonthCalendar } from '@/Components/Common/MonthCalendar/MonthCalendar';
@@ -22,6 +22,7 @@ const getMonthRange = (month: Date): { from: string; to: string } => {
 
 const SchedulePage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const passedDateStr = (location.state as any)?.selectedDate as string | undefined;
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<Date>(
@@ -55,7 +56,7 @@ const SchedulePage = () => {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <Button size="back" />
+        <Button size="back" onClick={() => navigate(-1)} />
         <h1 className={styles.title}>Расписание</h1>
       </div>
 
@@ -83,7 +84,7 @@ const SchedulePage = () => {
                   exercisesCount={workout.exercises_count}
                   muscleGroups={labelsForPrimaryList(workout.muscle_groups)}
                   date={new Date(workout.date)}
-                  onClick={() => console.log('Открыть тренировку', workout.id)}
+                  onClick={() => navigate(`/workout/${workout.id}`)}
                 />
               </div>
             ))}

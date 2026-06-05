@@ -70,6 +70,15 @@ class WorkoutRepository:
         user_id: UUID,
         from_dt: datetime,
     ) -> Workout | None:
+        completed_session_exists = (
+            select(WorkoutSession.id)
+            .where(
+                WorkoutSession.workout_id == Workout.id,
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.status == "completed",
+            )
+            .exists()
+        )
         statement = (
             select(Workout)
             .where(
@@ -77,6 +86,7 @@ class WorkoutRepository:
                 Workout.is_planned.is_(True),
                 Workout.planned_for.is_not(None),
                 Workout.planned_for >= from_dt,
+                ~completed_session_exists,
             )
             .order_by(Workout.planned_for.asc())
             .limit(1)

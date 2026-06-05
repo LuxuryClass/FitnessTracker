@@ -233,6 +233,54 @@ export interface WorkoutCreateResponse {
   description: string | null;
 }
 
+export interface WorkoutExerciseItem {
+  exercise_id: string;
+  order_index: number;
+  target_sets: WorkoutTargetSetItem[];
+}
+
+export interface Workout {
+  id: string;
+  title: string;
+  is_planned: boolean;
+  planned_for: string | null;
+  description: string | null;
+  exercises: WorkoutExerciseItem[];
+}
+
+// Частичное обновление: передаются только изменяемые поля
+export interface WorkoutUpdatePayload {
+  title?: string;
+  description?: string | null;
+  exercises?: WorkoutExerciseCreateItem[];
+}
+
+export interface WorkoutSessionSetItem {
+  id: string;
+  exercise_id: string;
+  client_event_id: string;
+  set_index: number;
+  weight_kg: number | string;
+  reps: number;
+}
+
+export interface WorkoutSession {
+  id: string;
+  workout_id: string;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  started_at: string;
+  completed_at: string | null;
+  sets: WorkoutSessionSetItem[];
+}
+
+export interface WorkoutSessionSetPayload {
+  exercise_id: string;
+  client_event_id: string;
+  set_index: number;
+  weight_kg: number;
+  reps: number;
+}
+
 const mapTokens = (pair: AccessTokenResponse): StoredTokens => ({
   accessToken: pair.access_token,
   tokenType: pair.token_type,
@@ -369,6 +417,55 @@ export const authApi = {
       method: "POST",
       accessToken,
       body: payload,
+    });
+  },
+
+  async getWorkout(accessToken: string, workoutId: string): Promise<Workout> {
+    return request<Workout>(`/workouts/${workoutId}`, {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async updateWorkout(accessToken: string, workoutId: string, payload: WorkoutUpdatePayload): Promise<Workout> {
+    return request<Workout>(`/workouts/${workoutId}`, {
+      method: "PATCH",
+      accessToken,
+      body: payload,
+    });
+  },
+
+  async startWorkoutSession(accessToken: string, workoutId: string): Promise<WorkoutSession> {
+    return request<WorkoutSession>("/workout-sessions/start", {
+      method: "POST",
+      accessToken,
+      body: { workout_id: workoutId },
+    });
+  },
+
+  async upsertWorkoutSessionSet(
+    accessToken: string,
+    sessionId: string,
+    payload: WorkoutSessionSetPayload,
+  ): Promise<WorkoutSessionSetItem> {
+    return request<WorkoutSessionSetItem>(`/workout-sessions/${sessionId}/sets`, {
+      method: "POST",
+      accessToken,
+      body: payload,
+    });
+  },
+
+  async deleteWorkoutSessionSet(accessToken: string, sessionId: string, setId: string): Promise<void> {
+    return request<void>(`/workout-sessions/${sessionId}/sets/${setId}`, {
+      method: "DELETE",
+      accessToken,
+    });
+  },
+
+  async completeWorkoutSession(accessToken: string, sessionId: string): Promise<WorkoutSession> {
+    return request<WorkoutSession>(`/workout-sessions/${sessionId}/complete`, {
+      method: "POST",
+      accessToken,
     });
   },
 };

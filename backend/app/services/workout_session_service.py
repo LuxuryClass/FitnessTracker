@@ -220,6 +220,28 @@ class WorkoutSessionService:
         await db.refresh(session_set)
         return self._build_set_response(session_set)
 
+    async def delete_session_set(
+        self,
+        db: AsyncSession,
+        current_user: User,
+        session_id: UUID,
+        set_id: UUID,
+    ) -> None:
+        session = await self._get_session_for_user_or_raise(db, current_user, session_id)
+        if session.status != "in_progress":
+            raise BadRequestException("Нельзя изменять подходы в завершённой сессии.")
+
+        session_set = await workout_session_set_repository.get_by_id_for_session(
+            db=db,
+            session_id=session.id,
+            set_id=set_id,
+        )
+        if session_set is None:
+            raise NotFoundException("Подход не найден.")
+
+        await workout_session_set_repository.delete(db=db, session_set=session_set)
+        await db.commit()
+
     async def complete_session(
         self,
         db: AsyncSession,

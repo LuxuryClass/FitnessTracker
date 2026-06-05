@@ -7,15 +7,25 @@ interface SetData {
   reps: number;
 }
 
+// Выполненный подход, восстановленный с сервера (set_index — 1-based)
+interface DoneSet {
+  setIndex: number;
+  weight: number;
+  reps: number;
+}
+
 interface SessionExerciseRowProps {
   name: string;
   muscleGroup: string;
   sets?: SetData[];
   index: number;
   completed?: boolean;
+  initialDoneSets?: DoneSet[];
   onComplete?: () => void;
   onImageClick?: () => void;
   onToggleComplete?: () => void;
+  onSetComplete?: (setIndex: number, weight: number, reps: number) => void;
+  onSetsReindexed?: (doneSets: DoneSet[], previousRowCount: number) => void;
   isFocused?: boolean;
 }
 
@@ -24,17 +34,35 @@ const SessionExerciseRowComponent = ({
   muscleGroup,
   sets = [],
   completed,
+  initialDoneSets = [],
   onComplete,
   onImageClick,
   onToggleComplete,
+  onSetComplete,
+  onSetsReindexed,
   isFocused,
 }: SessionExerciseRowProps) => {
+  // Начальное состояние строк: план + восстановленные с сервера выполненные подходы
+  const buildInitialRows = () => {
+    const doneByIndex = new Map(initialDoneSets.map(d => [d.setIndex, d]));
+    const rowCount = Math.max(sets.length, ...initialDoneSets.map(d => d.setIndex), 0);
+    const values = Array.from({ length: rowCount }, (_, i) => {
+      const done = doneByIndex.get(i + 1);
+      return done ? { weight: String(done.weight), reps: String(done.reps) } : { weight: '', reps: '' };
+    });
+    const doneFlags = Array.from({ length: rowCount }, (_, i) => doneByIndex.has(i + 1));
+    return { values, doneFlags };
+  };
+
   const [expanded, setExpanded] = useState(false);
-  const [currentSetIndex, setCurrentSetIndex] = useState(0);
+  const [currentSetIndex, setCurrentSetIndex] = useState(() => {
+    const idx = buildInitialRows().doneFlags.findIndex(done => !done);
+    return idx >= 0 ? idx : 0;
+  });
   const [setValues, setSetValues] = useState<{ weight: string; reps: string }[]>(
-    sets.map(() => ({ weight: '', reps: '' }))
+    () => buildInitialRows().values
   );
-  const [completedSets, setCompletedSets] = useState<boolean[]>(sets.map(() => false));
+  const [completedSets, setCompletedSets] = useState<boolean[]>(() => buildInitialRows().doneFlags);
   const [restTimer, setRestTimer] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const restIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -98,19 +126,23 @@ const SessionExerciseRowComponent = ({
   };
 
   const toggleSetDone = (i: number) => {
+    if (!completedSets[i]) {
+      const weight = Number(setValues[i]?.weight || getPlaceholder(i, 'weight')) || 0;
+      const reps = Number(setValues[i]?.reps || getPlaceholder(i, 'reps')) || 0;
+      if (reps < 1) return;
+
+      setSetValues(vals => vals.map((s, idx) => {
+        if (idx !== i) return s;
+        return {
+          weight: s.weight || getPlaceholder(i, 'weight'),
+          reps: s.reps || getPlaceholder(i, 'reps'),
+        };
+      }));
+      onSetComplete?.(i + 1, weight, reps);
+    }
     setCompletedSets(prev => {
       const next = [...prev];
       next[i] = !next[i];
-
-      if (!prev[i]) {
-        setSetValues(vals => vals.map((s, idx) => {
-          if (idx !== i) return s;
-          return {
-            weight: s.weight || getPlaceholder(i, 'weight'),
-            reps: s.reps || getPlaceholder(i, 'reps'),
-          };
-        }));
-      }
 
       // Фокус на первый невыполненный
       const firstIncomplete = next.findIndex(done => !done);
@@ -150,12 +182,24 @@ const SessionExerciseRowComponent = ({
     const removeSet = (i: number) => {
     setRemovingIndex(i);
     setTimeout(() => {
-        setSetValues(prev => prev.filter((_, idx) => idx !== i));
-        setCompletedSets(prev => prev.filter((_, idx) => idx !== i));
+        const previousRowCount = setValues.length;
+        const nextValues = setValues.filter((_, idx) => idx !== i);
+        const nextDone = completedSets.filter((_, idx) => idx !== i);
+        const doneSets = nextValues
+          .map((value, idx) => ({
+            setIndex: idx + 1,
+            weight: Number(value.weight) || 0,
+            reps: Number(value.reps) || 0,
+          }))
+          .filter((_, idx) => nextDone[idx]);
+
+        setSetValues(nextValues);
+        setCompletedSets(nextDone);
         setRemovingIndex(null);
         if (currentSetIndex >= i && currentSetIndex > 0) {
         setCurrentSetIndex(prev => prev - 1);
         }
+        onSetsReindexed?.(doneSets, previousRowCount);
     }, 300);
     };
 

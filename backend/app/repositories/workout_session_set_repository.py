@@ -32,6 +32,19 @@ class WorkoutSessionSetRepository:
         result = await db.execute(statement)
         return result.scalar_one_or_none()
 
+    async def get_by_id_for_session(
+        self,
+        db: AsyncSession,
+        session_id: UUID,
+        set_id: UUID,
+    ) -> WorkoutSessionSet | None:
+        statement = select(WorkoutSessionSet).where(
+            WorkoutSessionSet.id == set_id,
+            WorkoutSessionSet.session_id == session_id,
+        )
+        result = await db.execute(statement)
+        return result.scalar_one_or_none()
+
     async def get_by_session_exercise_set_index(
         self,
         db: AsyncSession,
@@ -82,6 +95,10 @@ class WorkoutSessionSetRepository:
         session_set.reps = reps
         await db.flush()
         return session_set
+
+    async def delete(self, db: AsyncSession, session_set: WorkoutSessionSet) -> None:
+        await db.delete(session_set)
+        await db.flush()
 
     async def calculate_weekly_volume_tons(
         self,

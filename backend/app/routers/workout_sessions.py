@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -60,6 +60,22 @@ async def upsert_workout_session_set(
         session_id=session_id,
         payload=payload,
     )
+
+
+@router.delete("/{session_id}/sets/{set_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_workout_session_set(
+    session_id: UUID,
+    set_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    await workout_session_service.delete_session_set(
+        db=db,
+        current_user=current_user,
+        session_id=session_id,
+        set_id=set_id,
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/{session_id}/complete", response_model=WorkoutSessionResponse, status_code=status.HTTP_200_OK)

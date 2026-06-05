@@ -1366,6 +1366,29 @@ null
 
 ---
 
+### 5.6 `DELETE /api/workout-sessions/{session_id}/sets/{set_id}`
+
+Удаление записи подхода из активной сессии (например, пользователь удалил строку подхода в UI).
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Правила**
+
+- удалять подходы можно только в сессии со статусом `in_progress`;
+- снятие галочки «выполнено» в UI не удаляет запись — она перезаписывается повторным upsert; удаление вызывается только при удалении строки подхода.
+
+**Response 204** — без тела.
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `404` — сессия или подход не найдены
+- `400` — сессия уже завершена
+
+---
+
 ## Быстрый рабочий сценарий для frontend
 
 1. Пользователь регистрируется (`POST /api/auth/register`) или логинится (`POST /api/auth/login`).
@@ -1379,6 +1402,6 @@ null
 6. На странице расписания Frontend запрашивает `GET /api/workouts/schedule` для текущего месяца; при смене месяца запрашивается новый диапазон.
 7. Frontend работает с упражнениями пользователя через `/api/exercises`.
 7. Frontend создает и редактирует тренировки через `/api/workouts`, передавая массив `exercises` c элементами формата `{ "exercise_id": "UUID" }`.
-8. При старте тренировки Frontend вызывает `POST /api/workout-sessions/start`, отправляет подходы через `POST /api/workout-sessions/{session_id}/sets` и завершает через `POST /api/workout-sessions/{session_id}/complete`.
+8. При старте тренировки Frontend вызывает `POST /api/workout-sessions/start` (идемпотентен — повторный вызов для той же тренировки возвращает активную сессию, это используется для resume), отправляет подходы через `POST /api/workout-sessions/{session_id}/sets`, удаляет строки подходов через `DELETE /api/workout-sessions/{session_id}/sets/{set_id}` и завершает через `POST /api/workout-sessions/{session_id}/complete`, после чего перечитывает `GET /api/users/me` для обновлённых метрик.
 
 Дополнительно: seed-команды backend описаны в `docs/backend/SEEDS.md`.
