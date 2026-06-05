@@ -179,15 +179,13 @@ user-select: none;
   display: flex;
   flex-direction: column;
   align-items: start;
-
+  width: 100%;
   .sectionLabel {
     margin-bottom: clamp(4px, 6/393 * 100vw, 8px);
   }
 }
 
-.tag {
-    width: max-content;
-}
+
 
 .section {
   display: flex;

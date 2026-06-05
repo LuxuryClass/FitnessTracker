@@ -73,7 +73,7 @@ const HomePage = () => {
   const todayStr = formatDate(new Date());
 
   const upcomingWorkouts = scheduleData
-    .filter(w => w.date >= todayStr && w.status !== 'completed')
+    .filter(w => w.date >= todayStr)
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
     .slice(0, 5);
 
@@ -151,7 +151,6 @@ const HomePage = () => {
                 time={workout.time ?? undefined}
                 exercisesCount={workout.exercises_count}
                 muscleGroups={labelsForPrimaryList(workout.muscle_groups)}
-                onClick={() => navigate(`/workout/${workout.id}`)}
               />
             ))}
           </div>

@@ -70,27 +70,6 @@
   padding-right: 40px; /* Место для кнопки */
 }
 
-.muscles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.muscleTag {
-  @include text_subtitle();
-  padding: 1px 8px;
-  border-radius: 12px;
-  color: var(--Accent-grey-color);
-  white-space: nowrap;
-  border: 1px solid var(--Accent-grey-color);
-}
-
-.muscleTagPrimary {
-  background-color: var(--Primary-color);
-  border-color: var(--Primary-color);
-  color: #080A00;
-}
-
 .actionButton {
   position: absolute;
   right: 0;

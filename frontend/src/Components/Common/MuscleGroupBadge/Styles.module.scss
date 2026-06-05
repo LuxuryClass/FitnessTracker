@@ -1,6 +1,7 @@
+// Тип inline — старый дизайн (один блок с точками)
 .badge {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 4px 0;
   background-color: transparent;
   padding: 4px 16px;
@@ -16,10 +17,7 @@
 }
 
 .groupPrimary {
-  background-color: var(--Primary-color);
-  color: #080A00;
-  border-radius: 8px;
-  padding: 1px 8px;
+  color: var(--Primary-color);
 }
 
 .separator {
@@ -27,4 +25,32 @@
   color: #fff;
   font-size: 14px;
   margin: 0 6px;
+}
+
+// Тип chips — новый дизайн (отдельные бейджи)
+.chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0;
+  max-width: 100%;
+  
+  &::-webkit-scrollbar { display: none; }
+  scrollbar-width: none;
+}
+
+.chip {
+  @include text-h3();
+  color: var(--Accent-grey-color);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border: 1px solid var(--Accent-grey-color);
+  border-radius: 16px;
+  flex-shrink: 0;
+}
+
+.chipPrimary {
+  color: var(--Primary-color);
+  border-color: var(--Primary-color);
 }

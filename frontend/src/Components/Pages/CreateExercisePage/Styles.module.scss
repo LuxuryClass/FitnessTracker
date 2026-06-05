@@ -79,7 +79,7 @@
   font-size: 14px;
 }
 
-.editMediaBtn, .deleteMediaBtn {
+.deleteMediaBtn {
   position: absolute;
   top: 8px;
   width: 32px;
@@ -92,19 +92,11 @@
   align-items: center;
   justify-content: center;
   z-index: 2;
+  right: 8px;
+  color: #ff4444;
   
   svg { width: 14px; height: 14px; }
   &:active { opacity: 0.8; }
-}
-
-.editMediaBtn {
-  right: 48px;
-  color: #fff;
-}
-
-.deleteMediaBtn {
-  right: 8px;
-  color: #ff4444;
 }
 
 .uploadBtn {
@@ -134,7 +126,7 @@
 .addMoreBtn {
   position: absolute;
   top: 8px;
-  right: 88px;
+  right: 48px;
   width: 32px;
   height: 32px;
   border-radius: 50%;

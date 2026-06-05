@@ -68,6 +68,7 @@ const DefaultExerciseRowComponent = ({
         </div>
         {(muscleGroups.length > 0 || secondaryMuscles.length > 0) && (
           <MuscleGroupBadge
+            type='block'
             groups={[...muscleGroups, ...secondaryMuscles]}
             primaryGroups={muscleGroups}
           />

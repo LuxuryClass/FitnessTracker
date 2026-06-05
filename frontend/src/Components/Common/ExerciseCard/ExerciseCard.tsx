@@ -1,3 +1,4 @@
+import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 
@@ -31,13 +32,9 @@ const ExerciseCard = ({
     onToggle?.(id);
   };
 
-  const primarySet = new Set(muscleGroups);
-  const secondaryMuscles = targetMuscles.filter(m => !primarySet.has(m));
-
   return (
     <div className={cn(styles.card, className, isSelected && styles.selected)} onClick={onClick}>
       <div className={styles.cardContent}>
-        {/* Картинка */}
         <div className={styles.cardImage}>
           {imageUrl ? (
             <img src={imageUrl} alt={name} />
@@ -52,51 +49,28 @@ const ExerciseCard = ({
           )}
         </div>
 
-        {/* Информация */}
         <div className={styles.cardInfo}>
           <h3 className={styles.title}>{name}</h3>
           
-          {/* Оборудование */}
           {equipment.length > 0 && (
             <div className={styles.equipment}>
               {equipment.join(' • ')}
             </div>
           )}
           
-          {/* Мышцы */}
-          <div className={styles.muscles}>
-            {muscleGroups.map((group, index) => (
-              <span key={`primary-${index}`} className={cn(styles.muscleTag, styles.muscleTagPrimary)}>
-                {group}
-              </span>
-            ))}
-            {secondaryMuscles.map((muscle, index) => (
-              <span key={`secondary-${index}`} className={styles.muscleTag}>
-                {muscle}
-              </span>
-            ))}
-          </div>
+          <MuscleGroupBadge 
+            type="block"
+            groups={[...muscleGroups, ...targetMuscles]} 
+            primaryGroups={muscleGroups} 
+          />
         </div>
 
-        {/* Кнопка добавления/удаления */}
         <button 
           className={cn(styles.actionButton, isSelected && styles.selectedButton)}
           onClick={handleToggle}
         >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none"
-            className={styles.icon}
-          >
-            <path 
-              d="M12 5V19M5 12H19" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round"
-              className={styles.plusIcon}
-            />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={styles.icon}>
+            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={styles.plusIcon}/>
           </svg>
         </button>
       </div>

@@ -8,6 +8,7 @@ import { useAuth } from '@/Auth';
 import {
   ApiError,
   authApi,
+  Exercise,
   type Exercise as CatalogExercise,
   type ExerciseSet,
   type WorkoutSession,
@@ -16,6 +17,7 @@ import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 import { useWorkoutQuery } from '@/hooks/useWorkoutQuery';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { labelForPrimary } from '@/Utils/muscleGroups';
+import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
 
 interface SessionExercise {
   exerciseId: string;
@@ -40,6 +42,11 @@ const SessionMainPage = () => {
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
+  
+  const handleExerciseImageClick = (exercise: any) => {
+    setModalExercise(exercise);
+  };
 
   // id серверных записей подходов по ключу "exerciseId:setIndex" — для DELETE при удалении строки
   const serverSetIdsRef = useRef<Map<string, string>>(new Map());
@@ -260,7 +267,7 @@ const SessionMainPage = () => {
               onToggleComplete={() => setExerciseCompleted(exercise.exerciseId, false)}
               onSetComplete={(setIndex, weight, reps) => handleSetComplete(exercise.exerciseId, setIndex, weight, reps)}
               onSetsReindexed={(doneSets, previousRowCount) => handleSetsReindexed(exercise.exerciseId, doneSets, previousRowCount)}
-              onImageClick={() => {}}
+              onImageClick={() => handleExerciseImageClick(exercise)}
             />
           ))}
         </div>
@@ -270,6 +277,19 @@ const SessionMainPage = () => {
       </Button>
       </div>
 
+{modalExercise && (
+  <ExerciseModal
+    type="session"
+    isOpen={!!modalExercise}
+    onClose={() => setModalExercise(null)}
+    name={modalExercise.name}
+    targetMuscles={modalExercise.primary_muscle_groups}
+    muscleGroups={modalExercise.secondary_muscles}
+    equipment={modalExercise.equipment}
+    media={modalExercise.media}
+    // description={modalExercise.description}
+  />
+)}
     </div>
   );
 };

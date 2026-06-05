@@ -5,21 +5,42 @@ import cn from 'classnames';
 interface MuscleGroupBadgeProps {
   groups: string[];
   primaryGroups?: string[];
+  type?: 'block' | 'inline';
   className?: string;
 }
 
-const MuscleGroupBadgeComponent = ({ groups, primaryGroups = [], className }: MuscleGroupBadgeProps) => {
+const MuscleGroupBadgeComponent = ({ 
+  groups, 
+  primaryGroups = [], 
+  type = 'inline',
+  className 
+}: MuscleGroupBadgeProps) => {
   if (!groups || groups.length === 0) return null;
 
   const uniqueGroups = [...new Set(groups)];
   const primarySet = new Set(primaryGroups);
 
+  if (type === 'inline') {
+    return (
+      <div className={cn(styles.badge, className)}>
+        {uniqueGroups.map((group, index) => (
+          <span key={index} className={styles.group}>
+            <span className={cn(primarySet.has(group) && styles.groupPrimary)}>{group}</span>
+            {index < uniqueGroups.length - 1 && <span className={styles.separator}>•</span>}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className={cn(styles.badge, className)}>
+    <div className={cn(styles.chips, className)}>
       {uniqueGroups.map((group, index) => (
-        <span key={index} className={styles.group}>
-          <span className={cn(primarySet.has(group) && styles.groupPrimary)}>{group}</span>
-          {index < uniqueGroups.length - 1 && <span className={styles.separator}>•</span>}
+        <span 
+          key={index} 
+          className={cn(styles.chip, primarySet.has(group) && styles.chipPrimary)}
+        >
+          {group}
         </span>
       ))}
     </div>
