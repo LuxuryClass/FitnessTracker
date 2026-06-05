@@ -14,6 +14,12 @@ interface SetGroup {
   weight: number;
 }
 
+interface MediaSlide {
+  id: string;
+  url: string;
+  type: 'image' | 'video';
+}
+
 interface ExerciseModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -21,14 +27,9 @@ interface ExerciseModalProps {
   muscleGroups?: string[];
   targetMuscles?: string[];
   equipment?: string[];
-  imageUrl?: string;
-  videoUrl?: string;
+  media?: MediaSlide[];
   description?: string;
   sets?: ExerciseSet[];
-  canEditMedia?: boolean;
-  isMediaUploading?: boolean;
-  onUploadMedia?: (file: File) => void;
-  onDeleteMedia?: () => void;
   onDescriptionChange?: (value: string) => void;
   onConfirm?: (sets: ExerciseSet[], description: string) => void;
 }
@@ -64,14 +65,9 @@ export const ExerciseModal = ({
   muscleGroups = [],
   targetMuscles = [],
   equipment = [],
-  imageUrl,
-  videoUrl,
+  media,
   description = '',
   sets: initialSets,
-  canEditMedia = false,
-  isMediaUploading = false,
-  onUploadMedia,
-  onDeleteMedia,
   onDescriptionChange,
   onConfirm,
 }: ExerciseModalProps) => {
@@ -96,14 +92,13 @@ export const ExerciseModal = ({
   // Description
   const [localDescription, setLocalDescription] = useState(description);
 
-  // Media
-  const [previewUrl, setPreviewUrl] = useState<string | null>(imageUrl || videoUrl || null);
-  const [mediaType, setMediaType] = useState<'image' | 'video' | null>(
-    imageUrl ? 'image' : videoUrl ? 'video' : null
-  );
+  const slides = media ?? [];
+  const [slideIndex, setSlideIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const touchStartX = useRef(0);
+
+  const currentSlide = slides[slideIndex] ?? null;
 
   // ─── Open / Close ─────────────────────────────────────
   useEffect(() => {
@@ -133,6 +128,10 @@ export const ExerciseModal = ({
   useEffect(() => {
     setLocalDescription(description);
   }, [description]);
+
+  useEffect(() => {
+    setSlideIndex(0);
+  }, [media]);
 
   // ─── Mode toggling ────────────────────────────────────
   const handleCollapse = () => {
@@ -237,27 +236,19 @@ export const ExerciseModal = ({
     onClose();
   };
 
-  // ─── Media handlers ───────────────────────────────────
-  useEffect(() => {
-    setPreviewUrl(imageUrl || videoUrl || null);
-    setMediaType(imageUrl ? 'image' : videoUrl ? 'video' : null);
-  }, [imageUrl, videoUrl]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    onUploadMedia?.(file);
+  // ─── Media swipe (read-only) ──────────────────────────
+  const handleMediaTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDeleteMedia?.();
-  };
-
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    fileInputRef.current?.click();
+  const handleMediaTouchEnd = (e: React.TouchEvent) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) <= 50) return;
+    if (diff > 0 && slideIndex < slides.length - 1) {
+      setSlideIndex(prev => prev + 1);
+    } else if (diff < 0 && slideIndex > 0) {
+      setSlideIndex(prev => prev - 1);
+    }
   };
 
   // ─── Render ───────────────────────────────────────────
@@ -279,48 +270,37 @@ export const ExerciseModal = ({
             <h3 className={styles.name}>{name}</h3>
           </div>
 
-          {/* Media */}
-          <div className={styles.media}>
-            {previewUrl ? (
+          {/* Media — read-only карусель со свайпом */}
+          <div className={styles.media} onTouchStart={handleMediaTouchStart} onTouchEnd={handleMediaTouchEnd}>
+            {currentSlide ? (
               <>
-                {mediaType === 'video' ? (
-                  <video ref={videoRef} src={previewUrl} controls className={styles.mediaContent}
+                {currentSlide.type === 'video' ? (
+                  <video ref={videoRef} src={currentSlide.url} controls className={styles.mediaContent}
                     onClick={() => videoRef.current?.paused ? videoRef.current.play() : videoRef.current?.pause()} />
                 ) : (
-                  <img src={previewUrl} alt={name} className={styles.mediaContent} onClick={() => setIsFullscreen(true)} />
+                  <img src={currentSlide.url} alt={name} className={styles.mediaContent} onClick={() => setIsFullscreen(true)} />
                 )}
-                {canEditMedia && (
-                  <>
-                    <button className={styles.editMediaBtn} onClick={handleEditClick} disabled={isMediaUploading}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15.2322 5.23223L18.7678 8.76777M16.7322 3.73223C17.7085 2.75592 19.2915 2.75592 20.2678 3.73223C21.2441 4.70854 21.2441 6.29146 20.2678 7.26777L6.5 21.0355H3V17.4645L16.7322 3.73223Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </button>
-                    <button className={styles.deleteMediaBtn} onClick={handleDeleteClick} disabled={isMediaUploading}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 6H5H21M8 6V4C8 2.89543 8.89543 2 10 2H14C15.1046 2 16 2.89543 16 4V6M19 6V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </button>
-                  </>
+
+                {slides.length > 1 && (
+                  <div className={styles.dots}>
+                    {slides.map((slide, i) => (
+                      <button key={slide.id} className={cn(styles.dot, i === slideIndex && styles.dotActive)} onClick={() => setSlideIndex(i)} />
+                    ))}
+                  </div>
                 )}
               </>
             ) : (
               <div className={styles.mediaPlaceholder}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="1.5"/></svg>
-                <span className={styles.mediaText}>{canEditMedia ? 'Добавить фото или видео' : 'Нет фото или видео'}</span>
-                {canEditMedia && (
-                  <button className={styles.uploadBtn} onClick={handleEditClick} disabled={isMediaUploading}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    {isMediaUploading ? 'Загрузка…' : 'Загрузить'}
-                  </button>
-                )}
+                <span className={styles.mediaText}>Нет фото или видео</span>
               </div>
-            )}
-            {canEditMedia && (
-              <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileChange} className={styles.fileInput} disabled={isMediaUploading} />
             )}
           </div>
 
           {/* Fullscreen */}
-          {isFullscreen && previewUrl && mediaType === 'image' && createPortal(
+          {isFullscreen && currentSlide && currentSlide.type === 'image' && createPortal(
             <div className={styles.fullscreen} onClick={() => setIsFullscreen(false)}>
-              <img src={previewUrl} alt={name} className={styles.fullscreenImage} />
+              <img src={currentSlide.url} alt={name} className={styles.fullscreenImage} />
             </div>,
             document.body
           )}

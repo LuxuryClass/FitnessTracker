@@ -1,14 +1,11 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/Components/UI/Button/Button';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 import ExerciseCard from '@/Components/Common/ExerciseCard/ExerciseCard';
 import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
 import { useAuth } from '@/Auth';
-import { ApiError, authApi, type Exercise as ApiExercise } from '@/Auth/authApi';
-import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { labelForSecondary, labelForPrimary, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
 import { filterExercisesByCategory } from '../../exerciseFiltering';
@@ -37,9 +34,6 @@ interface Exercise {
   media: ExerciseMediaItem[];
 }
 
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
-
 const groupNames: Record<string, string> = {
   chest: 'Грудь',
   back: 'Спина',
@@ -56,26 +50,7 @@ const ExerciseSelectPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const callWithAuth = useAuthenticatedCall();
-  const queryClient = useQueryClient();
   const { data: allExercises = [] } = useExercisesQuery();
-
-  const [isMediaUploading, setIsMediaUploading] = useState(false);
-  const [pendingMedia, setPendingMedia] = useState<{
-    exerciseId: string;
-    url: string;
-    type: 'image' | 'video';
-  } | null>(null);
-  const pendingMediaRef = useRef<typeof pendingMedia>(null);
-  pendingMediaRef.current = pendingMedia;
-
-  useEffect(() => {
-    return () => {
-      if (pendingMediaRef.current) {
-        URL.revokeObjectURL(pendingMediaRef.current.url);
-      }
-    };
-  }, []);
 
   const initialSearchQuery = (location.state as any)?.exerciseSearchQuery ?? '';
 
@@ -204,107 +179,6 @@ const ExerciseSelectPage = () => {
     setModalExercise(null);
   };
 
-  // Патчим закэшированный список упражнений свежим объектом из ответа сервера.
-  const applyUpdatedExercise = (updated: ApiExercise) => {
-    queryClient.setQueryData<ApiExercise[]>(['exercises', user?.id], prev =>
-      prev ? prev.map(ex => (ex.id === updated.id ? updated : ex)) : prev,
-    );
-    setModalExercise(prev =>
-      prev && prev.id === updated.id
-        ? { ...prev, media: updated.media }
-        : prev,
-    );
-  };
-
-  const clearPendingMedia = () => {
-    setPendingMedia(prev => {
-      if (prev) URL.revokeObjectURL(prev.url);
-      return null;
-    });
-  };
-
-  const handleUploadMedia = (file: File): void => {
-    if (!modalExercise) return;
-
-    const isImage = file.type.startsWith('image/');
-    const isVideo = file.type.startsWith('video/');
-    if (!isImage && !isVideo) {
-      alert('Разрешены только изображения и видео.');
-      return;
-    }
-    if (isImage && file.size > MAX_IMAGE_SIZE_BYTES) {
-      alert('Размер изображения не должен превышать 5 MB.');
-      return;
-    }
-    if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
-      alert('Размер видео не должен превышать 50 MB.');
-      return;
-    }
-
-    const exerciseId = modalExercise.id;
-    setPendingMedia(prev => {
-      if (prev) URL.revokeObjectURL(prev.url);
-      return { exerciseId, url: URL.createObjectURL(file), type: isVideo ? 'video' : 'image' };
-    });
-    setIsMediaUploading(true);
-
-    const currentMediaId = modalExercise.media[0]?.id ?? null;
-
-    void (async () => {
-      try {
-        if (currentMediaId) {
-          await callWithAuth(token => authApi.deleteExerciseMedia(token, exerciseId, currentMediaId));
-        }
-        const updated = await callWithAuth(token => authApi.uploadExerciseMedia(token, exerciseId, file));
-        applyUpdatedExercise(updated);
-      } catch (error) {
-        alert(error instanceof ApiError ? error.message : 'Не удалось загрузить медиа. Попробуйте позже.');
-      } finally {
-        clearPendingMedia();
-        setIsMediaUploading(false);
-      }
-    })();
-  };
-
-  const handleDeleteMedia = (): void => {
-    if (!modalExercise) return;
-    const mediaId = modalExercise.media[0]?.id;
-    if (!mediaId) return;
-
-    const exerciseId = modalExercise.id;
-    clearPendingMedia();
-    setIsMediaUploading(true);
-
-    void (async () => {
-      try {
-        const updated = await callWithAuth(token => authApi.deleteExerciseMedia(token, exerciseId, mediaId));
-        applyUpdatedExercise(updated);
-      } catch (error) {
-        alert(error instanceof ApiError ? error.message : 'Не удалось удалить медиа. Попробуйте позже.');
-      } finally {
-        setIsMediaUploading(false);
-      }
-    })();
-  };
-
-  const getModalImageUrl = (): string | undefined => {
-    if (!modalExercise) return undefined;
-    if (pendingMedia && pendingMedia.exerciseId === modalExercise.id) {
-      return pendingMedia.type === 'image' ? pendingMedia.url : undefined;
-    }
-    const first = modalExercise.media[0];
-    return first?.type === 'image' ? first.url : undefined;
-  };
-
-  const getModalVideoUrl = (): string | undefined => {
-    if (!modalExercise) return undefined;
-    if (pendingMedia && pendingMedia.exerciseId === modalExercise.id) {
-      return pendingMedia.type === 'video' ? pendingMedia.url : undefined;
-    }
-    const first = modalExercise.media[0];
-    return first?.type === 'video' ? first.url : undefined;
-  };
-
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -381,12 +255,7 @@ const ExerciseSelectPage = () => {
           equipment={modalExercise.equipment}
           description=""
           sets={exerciseSets[modalExercise.id]}
-          imageUrl={getModalImageUrl()}
-          videoUrl={getModalVideoUrl()}
-          canEditMedia={!!user && modalExercise.created_by_user_id === user.id}
-          isMediaUploading={isMediaUploading}
-          onUploadMedia={handleUploadMedia}
-          onDeleteMedia={handleDeleteMedia}
+          media={modalExercise.media}
           onConfirm={handleModalConfirm}
         />
       )}

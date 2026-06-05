@@ -11,6 +11,7 @@ import {
   ApiError,
   authApi,
   type Exercise as CatalogExercise,
+  type ExerciseMediaItem,
   type ExerciseSet,
   type Workout,
   type WorkoutExerciseCreateItem,
@@ -29,8 +30,7 @@ interface PreviewExercise {
   muscleGroups: string[];
   targetMuscles: string[];
   equipment: string[];
-  imageUrl?: string;
-  videoUrl?: string;
+  media: ExerciseMediaItem[];
   sets: ExerciseSet[];
 }
 
@@ -62,15 +62,13 @@ const WorkoutSessionPage = () => {
       .flatMap(item => {
         const info = catalogById.get(item.exercise_id);
         if (!info) return [];
-        const firstMedia = info.media[0];
         return [{
           exerciseId: item.exercise_id,
           name: info.name,
           muscleGroups: info.primary_muscle_groups.map(labelForPrimary),
           targetMuscles: info.secondary_muscles.map(labelForSecondary),
           equipment: info.equipment,
-          imageUrl: firstMedia?.type === 'image' ? firstMedia.url : undefined,
-          videoUrl: firstMedia?.type === 'video' ? firstMedia.url : undefined,
+          media: info.media,
           sets: item.target_sets.map(set => ({
             weight: Number(set.target_weight_kg ?? 0),
             reps: set.target_reps ?? 0,
@@ -217,8 +215,7 @@ const WorkoutSessionPage = () => {
           muscleGroups={modalExercise.muscleGroups}
           targetMuscles={modalExercise.targetMuscles}
           equipment={modalExercise.equipment}
-          imageUrl={modalExercise.imageUrl}
-          videoUrl={modalExercise.videoUrl}
+          media={modalExercise.media}
           description=""
           sets={modalExercise.sets}
           onConfirm={handleModalConfirm}
