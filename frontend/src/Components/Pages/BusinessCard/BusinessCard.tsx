@@ -111,7 +111,7 @@ function CardInner({ reducedMotion }: { reducedMotion: boolean }) {
           <FeatureScene {...FEATURES[1]} flip={true} reducedMotion={reducedMotion} />
           <SceneSteps reducedMotion={reducedMotion} />
           <FeatureScene {...FEATURES[2]} flip={false} reducedMotion={reducedMotion} />
-          <FeatureScene {...FEATURES[3]} flip={true} reducedMotion={reducedMotion} noSnap />
+          {/* <FeatureScene {...FEATURES[3]} flip={true} reducedMotion={reducedMotion} noSnap /> */}
           <Scene6Return reducedMotion={reducedMotion} />
         </div>
       </div>
