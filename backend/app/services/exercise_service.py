@@ -17,8 +17,9 @@ MAX_EXERCISE_MEDIA_COUNT = 10
 
 class ExerciseService:
     async def _to_response(self, exercise: Exercise) -> ExerciseResponse:
-        response = ExerciseResponse.model_validate(exercise)
-        response.media = [
+        # media собираем вручную: ORM-поля object_key/media_type не совпадают
+        # с url/type схемы, поэтому ORM-объект целиком не валидируем
+        media = [
             ExerciseMediaItem(
                 id=item.id,
                 url=await storage_service.build_exercise_media_access_url(item.object_key),
@@ -26,7 +27,18 @@ class ExerciseService:
             )
             for item in exercise.media
         ]
-        return response
+        return ExerciseResponse(
+            id=exercise.id,
+            created_by_user_id=exercise.created_by_user_id,
+            name=exercise.name,
+            description=exercise.description,
+            primary_muscle_groups=list(exercise.primary_muscle_groups),
+            secondary_muscles=list(exercise.secondary_muscles),
+            equipment=list(exercise.equipment),
+            media=media,
+            created_at=exercise.created_at,
+            updated_at=exercise.updated_at,
+        )
 
     async def _get_owned_exercise(self, db: AsyncSession, current_user: User, exercise_id: UUID) -> Exercise:
         exercise = await exercise_repository.get_by_id(db, exercise_id)

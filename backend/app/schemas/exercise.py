@@ -177,6 +177,8 @@ class ExerciseMediaItem(BaseModel):
     url: str
     type: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ExerciseResponse(BaseModel):
     id: UUID
