@@ -5,18 +5,15 @@ from datetime import datetime
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.exercise_media import ExerciseMedia
 
 
 class Exercise(Base):
     __tablename__ = "exercises"
     __table_args__ = (
-        CheckConstraint(
-            "cardinality(primary_muscle_groups) >= 1",
-            name="ck_exercises_primary_muscle_groups_not_empty",
-        ),
         UniqueConstraint("created_by_user_id", "name", name="uq_exercises_owner_name"),
     )
 
@@ -26,13 +23,21 @@ class Exercise(Base):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    primary_muscle_groups: Mapped[list[str]] = mapped_column(ARRAY(String(50)), nullable=False)
+    primary_muscle_groups: Mapped[list[str]] = mapped_column(
+        ARRAY(String(50)), nullable=False, server_default="{}"
+    )
     secondary_muscles: Mapped[list[str]] = mapped_column(
         ARRAY(String(50)), nullable=False, server_default="{}"
     )
-    equipment: Mapped[str] = mapped_column(String(120), nullable=False)
-    media_object_key: Mapped[str | None] = mapped_column(String(1024), nullable=True)
-    media_type: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    equipment: Mapped[list[str]] = mapped_column(
+        ARRAY(String(120)), nullable=False, server_default="{}"
+    )
+    # lazy="selectin" обязателен, так как async-сессия не умеет lazy-load relationship
+    media: Mapped[list[ExerciseMedia]] = relationship(
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="ExerciseMedia.position",
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()

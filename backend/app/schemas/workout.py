@@ -50,7 +50,7 @@ class WorkoutCreateRequest(BaseModel):
     is_planned: bool
     planned_for: datetime | None = None
     description: str | None = Field(default=None, max_length=2000)
-    exercises: list[WorkoutExerciseCreateItem] = Field(min_length=1, max_length=100)
+    exercises: list[WorkoutExerciseCreateItem] = Field(default_factory=list, max_length=100)
 
     @field_validator("title")
     @classmethod
@@ -92,7 +92,7 @@ class WorkoutUpdateRequest(BaseModel):
     is_planned: bool | None = None
     planned_for: datetime | None = None
     description: str | None = Field(default=None, max_length=2000)
-    exercises: list[WorkoutExerciseCreateItem] | None = Field(default=None, min_length=1, max_length=100)
+    exercises: list[WorkoutExerciseCreateItem] | None = Field(default=None, max_length=100)
 
     @field_validator("title")
     @classmethod

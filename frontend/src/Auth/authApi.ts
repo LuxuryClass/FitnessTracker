@@ -174,6 +174,12 @@ export interface NextWorkoutResponse {
   exercises: NextWorkoutExerciseItem[];
 }
 
+export interface ExerciseMediaItem {
+  id: string;
+  url: string;
+  type: 'image' | 'video';
+}
+
 export interface Exercise {
   id: string;
   created_by_user_id: string | null;
@@ -181,11 +187,18 @@ export interface Exercise {
   description: string | null;
   primary_muscle_groups: string[];
   secondary_muscles: string[];
-  equipment: string | null;
-  media_url: string | null;
-  media_type: 'image' | 'video' | null;
+  equipment: string[];
+  media: ExerciseMediaItem[];
   created_at: string;
   updated_at: string;
+}
+
+export interface ExerciseCreatePayload {
+  name: string;
+  description: string | null;
+  primary_muscle_groups: string[];
+  secondary_muscles: string[];
+  equipment: string[];
 }
 
 export interface ExerciseSet {
@@ -326,6 +339,14 @@ export const authApi = {
     });
   },
 
+  async createExercise(accessToken: string, payload: ExerciseCreatePayload): Promise<Exercise> {
+    return request<Exercise>("/exercises", {
+      method: "POST",
+      accessToken,
+      body: payload,
+    });
+  },
+
   async uploadExerciseMedia(accessToken: string, exerciseId: string, file: File): Promise<Exercise> {
     const formData = new FormData();
     formData.append("media", file);
@@ -336,8 +357,8 @@ export const authApi = {
     });
   },
 
-  async deleteExerciseMedia(accessToken: string, exerciseId: string): Promise<Exercise> {
-    return request<Exercise>(`/exercises/${exerciseId}/media`, {
+  async deleteExerciseMedia(accessToken: string, exerciseId: string, mediaId: string): Promise<Exercise> {
+    return request<Exercise>(`/exercises/${exerciseId}/media/${mediaId}`, {
       method: "DELETE",
       accessToken,
     });

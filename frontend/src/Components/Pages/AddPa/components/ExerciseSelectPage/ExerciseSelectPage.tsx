@@ -21,15 +21,20 @@ interface Filter {
   label: string;
 }
 
+interface ExerciseMediaItem {
+  id: string;
+  url: string;
+  type: 'image' | 'video';
+}
+
 interface Exercise {
   id: string;
   name: string;
   created_by_user_id: string | null;
   primary_muscle_groups: string[];
   secondary_muscles: string[];
-  equipment?: string | null;
-  media_url: string | null;
-  media_type: 'image' | 'video' | null;
+  equipment: string[];
+  media: ExerciseMediaItem[];
 }
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -112,7 +117,7 @@ const ExerciseSelectPage = () => {
       const q = searchQuery.toLowerCase();
       const matchesName = ex.name.toLowerCase().includes(q);
       const matchesSecondary = ex.secondary_muscles.some(m => labelForSecondary(m).toLowerCase().includes(q));
-      const matchesEquipment = ex.equipment?.toLowerCase().includes(q);
+      const matchesEquipment = ex.equipment.some(e => e.toLowerCase().includes(q));
       if (!(matchesName || matchesSecondary || matchesEquipment)) return false;
     }
 
@@ -206,7 +211,7 @@ const ExerciseSelectPage = () => {
     );
     setModalExercise(prev =>
       prev && prev.id === updated.id
-        ? { ...prev, media_url: updated.media_url, media_type: updated.media_type }
+        ? { ...prev, media: updated.media }
         : prev,
     );
   };
@@ -243,8 +248,13 @@ const ExerciseSelectPage = () => {
     });
     setIsMediaUploading(true);
 
+    const currentMediaId = modalExercise.media[0]?.id ?? null;
+
     void (async () => {
       try {
+        if (currentMediaId) {
+          await callWithAuth(token => authApi.deleteExerciseMedia(token, exerciseId, currentMediaId));
+        }
         const updated = await callWithAuth(token => authApi.uploadExerciseMedia(token, exerciseId, file));
         applyUpdatedExercise(updated);
       } catch (error) {
@@ -258,6 +268,8 @@ const ExerciseSelectPage = () => {
 
   const handleDeleteMedia = (): void => {
     if (!modalExercise) return;
+    const mediaId = modalExercise.media[0]?.id;
+    if (!mediaId) return;
 
     const exerciseId = modalExercise.id;
     clearPendingMedia();
@@ -265,7 +277,7 @@ const ExerciseSelectPage = () => {
 
     void (async () => {
       try {
-        const updated = await callWithAuth(token => authApi.deleteExerciseMedia(token, exerciseId));
+        const updated = await callWithAuth(token => authApi.deleteExerciseMedia(token, exerciseId, mediaId));
         applyUpdatedExercise(updated);
       } catch (error) {
         alert(error instanceof ApiError ? error.message : 'Не удалось удалить медиа. Попробуйте позже.');
@@ -280,7 +292,8 @@ const ExerciseSelectPage = () => {
     if (pendingMedia && pendingMedia.exerciseId === modalExercise.id) {
       return pendingMedia.type === 'image' ? pendingMedia.url : undefined;
     }
-    return modalExercise.media_type === 'image' ? modalExercise.media_url ?? undefined : undefined;
+    const first = modalExercise.media[0];
+    return first?.type === 'image' ? first.url : undefined;
   };
 
   const getModalVideoUrl = (): string | undefined => {
@@ -288,7 +301,8 @@ const ExerciseSelectPage = () => {
     if (pendingMedia && pendingMedia.exerciseId === modalExercise.id) {
       return pendingMedia.type === 'video' ? pendingMedia.url : undefined;
     }
-    return modalExercise.media_type === 'video' ? modalExercise.media_url ?? undefined : undefined;
+    const first = modalExercise.media[0];
+    return first?.type === 'video' ? first.url : undefined;
   };
 
   return (
@@ -341,7 +355,7 @@ const ExerciseSelectPage = () => {
                 name={exercise.name}
                 muscleGroups={exercise.primary_muscle_groups.map(labelForPrimary)}
                 targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
-                equipment={exercise.equipment ? [exercise.equipment] : []}
+                equipment={exercise.equipment}
                 onToggle={handleToggleExercise}
                 isSelected={isExerciseSelected(exercise.id)}
                 onClick={() => handleExerciseClick(exercise)}
@@ -364,7 +378,7 @@ const ExerciseSelectPage = () => {
           name={modalExercise.name}
           muscleGroups={modalExercise.primary_muscle_groups.map(labelForPrimary)}
           targetMuscles={modalExercise.secondary_muscles.map(labelForSecondary)}
-          equipment={modalExercise.equipment ? [modalExercise.equipment] : []}
+          equipment={modalExercise.equipment}
           description=""
           sets={exerciseSets[modalExercise.id]}
           imageUrl={getModalImageUrl()}

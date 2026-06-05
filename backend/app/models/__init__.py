@@ -1,6 +1,7 @@
 """Пакет ORM-моделей."""
 
 from app.models.exercise import Exercise
+from app.models.exercise_media import ExerciseMedia
 from app.models.user import User
 from app.models.user_notification_settings import UserNotificationSettings
 from app.models.workout import Workout
@@ -15,6 +16,7 @@ __all__ = [
     "User",
     "Workout",
     "Exercise",
+    "ExerciseMedia",
     "WorkoutExercise",
     "WorkoutExerciseTargetSet",
     "WorkoutSession",

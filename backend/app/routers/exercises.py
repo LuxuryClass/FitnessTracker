@@ -69,39 +69,39 @@ async def update_exercise(
 @router.delete("/{exercise_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_exercise(
     exercise_id: UUID,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Response:
-    await exercise_service.delete_exercise(db=db, current_user=current_user, exercise_id=exercise_id)
+    media_keys = await exercise_service.delete_exercise(db=db, current_user=current_user, exercise_id=exercise_id)
+    # Файлы медиа чистим из bucket в фоне, чтобы не задерживать ответ.
+    for media_key in media_keys:
+        background_tasks.add_task(storage_service.delete_exercise_media, media_key, ignore_missing=True)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/{exercise_id}/media", response_model=ExerciseResponse, status_code=status.HTTP_200_OK)
 async def upload_exercise_media(
     exercise_id: UUID,
-    background_tasks: BackgroundTasks,
     media: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ExerciseResponse:
-    exercise_response, old_media_to_delete = await exercise_service.upload_media(
+    return await exercise_service.upload_media(
         db=db, current_user=current_user, exercise_id=exercise_id, file=media
     )
-    if old_media_to_delete:
-        background_tasks.add_task(storage_service.delete_exercise_media, old_media_to_delete, ignore_missing=True)
-    return exercise_response
 
 
-@router.delete("/{exercise_id}/media", response_model=ExerciseResponse, status_code=status.HTTP_200_OK)
+@router.delete("/{exercise_id}/media/{media_id}", response_model=ExerciseResponse, status_code=status.HTTP_200_OK)
 async def delete_exercise_media(
     exercise_id: UUID,
+    media_id: UUID,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ExerciseResponse:
     exercise_response, old_media_to_delete = await exercise_service.delete_media(
-        db=db, current_user=current_user, exercise_id=exercise_id
+        db=db, current_user=current_user, exercise_id=exercise_id, media_id=media_id
     )
-    if old_media_to_delete:
-        background_tasks.add_task(storage_service.delete_exercise_media, old_media_to_delete, ignore_missing=True)
+    background_tasks.add_task(storage_service.delete_exercise_media, old_media_to_delete, ignore_missing=True)
     return exercise_response

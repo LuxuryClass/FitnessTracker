@@ -575,7 +575,7 @@
 
 **Канонические значения групп мышц.**
 
-- `primary_muscle_groups` — фронт-категории, по которым упражнение группируется на UI. Минимум 1 значение, максимум 10. Канонические ключи (whitelist на бэке):
+- `primary_muscle_groups` — фронт-категории, по которым упражнение группируется на UI. Может быть пустым (упражнение попадает только в категорию «Личные»), максимум 10. Канонические ключи (whitelist на бэке):
   `chest`, `back`, `legs`, `shoulders`, `arms`, `core`, `cardio`.
 - `secondary_muscles` — детальные мышцы (для будущей визуализации). Может быть пустым (например, для `cardio`). Без whitelist (свободный текст). Рекомендуемые ключи (lowercase, kebab-case для составных):
   `chest`, `upper-back`, `lower-back`, `trapezius`, `abs`, `obliques`, `biceps`, `triceps`, `forearm`, `deltoids`, `quadriceps`, `hamstring`, `gluteal`, `calves`, `adductors`, `abductors`, `neck`, `tibialis`.
@@ -611,7 +611,8 @@
     "description": "Базовое упражнение на ноги и ягодицы.",
     "primary_muscle_groups": ["legs"],
     "secondary_muscles": ["quadriceps", "gluteal", "hamstring"],
-    "equipment": "штанга",
+    "equipment": ["Штанга"],
+    "media": [],
     "created_at": "2026-04-20T10:00:00+00:00",
     "updated_at": "2026-04-20T10:00:00+00:00"
   }
@@ -645,7 +646,14 @@
     "description": "Контроль лопаток и плавное движение",
     "primary_muscle_groups": ["shoulders"],
     "secondary_muscles": ["deltoids", "triceps"],
-    "equipment": "гантели",
+    "equipment": ["Гантели"],
+    "media": [
+      {
+        "id": "0c8b8df1-4b8e-4f4f-9be4-2a4f5a6d7e8f",
+        "url": "https://bucket.example.com/exercises/...?presigned",
+        "type": "image"
+      }
+    ],
     "created_at": "2026-04-16T12:15:00+00:00",
     "updated_at": "2026-04-16T12:15:00+00:00"
   }
@@ -676,7 +684,8 @@
   "description": "Контроль лопаток и плавное движение",
   "primary_muscle_groups": ["shoulders"],
   "secondary_muscles": ["deltoids", "triceps"],
-  "equipment": "гантели",
+  "equipment": ["Гантели"],
+  "media": [],
   "created_at": "2026-04-16T12:15:00+00:00",
   "updated_at": "2026-04-16T12:15:00+00:00"
 }
@@ -706,7 +715,7 @@
   "description": "Контроль лопаток и плавное движение",
   "primary_muscle_groups": ["shoulders"],
   "secondary_muscles": ["deltoids", "triceps"],
-  "equipment": "гантели"
+  "equipment": ["Гантели", "Скамья"]
 }
 ```
 
@@ -714,9 +723,9 @@
 
 - `name` — строка, 1..255
 - `description` — `string | null`, максимум 2000
-- `primary_muscle_groups` — массив строк, 1..10 элементов, без дублей. Только канонические значения (whitelist выше)
-- `secondary_muscles` — массив строк, 0..30 элементов, без дублей. По умолчанию `[]`
-- `equipment` — строка, 1..120
+- `primary_muscle_groups` — массив строк, 0..10 элементов, без дублей. Только канонические значения (whitelist выше). По умолчанию `[]`
+- `secondary_muscles` — массив строк, 0..30 элементов, без дублей (кейс-инсенситивно), регистр сохраняется. По умолчанию `[]`
+- `equipment` — массив строк, 0..20 элементов, каждый 1..120 символов, без дублей (кейс-инсенситивно), регистр сохраняется. По умолчанию `[]`
 
 **Response 201**
 
@@ -728,7 +737,8 @@
   "description": "Контроль лопаток и плавное движение",
   "primary_muscle_groups": ["shoulders"],
   "secondary_muscles": ["deltoids", "triceps"],
-  "equipment": "гантели",
+  "equipment": ["Гантели", "Скамья"],
+  "media": [],
   "created_at": "2026-04-16T12:15:00+00:00",
   "updated_at": "2026-04-16T12:15:00+00:00"
 }
@@ -760,7 +770,7 @@
   "description": "Контроль корпуса",
   "primary_muscle_groups": ["shoulders"],
   "secondary_muscles": ["deltoids"],
-  "equipment": "гантели"
+  "equipment": ["Гантели"]
 }
 ```
 
@@ -768,9 +778,9 @@
 
 - `name` — `string | optional`, 1..255
 - `description` — `string | null | optional`, максимум 2000
-- `primary_muscle_groups` — `string[] | optional`, 1..10 элементов, без дублей, только из whitelist
-- `secondary_muscles` — `string[] | optional`, 0..30 элементов, без дублей
-- `equipment` — `string | optional`, 1..120
+- `primary_muscle_groups` — `string[] | optional`, 0..10 элементов, без дублей, только из whitelist
+- `secondary_muscles` — `string[] | optional`, 0..30 элементов, без дублей (кейс-инсенситивно), регистр сохраняется
+- `equipment` — `string[] | optional`, 0..20 элементов, каждый 1..120 символов, без дублей (кейс-инсенситивно), регистр сохраняется
 
 **Response 200**
 
@@ -782,7 +792,8 @@
   "description": "Контроль корпуса",
   "primary_muscle_groups": ["shoulders"],
   "secondary_muscles": ["deltoids"],
-  "equipment": "гантели",
+  "equipment": ["Гантели"],
+  "media": [],
   "created_at": "2026-04-16T12:15:00+00:00",
   "updated_at": "2026-04-18T10:00:00+00:00"
 }
@@ -816,6 +827,64 @@
 - `403` — попытка удалить чужое упражнение
 - `404` — упражнение не найдено
 - `400` — упражнение используется в тренировке и не может быть удалено
+
+Файлы медиа упражнения удаляются из bucket в фоне.
+
+---
+
+### 3.7 `POST /api/exercises/{exercise_id}/media`
+
+Загрузка медиафайла (фото/видео) своего упражнения. Файл **добавляется в конец** списка медиа (`position = max + 1`), существующие медиа не затрагиваются. Лимит — 10 медиа на упражнение.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+- `Content-Type: multipart/form-data`
+
+**Request body (multipart)**
+
+- `media` — файл: изображение (`image/*`, до 5 MB) или видео (`video/*`, до 50 MB)
+
+**Response 200**
+
+Обновлённое упражнение (формат как в `GET /api/exercises/{exercise_id}`), поле `media` отсортировано по `position`:
+
+```json
+{
+  "id": "a7f5d856-7b53-4e5f-bf6d-8f8ed7483b89",
+  "media": [
+    { "id": "0c8b8df1-...", "url": "https://...presigned", "type": "image" },
+    { "id": "5d2a1c44-...", "url": "https://...presigned", "type": "video" }
+  ]
+}
+```
+
+**Ошибки**
+
+- `400` — недопустимый тип/размер файла или превышен лимит 10 медиа
+- `401` — нет/невалидный access-токен
+- `403` — попытка работать с чужим (в т.ч. системным) упражнением
+- `404` — упражнение не найдено
+
+---
+
+### 3.8 `DELETE /api/exercises/{exercise_id}/media/{media_id}`
+
+Удаление одного медиафайла своего упражнения по id. Файл удаляется из bucket в фоне.
+
+**Headers**
+
+- `Authorization: Bearer <access_token>`
+
+**Response 200**
+
+Обновлённое упражнение (формат как в `GET /api/exercises/{exercise_id}`).
+
+**Ошибки**
+
+- `401` — нет/невалидный access-токен
+- `403` — попытка работать с чужим (в т.ч. системным) упражнением
+- `404` — упражнение или медиа не найдено
 
 ---
 
@@ -971,7 +1040,7 @@
 - `is_planned` — boolean
 - `planned_for` — `datetime | null`
 - `description` — `string | null`, максимум 2000
-- `exercises` — массив 1..100, каждый элемент: `{ "exercise_id": "UUID", "target_sets": WorkoutTargetSetItem[] | null }`
+- `exercises` — массив 0..100 (тренировку можно создать без упражнений и наполнить позже), каждый элемент: `{ "exercise_id": "UUID", "target_sets": WorkoutTargetSetItem[] | null }`
 - `target_sets[].set_index` — int `>= 1`, последовательные без пропусков
 - `target_sets[].target_reps` — `int | null`, `> 0`
 - `target_sets[].target_weight_kg` — `Decimal | null`, `>= 0`
@@ -1033,7 +1102,7 @@
 - `is_planned` — `boolean | optional`
 - `planned_for` — `datetime | null | optional`
 - `description` — `string | null | optional`, максимум 2000
-- `exercises` — `array | optional`, 1..100, без дублей по `exercise_id`. Формат элемента — как в `POST /api/workouts` (с опциональным `target_sets`)
+- `exercises` — `array | optional`, 0..100, без дублей по `exercise_id`. Формат элемента — как в `POST /api/workouts` (с опциональным `target_sets`)
 
 **Правила**
 

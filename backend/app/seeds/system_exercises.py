@@ -15,7 +15,7 @@ class SystemExerciseSeed:
     description: str
     primary_muscle_groups: list[str]
     secondary_muscles: list[str]
-    equipment: str
+    equipment: list[str]
 
 
 SYSTEM_EXERCISES: tuple[SystemExerciseSeed, ...] = (
@@ -24,112 +24,112 @@ SYSTEM_EXERCISES: tuple[SystemExerciseSeed, ...] = (
         description="Базовое упражнение на ноги и ягодицы.",
         primary_muscle_groups=["legs"],
         secondary_muscles=["quadriceps", "gluteal", "hamstring"],
-        equipment="штанга",
+        equipment=["Штанга"],
     ),
     SystemExerciseSeed(
         name="Жим штанги лежа",
         description="Базовое упражнение на грудные мышцы.",
         primary_muscle_groups=["chest"],
         secondary_muscles=["chest", "triceps", "deltoids"],
-        equipment="штанга",
+        equipment=["Штанга"],
     ),
     SystemExerciseSeed(
         name="Становая тяга",
         description="Базовое многосуставное упражнение на заднюю цепь.",
         primary_muscle_groups=["back", "legs"],
         secondary_muscles=["lower-back", "gluteal", "hamstring"],
-        equipment="штанга",
+        equipment=["Штанга"],
     ),
     SystemExerciseSeed(
         name="Тяга верхнего блока",
         description="Упражнение на широчайшие мышцы спины.",
         primary_muscle_groups=["back"],
         secondary_muscles=["upper-back", "biceps"],
-        equipment="блочный тренажер",
+        equipment=["Блочный тренажёр"],
     ),
     SystemExerciseSeed(
         name="Жим гантелей сидя",
         description="Упражнение на плечи в вертикальной плоскости.",
         primary_muscle_groups=["shoulders"],
         secondary_muscles=["deltoids", "triceps"],
-        equipment="гантели",
+        equipment=["Гантели"],
     ),
     SystemExerciseSeed(
         name="Выпады с гантелями",
         description="Упражнение на ноги и ягодицы с акцентом на стабильность.",
         primary_muscle_groups=["legs"],
         secondary_muscles=["quadriceps", "gluteal"],
-        equipment="гантели",
+        equipment=["Гантели"],
     ),
     SystemExerciseSeed(
         name="Планка",
         description="Статическое упражнение на мышцы кора.",
         primary_muscle_groups=["core"],
         secondary_muscles=["abs"],
-        equipment="коврик",
+        equipment=["Коврик"],
     ),
     SystemExerciseSeed(
         name="Подтягивания",
         description="Базовое упражнение на мышцы спины и рук.",
         primary_muscle_groups=["back"],
         secondary_muscles=["upper-back", "biceps"],
-        equipment="турник",
+        equipment=["Турник"],
     ),
     SystemExerciseSeed(
         name="Скручивания",
         description="Упражнение на пресс и косые мышцы.",
         primary_muscle_groups=["core"],
         secondary_muscles=["abs", "obliques"],
-        equipment="коврик",
+        equipment=["Коврик"],
     ),
     SystemExerciseSeed(
         name="Подъём ног в висе",
         description="Упражнение на нижний пресс.",
         primary_muscle_groups=["core"],
         secondary_muscles=["abs"],
-        equipment="турник",
+        equipment=["Турник"],
     ),
     SystemExerciseSeed(
         name="Подъём гантелей на бицепс",
         description="Изолированное упражнение на бицепс.",
         primary_muscle_groups=["arms"],
         secondary_muscles=["biceps", "forearm"],
-        equipment="гантели",
+        equipment=["Гантели"],
     ),
     SystemExerciseSeed(
         name="Французский жим",
         description="Изолированное упражнение на трицепс.",
         primary_muscle_groups=["arms"],
         secondary_muscles=["triceps"],
-        equipment="штанга",
+        equipment=["Штанга"],
     ),
     SystemExerciseSeed(
         name="Махи в стороны",
         description="Изолированное упражнение на средние дельты.",
         primary_muscle_groups=["shoulders"],
         secondary_muscles=["deltoids"],
-        equipment="гантели",
+        equipment=["Гантели"],
     ),
     SystemExerciseSeed(
         name="Подъём на носки стоя",
         description="Упражнение на икроножные мышцы.",
         primary_muscle_groups=["legs"],
         secondary_muscles=["calves"],
-        equipment="тренажер",
+        equipment=["Тренажёр"],
     ),
     SystemExerciseSeed(
         name="Бег на дорожке",
         description="Кардио на беговой дорожке.",
         primary_muscle_groups=["cardio"],
         secondary_muscles=[],
-        equipment="беговая дорожка",
+        equipment=["Беговая дорожка"],
     ),
     SystemExerciseSeed(
         name="Велотренажер",
         description="Кардио на велотренажере.",
         primary_muscle_groups=["cardio"],
         secondary_muscles=[],
-        equipment="велотренажер",
+        equipment=["Велотренажёр"],
     ),
 )
 

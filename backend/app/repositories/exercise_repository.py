@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.exercise import Exercise
+from app.models.exercise_media import ExerciseMedia
 
 
 class ExerciseRepository:
@@ -53,7 +54,7 @@ class ExerciseRepository:
         description: str | None,
         primary_muscle_groups: list[str],
         secondary_muscles: list[str],
-        equipment: str,
+        equipment: list[str],
     ) -> Exercise:
         exercise = Exercise(
             created_by_user_id=created_by_user_id,
@@ -78,17 +79,28 @@ class ExerciseRepository:
         await db.flush()
         return exercise
 
-    async def update_media(
+    async def add_media(
         self,
         db: AsyncSession,
         exercise: Exercise,
-        media_object_key: str | None,
-        media_type: str | None,
-    ) -> Exercise:
-        exercise.media_object_key = media_object_key
-        exercise.media_type = media_type
+        object_key: str,
+        media_type: str,
+    ) -> ExerciseMedia:
+        # Новый файл встаёт в конец: max(position) + 1.
+        next_position = max((item.position for item in exercise.media), default=0) + 1
+        media = ExerciseMedia(
+            exercise_id=exercise.id,
+            object_key=object_key,
+            media_type=media_type,
+            position=next_position,
+        )
+        exercise.media.append(media)
         await db.flush()
-        return exercise
+        return media
+
+    async def delete_media(self, db: AsyncSession, exercise: Exercise, media: ExerciseMedia) -> None:
+        exercise.media.remove(media)
+        await db.flush()
 
     async def delete(self, db: AsyncSession, exercise: Exercise) -> None:
         await db.delete(exercise)

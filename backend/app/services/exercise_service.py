@@ -8,14 +8,24 @@ from app.core.exceptions import AlreadyExistsException, BadRequestException, For
 from app.models.exercise import Exercise
 from app.models.user import User
 from app.repositories import exercise_repository
-from app.schemas.exercise import ExerciseCreateRequest, ExerciseResponse, ExerciseUpdateRequest
+from app.schemas.exercise import ExerciseCreateRequest, ExerciseMediaItem, ExerciseResponse, ExerciseUpdateRequest
 from app.services.storage_service import storage_service
+
+# Максимум медиафайлов на одно упражнение
+MAX_EXERCISE_MEDIA_COUNT = 10
 
 
 class ExerciseService:
     async def _to_response(self, exercise: Exercise) -> ExerciseResponse:
         response = ExerciseResponse.model_validate(exercise)
-        response.media_url = await storage_service.build_exercise_media_access_url(exercise.media_object_key)
+        response.media = [
+            ExerciseMediaItem(
+                id=item.id,
+                url=await storage_service.build_exercise_media_access_url(item.object_key),
+                type=item.media_type,
+            )
+            for item in exercise.media
+        ]
         return response
 
     async def _get_owned_exercise(self, db: AsyncSession, current_user: User, exercise_id: UUID) -> Exercise:
@@ -95,14 +105,17 @@ class ExerciseService:
         db: AsyncSession,
         current_user: User,
         exercise_id: UUID,
-    ) -> None:
+    ) -> list[str]:
         exercise = await self._get_owned_exercise(db, current_user, exercise_id)
+        # Ключи собираем до удаления: после commit объекты media уже недоступны
+        media_keys = [item.object_key for item in exercise.media]
         try:
             await exercise_repository.delete(db, exercise)
             await db.commit()
         except IntegrityError as exc:
             await db.rollback()
             raise BadRequestException("Нельзя удалить упражнение, которое используется в тренировках.") from exc
+        return media_keys
 
     async def upload_media(
         self,
@@ -110,21 +123,22 @@ class ExerciseService:
         current_user: User,
         exercise_id: UUID,
         file: UploadFile,
-    ) -> tuple[ExerciseResponse, str | None]:
+    ) -> ExerciseResponse:
         exercise = await self._get_owned_exercise(db, current_user, exercise_id)
-        old_media_key = exercise.media_object_key
+        if len(exercise.media) >= MAX_EXERCISE_MEDIA_COUNT:
+            raise BadRequestException(
+                f"Нельзя загрузить больше {MAX_EXERCISE_MEDIA_COUNT} медиа для одного упражнения."
+            )
         media_key, media_type = await storage_service.upload_exercise_media(
             user_id=current_user.id, exercise_id=exercise.id, file=file
         )
         try:
-            exercise = await exercise_repository.update_media(
-                db=db, exercise=exercise, media_object_key=media_key, media_type=media_type
+            await exercise_repository.add_media(
+                db=db, exercise=exercise, object_key=media_key, media_type=media_type
             )
             await db.commit()
             await db.refresh(exercise)
-            response = await self._to_response(exercise)
-            old_media_to_delete = old_media_key if old_media_key and old_media_key != media_key else None
-            return response, old_media_to_delete
+            return await self._to_response(exercise)
         except (BadRequestException, SQLAlchemyError):
             await db.rollback()
             await storage_service.delete_exercise_media(media_key, ignore_missing=True)
@@ -135,12 +149,14 @@ class ExerciseService:
         db: AsyncSession,
         current_user: User,
         exercise_id: UUID,
-    ) -> tuple[ExerciseResponse, str | None]:
+        media_id: UUID,
+    ) -> tuple[ExerciseResponse, str]:
         exercise = await self._get_owned_exercise(db, current_user, exercise_id)
-        old_media_key = exercise.media_object_key
-        exercise = await exercise_repository.update_media(
-            db=db, exercise=exercise, media_object_key=None, media_type=None
-        )
+        media = next((item for item in exercise.media if item.id == media_id), None)
+        if media is None:
+            raise NotFoundException("Медиа не найдено.")
+        old_media_key = media.object_key
+        await exercise_repository.delete_media(db, exercise, media)
         await db.commit()
         await db.refresh(exercise)
         response = await self._to_response(exercise)

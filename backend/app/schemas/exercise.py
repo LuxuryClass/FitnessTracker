@@ -25,6 +25,25 @@ def _normalize_string_list(values: list[str], field_label: str) -> list[str]:
     return normalized
 
 
+def _normalize_case_preserving_list(values: list[str], field_label: str, max_item_length: int) -> list[str]:
+    normalized: list[str] = []
+    seen: set[str] = set()
+
+    for raw in values:
+        cleaned = raw.strip()
+        if not cleaned:
+            raise ValueError(f"{field_label} не может содержать пустые значения.")
+        if len(cleaned) > max_item_length:
+            raise ValueError(f"Элемент {field_label} не может быть длиннее {max_item_length} символов.")
+        key = cleaned.lower()
+        if key in seen:
+            raise ValueError(f"{field_label} не должен содержать дубли.")
+        seen.add(key)
+        normalized.append(cleaned)
+
+    return normalized
+
+
 def _validate_primary_groups(values: list[str]) -> list[str]:
     normalized = _normalize_string_list(values, "primary_muscle_groups")
     invalid = [v for v in normalized if v not in ALLOWED_PRIMARY_MUSCLE_GROUPS]
@@ -39,9 +58,9 @@ def _validate_primary_groups(values: list[str]) -> list[str]:
 class ExerciseCreateRequest(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
-    primary_muscle_groups: list[str] = Field(min_length=1, max_length=10)
+    primary_muscle_groups: list[str] = Field(default_factory=list, max_length=10)
     secondary_muscles: list[str] = Field(default_factory=list, max_length=30)
-    equipment: str = Field(min_length=1, max_length=120)
+    equipment: list[str] = Field(default_factory=list, max_length=20)
 
     @field_validator("name")
     @classmethod
@@ -61,13 +80,10 @@ class ExerciseCreateRequest(BaseModel):
 
     @field_validator("equipment")
     @classmethod
-    def validate_equipment(cls, value: str | None) -> str:
+    def validate_equipment(cls, value: list[str] | None) -> list[str]:
         if value is None:
             raise ValueError("equipment не может быть null.")
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("equipment не может быть пустым.")
-        return normalized
+        return _normalize_case_preserving_list(value, "equipment", max_item_length=120)
 
     @field_validator("primary_muscle_groups")
     @classmethod
@@ -77,15 +93,15 @@ class ExerciseCreateRequest(BaseModel):
     @field_validator("secondary_muscles")
     @classmethod
     def validate_secondary_muscles(cls, value: list[str]) -> list[str]:
-        return _normalize_string_list(value, "secondary_muscles")
+        return _normalize_case_preserving_list(value, "secondary_muscles", max_item_length=50)
 
 
 class ExerciseUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
-    primary_muscle_groups: list[str] | None = Field(default=None, min_length=1, max_length=10)
+    primary_muscle_groups: list[str] | None = Field(default=None, max_length=10)
     secondary_muscles: list[str] | None = Field(default=None, max_length=30)
-    equipment: str | None = Field(default=None, max_length=120)
+    equipment: list[str] | None = Field(default=None, max_length=20)
 
     @field_validator("name")
     @classmethod
@@ -107,13 +123,10 @@ class ExerciseUpdateRequest(BaseModel):
 
     @field_validator("equipment")
     @classmethod
-    def validate_equipment(cls, value: str | None) -> str:
+    def validate_equipment(cls, value: list[str] | None) -> list[str]:
         if value is None:
             raise ValueError("equipment не может быть null.")
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("equipment не может быть пустым.")
-        return normalized
+        return _normalize_case_preserving_list(value, "equipment", max_item_length=120)
 
     @field_validator("primary_muscle_groups")
     @classmethod
@@ -127,7 +140,7 @@ class ExerciseUpdateRequest(BaseModel):
     def validate_secondary_muscles(cls, value: list[str] | None) -> list[str]:
         if value is None:
             raise ValueError("secondary_muscles не может быть null.")
-        return _normalize_string_list(value, "secondary_muscles")
+        return _normalize_case_preserving_list(value, "secondary_muscles", max_item_length=50)
 
     @model_validator(mode="after")
     def validate_payload(self) -> "ExerciseUpdateRequest":
@@ -159,6 +172,12 @@ class ExerciseUpdateRequest(BaseModel):
         return update_data
 
 
+class ExerciseMediaItem(BaseModel):
+    id: UUID
+    url: str
+    type: str
+
+
 class ExerciseResponse(BaseModel):
     id: UUID
     created_by_user_id: UUID | None
@@ -166,9 +185,8 @@ class ExerciseResponse(BaseModel):
     description: str | None
     primary_muscle_groups: list[str]
     secondary_muscles: list[str]
-    equipment: str | None
-    media_url: str | None = None
-    media_type: str | None = None
+    equipment: list[str]
+    media: list[ExerciseMediaItem] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 

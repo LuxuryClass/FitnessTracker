@@ -50,9 +50,8 @@ def create_mock_exercise(overrides=None):
         "description": "Default desc",
         "primary_muscle_groups": ["arms"],
         "secondary_muscles": ["biceps"],
-        "equipment": "dumbbells",
-        "media_object_key": None,
-        "media_type": None,
+        "equipment": ["dumbbells"],
+        "media": [],
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
     }

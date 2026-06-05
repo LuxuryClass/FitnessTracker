@@ -193,9 +193,7 @@ const CreateWorkoutPage = () => {
     return formData.workoutName.trim() || 'Тренировка';
   }, [formData.workoutName]);
 
-  const isSaveDisabled =
-    orderedSelectedExercises.length === 0
-    || createWorkoutMutation.isPending;
+  const isSaveDisabled = createWorkoutMutation.isPending;
 
   const handleSave = async () => {
     if (isSaveDisabled) return;

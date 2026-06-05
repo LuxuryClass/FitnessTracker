@@ -1,7 +1,17 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/Components/UI/Button/Button';
 import { Input } from '@/Components/UI/Input/Input';
+import { useAuth } from '@/Auth';
+import { ApiError, authApi, type Exercise as ApiExercise } from '@/Auth/authApi';
+import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
+import {
+  PRIMARY_MUSCLE_GROUPS,
+  PRIMARY_TO_SECONDARY,
+  labelForPrimary,
+  labelForSecondary,
+} from '@/Utils/muscleGroups';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 
@@ -20,7 +30,12 @@ interface MuscleGroup {
 interface MediaItem {
   url: string;
   type: 'image' | 'video';
+  file: File;
 }
+
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
+const MAX_MEDIA_COUNT = 10;
 
 const DEFAULT_EQUIPMENT: Equipment[] = [
   { id: 'barbell', label: 'Штанга' },
@@ -32,57 +47,20 @@ const DEFAULT_EQUIPMENT: Equipment[] = [
   { id: 'cable', label: 'Кроссовер' },
 ];
 
-const PRIMARY_MUSCLES: MuscleGroup[] = [
-  { id: 'chest', label: 'Грудь' },
-  { id: 'back', label: 'Спина' },
-  { id: 'legs', label: 'Ноги' },
-  { id: 'shoulders', label: 'Плечи' },
-  { id: 'arms', label: 'Руки' },
-  { id: 'core', label: 'Корпус' },
-  { id: 'cardio', label: 'Кардио' },
-];
-
-const SECONDARY_BY_PRIMARY: Record<string, MuscleGroup[]> = {
-  chest: [
-    { id: 'upper_chest', label: 'Верх груди' },
-    { id: 'middle_chest', label: 'Середина груди' },
-    { id: 'lower_chest', label: 'Низ груди' },
-    { id: 'front_delt', label: 'Передняя дельта' },
-    { id: 'triceps', label: 'Трицепс' },
-  ],
-  back: [
-    { id: 'lats', label: 'Широчайшие' },
-    { id: 'traps', label: 'Трапеции' },
-    { id: 'rhomboids', label: 'Ромбовидные' },
-    { id: 'erectors', label: 'Разгибатели спины' },
-    { id: 'rear_delt', label: 'Задняя дельта' },
-    { id: 'biceps', label: 'Бицепс' },
-  ],
-  legs: [
-    { id: 'quadriceps', label: 'Квадрицепс' },
-    { id: 'hamstrings', label: 'Бицепс бедра' },
-    { id: 'glutes', label: 'Ягодичные' },
-    { id: 'calves', label: 'Икроножные' },
-  ],
-  shoulders: [
-    { id: 'front_delt', label: 'Передняя дельта' },
-    { id: 'side_delt', label: 'Средняя дельта' },
-    { id: 'rear_delt', label: 'Задняя дельта' },
-    { id: 'traps', label: 'Трапеции' },
-  ],
-  arms: [
-    { id: 'biceps', label: 'Бицепс' },
-    { id: 'triceps', label: 'Трицепс' },
-    { id: 'forearms', label: 'Предплечья' },
-  ],
-  core: [
-    { id: 'abs', label: 'Пресс' },
-    { id: 'obliques', label: 'Косые мышцы' },
-  ],
-};
+const PRIMARY_MUSCLES: MuscleGroup[] = PRIMARY_MUSCLE_GROUPS.map(key => ({
+  id: key,
+  label: labelForPrimary(key),
+}));
 
 const CreateExercisePage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const callWithAuth = useAuthenticatedCall();
+  const queryClient = useQueryClient();
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [nameErrorTrigger, setNameErrorTrigger] = useState(0);
 
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -112,20 +90,49 @@ const CreateExercisePage = () => {
   const editSecondInputRef = useRef<HTMLInputElement>(null);
 
   const secondaryList = useMemo(() => {
-    const base = primaryMuscle ? SECONDARY_BY_PRIMARY[primaryMuscle] || [] : [];
+    const baseKeys = primaryMuscle ? PRIMARY_TO_SECONDARY[primaryMuscle] || [] : [];
+    const base: MuscleGroup[] = baseKeys.map(key => ({ id: key, label: labelForSecondary(key) }));
     return [...base, ...customSecondaryList];
   }, [primaryMuscle, customSecondaryList]);
 
   const currentMedia = mediaItems[currentMediaIndex] || null;
 
+  const mediaItemsRef = useRef(mediaItems);
+  mediaItemsRef.current = mediaItems;
+  useEffect(() => {
+    return () => {
+      mediaItemsRef.current.forEach(item => URL.revokeObjectURL(item.url));
+    };
+  }, []);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    const type = file.type.startsWith('video/') ? 'video' : 'image';
-    setMediaItems(prev => [...prev, { url, type }]);
-    setCurrentMediaIndex(mediaItems.length);
     e.target.value = '';
+
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    if (!isImage && !isVideo) {
+      alert('Разрешены только изображения и видео.');
+      return;
+    }
+    if (isImage && file.size > MAX_IMAGE_SIZE_BYTES) {
+      alert('Размер изображения не должен превышать 5 MB.');
+      return;
+    }
+    if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
+      alert('Размер видео не должен превышать 50 MB.');
+      return;
+    }
+    if (mediaItems.length >= MAX_MEDIA_COUNT) {
+      alert(`Нельзя добавить больше ${MAX_MEDIA_COUNT} медиа.`);
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    const type = isVideo ? 'video' : 'image';
+    setMediaItems(prev => [...prev, { url, type, file }]);
+    setCurrentMediaIndex(mediaItems.length);
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
@@ -134,7 +141,11 @@ const CreateExercisePage = () => {
   };
 
   const handleDeleteMedia = (index: number) => {
-    setMediaItems(prev => prev.filter((_, i) => i !== index));
+    setMediaItems(prev => {
+      const removed = prev[index];
+      if (removed) URL.revokeObjectURL(removed.url);
+      return prev.filter((_, i) => i !== index);
+    });
     if (currentMediaIndex >= index && currentMediaIndex > 0) {
       setCurrentMediaIndex(prev => Math.max(0, prev - 1));
     }
@@ -260,16 +271,59 @@ const CreateExercisePage = () => {
   };
 
   const handleSave = () => {
-    const data = {
-      name,
-      description,
-      equipment: selectedEquipment.map(id => equipmentList.find(e => e.id === id)?.label).filter(Boolean),
-      primaryMuscle: PRIMARY_MUSCLES.find(m => m.id === primaryMuscle)?.label,
-      secondaryMuscles: secondaryMuscles.map(id => secondaryList.find(m => m.id === id)?.label).filter(Boolean),
-      media: mediaItems,
+    if (isSaving) return;
+    setNameError('');
+    setIsSaving(true);
+
+    const secondaryPayload = secondaryMuscles
+      .map(id => {
+        const item = secondaryList.find(m => m.id === id);
+        if (!item) return null;
+        return item.isCustom ? item.label : item.id;
+      })
+      .filter((v): v is string => Boolean(v));
+
+    const payload = {
+      name: name.trim(),
+      description: description.trim() || null,
+      primary_muscle_groups: primaryMuscle ? [primaryMuscle] : [],
+      secondary_muscles: secondaryPayload,
+      equipment: selectedEquipment
+        .map(id => equipmentList.find(e => e.id === id)?.label)
+        .filter((v): v is string => Boolean(v)),
     };
-    console.log('Создаём упражнение:', data);
-    navigate(-1);
+
+    void (async () => {
+      try {
+        let exercise = await callWithAuth(token => authApi.createExercise(token, payload));
+
+        let mediaFailed = false;
+        for (const item of mediaItems) {
+          try {
+            exercise = await callWithAuth(token => authApi.uploadExerciseMedia(token, exercise.id, item.file));
+          } catch {
+            mediaFailed = true;
+          }
+        }
+        if (mediaFailed) {
+          alert('Упражнение создано, но не все медиа загрузились.');
+        }
+
+        queryClient.setQueryData<ApiExercise[]>(['exercises', user?.id], prev =>
+          prev ? [...prev, exercise] : prev,
+        );
+        navigate(-1);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 409) {
+          setNameError(error.message);
+          setNameErrorTrigger(prev => prev + 1);
+        } else {
+          alert(error instanceof ApiError ? error.message : 'Не удалось создать упражнение. Попробуйте позже.');
+        }
+      } finally {
+        setIsSaving(false);
+      }
+    })();
   };
 
   const isValid = name.trim().length > 0;
@@ -327,7 +381,15 @@ const CreateExercisePage = () => {
 
         <div className={styles.section}>
           <span className={styles.sectionLabel}>Название (Обязательное поле)</span>
-          <Input type="text" value={name} onChange={setName} placeholder="Введите название" className={styles.nameInput} />
+          <Input
+            type="text"
+            value={name}
+            onChange={value => { setName(value); setNameError(''); }}
+            placeholder="Введите название"
+            className={styles.nameInput}
+            error={nameError}
+            errorTrigger={nameErrorTrigger}
+          />
         </div>
 
         <div className={styles.section}>
@@ -425,8 +487,8 @@ const CreateExercisePage = () => {
       </div>
 
       {isValid && (
-        <Button size="l" color="primary" fullWidth onClick={handleSave} className={styles.saveBtn}>
-          Сохранить
+        <Button size="l" color="primary" fullWidth onClick={handleSave} disabled={isSaving} className={styles.saveBtn}>
+          {isSaving ? 'Сохранение…' : 'Сохранить'}
         </Button>
       )}
     </div>
