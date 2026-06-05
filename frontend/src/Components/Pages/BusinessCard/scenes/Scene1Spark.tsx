@@ -3,7 +3,7 @@ import { useScrollFrame } from '../engine/ScrollEngine';
 import { Wordmark } from './Wordmark';
 import styles from './Scene1Spark.module.scss';
 
-const PILLS = ['Планируй', 'Собирай', 'Выполняй', 'Следи'];
+const PILLS = ['Планируй', 'Составляй', 'Выполняй', 'Отслеживай'];
 export function Scene1Spark({ reducedMotion }: { reducedMotion: boolean }) {
   const contentRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
@@ -44,11 +44,9 @@ export function Scene1Spark({ reducedMotion }: { reducedMotion: boolean }) {
       className={`${styles.scene} ${reducedMotion ? styles.reduced : ''}`}
     >
       <div ref={contentRef} className={styles.content}>
-        <span className={styles.kicker}>ФИТНЕС, НО С ЖИЗНЬЮ</span>
         <Wordmark size={78} lit={lit} className={styles.mark} />
         <p className={styles.tagline}>
-          Один подход в день.<br />
-          Остальное — <span className={styles.taglineKey}>инерция</span>.
+          Твой <span className={styles.taglineKey}>прогресс</span> в два клика<br />
         </p>
 
         <div className={styles.flow}>

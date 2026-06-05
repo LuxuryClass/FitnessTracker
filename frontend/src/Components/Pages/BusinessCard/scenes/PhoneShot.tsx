@@ -18,7 +18,6 @@ export function PhoneShot({
   const [failed, setFailed] = useState(false);
   return (
     <div className={styles.frame}>
-      <div className={styles.notch} />
       <div className={styles.screen}>
         <div ref={innerRef} className={styles.inner}>
           {!failed ? (

@@ -21,7 +21,7 @@ const REASONS: Reason[] = [
   {
     k: 'noise',
     title: 'Ничего лишнего',
-    text: 'Без ленты, лайков и рекламы. Только ты, штанга и сегодняшний подход.',
+    text: 'Без рекламы и соцсетей. Только ты и штанга.',
   },
   {
     k: 'auto',
@@ -31,13 +31,13 @@ const REASONS: Reason[] = [
   {
     k: 'spark',
     title: 'Один подход в день',
-    text: 'Маленькая искра каждый день складывается в инерцию, которую уже не остановить.',
+    text: 'Маленькая искра каждый день создает привычку.',
     hero: true,
   },
   {
     k: 'balance',
     title: 'Виден баланс нагрузки',
-    text: 'Видно, какие мышцы прокачаны, а какие отстают — перекосов больше не будет.',
+    text: 'Наглядный трекинг отстающих групп мышц',
   },
   {
     k: 'own',
@@ -106,7 +106,7 @@ export function SceneWhy({ reducedMotion }: { reducedMotion: boolean }) {
         <div ref={headRef} className={styles.head}>
           <span className={styles.kicker}>ПОЧЕМУ Flame Fitness</span>
           <h2 className={styles.title}>
-            Трекер, который не <span className={styles.em}>гаснет</span> через неделю
+            <span className={styles.em}>Огонь</span>, который <span className={styles.em}>не угаснет</span>
           </h2>
         </div>
 

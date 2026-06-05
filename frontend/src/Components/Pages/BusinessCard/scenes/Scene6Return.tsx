@@ -28,7 +28,7 @@ export function Scene6Return({ reducedMotion }: { reducedMotion: boolean }) {
           <p className={styles.outro}>
             Начни сегодня — одна искра, и инерция сделает остальное.
           </p>
-          <div className={styles.legal}>© FlameFitness · made with sweat</div>
+          <div className={styles.legal}>© FlameTeam · made with sweat</div>
         </div>
       </div>
     </section>
