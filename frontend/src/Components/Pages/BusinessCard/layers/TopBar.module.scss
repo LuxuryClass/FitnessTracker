@@ -29,6 +29,112 @@
   &:active { transform: scale(0.96); }
 }
 
+.installWrap {
+  position: relative;
+  pointer-events: auto;
+}
+
+// Pill-кнопка установки PWA — видна сразу при заходе на любой сцене
+.install {
+  pointer-events: auto;
+  height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: $text;
+  font-weight: 600;
+  font-size: 14px;
+  color: $lime-core;
+  background: transparent;
+  border: 1px solid rgba(159, 218, 22, 0.35);
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: rgba(159, 218, 22, 0.12);
+    border-color: $lime-core;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+// На узких экранах прячем текст — остаётся компактная иконка
+@media (max-width: 379px) {
+  .installLabel {
+    display: none;
+  }
+
+  .install {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+// Пока висит подсказка — иконка мягко пульсирует lime-свечением
+.installPulse {
+  animation: installPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes installPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(159, 218, 22, 0);
+    border-color: rgba(159, 218, 22, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(159, 218, 22, 0.55);
+    border-color: $lime-core;
+  }
+}
+
+// Плашка-подсказка под иконкой со стрелочкой вверх
+.hint {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  padding: 8px 14px;
+  font-family: $text;
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+  color: $ink-base;
+  background: $lime-core;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(159, 218, 22, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+
+  // стрелочка к иконке
+  &::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 10px;
+    height: 10px;
+    background: $lime-core;
+    border-radius: 2px;
+  }
+}
+
+.hintVisible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .login {
   height: 40px;
   padding: 0 16px;

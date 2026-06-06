@@ -1,0 +1,187 @@
+@use '_tokens.scss' as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 13, 7, 0);
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+  z-index: 200;
+  transition: background 0.3s ease, backdrop-filter 0.3s ease;
+  pointer-events: none;
+}
+
+.overlayVisible {
+  background: rgba(11, 13, 7, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  pointer-events: auto;
+}
+
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 440px;
+  background: $ink-raise;
+  border: 1px solid rgba(159, 218, 22, 0.18);
+  border-bottom: none;
+  border-radius: 26px 26px 0 0;
+  padding: 14px 24px calc(28px + env(safe-area-inset-bottom));
+  z-index: 201;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sheetOpen {
+  transform: translateX(-50%) translateY(0);
+}
+
+.handle {
+  width: 40px;
+  height: 4px;
+  background: $ash-dim;
+  border-radius: 2px;
+  margin: 0 auto 18px;
+}
+
+.close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $ash;
+  background: rgba(244, 246, 238, 0.06);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: $off-white;
+    background: rgba(244, 246, 238, 0.12);
+  }
+}
+
+// Мягкое lime-свечение сверху листа — фирменный акцент визитки
+.glow {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  height: 120px;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(159, 218, 22, 0.22) 0%,
+    rgba(159, 218, 22, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.title {
+  font-family: $display;
+  font-weight: 600;
+  font-size: 22px;
+  color: $off-white;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-family: $text;
+  font-size: 14px;
+  line-height: 1.45;
+  color: $ash;
+  margin: 0 0 20px;
+  max-width: 340px;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: rgba(244, 246, 238, 0.04);
+  border: 1px solid rgba(244, 246, 238, 0.07);
+  border-radius: 16px;
+}
+
+.stepNum {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $text;
+  font-weight: 700;
+  font-size: 13px;
+  color: $ink-base;
+  background: $lime-core;
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(159, 218, 22, 0.35);
+}
+
+.stepText {
+  flex: 1;
+  font-family: $text;
+  font-size: 14px;
+  line-height: 1.4;
+  color: $off-white;
+
+  b {
+    color: $lime-hot;
+    font-weight: 600;
+  }
+}
+
+.stepIcon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  color: $ash;
+}
+
+.gotIt {
+  width: 100%;
+  height: 48px;
+  font-family: $text;
+  font-weight: 600;
+  font-size: 15px;
+  color: $ink-base;
+  background: $lime-core;
+  border: 1px solid $lime-core;
+  border-radius: 24px;
+  box-shadow: 0 0 18px rgba(159, 218, 22, 0.3);
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease;
+
+  &:hover {
+    background: $lime-hot;
+    border-color: $lime-hot;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}

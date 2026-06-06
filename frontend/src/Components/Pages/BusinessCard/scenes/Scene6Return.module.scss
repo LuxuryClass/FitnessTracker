@@ -37,6 +37,40 @@
   max-width: 300px;
 }
 
+// CTA установки PWA — фирменный стиль кнопки .start из TopBar, но крупнее
+.install {
+  height: 48px;
+  padding: 0 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: $text;
+  font-weight: 600;
+  font-size: 15px;
+  color: $ink-base;
+  background: $lime-core;
+  border: 1px solid $lime-core;
+  border-radius: 26px;
+  box-shadow: 0 0 24px rgba(159, 218, 22, 0.4);
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.18s ease, transform 0.12s ease;
+
+  &:hover {
+    background: $lime-hot;
+    border-color: $lime-hot;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.installIcon {
+  width: 18px;
+  height: 18px;
+}
+
 .legal {
   font-family: $text;
   font-size: 10px;
