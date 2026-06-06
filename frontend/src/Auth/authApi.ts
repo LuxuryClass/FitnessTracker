@@ -243,6 +243,7 @@ export interface Workout {
   id: string;
   title: string;
   is_planned: boolean;
+  is_completed: boolean;
   planned_for: string | null;
   description: string | null;
   exercises: WorkoutExerciseItem[];

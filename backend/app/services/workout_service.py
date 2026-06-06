@@ -85,6 +85,7 @@ class WorkoutService:
         workout: Workout,
         workout_exercises: list[WorkoutExercise],
         target_sets: list[WorkoutExerciseTargetSet],
+        is_completed: bool,
     ) -> WorkoutResponse:
         target_sets_by_exercise: dict[UUID, list[WorkoutExerciseTargetSet]] = defaultdict(list)
         for target_set in target_sets:
@@ -95,6 +96,7 @@ class WorkoutService:
             user_id=workout.user_id,
             title=workout.title,
             is_planned=workout.is_planned,
+            is_completed=is_completed,
             planned_for=workout.planned_for,
             description=workout.description,
             exercises=[
@@ -131,6 +133,7 @@ class WorkoutService:
         workout_ids = [workout.id for workout in workouts]
         workout_exercises = await workout_exercise_repository.list_by_workout_ids(db, workout_ids)
         target_sets = await workout_exercise_target_set_repository.list_by_workout_ids(db, workout_ids)
+        completed_workout_ids = await workout_session_repository.list_completed_workout_ids(db, workout_ids)
 
         grouped_exercises: dict[UUID, list[WorkoutExercise]] = defaultdict(list)
         for workout_exercise in workout_exercises:
@@ -145,6 +148,7 @@ class WorkoutService:
                 workout,
                 grouped_exercises.get(workout.id, []),
                 grouped_target_sets.get(workout.id, []),
+                is_completed=workout.id in completed_workout_ids,
             )
             for workout in workouts
         ]
@@ -158,7 +162,13 @@ class WorkoutService:
         workout = await self._get_workout_for_user_or_raise(db, current_user, workout_id)
         workout_exercises = await workout_exercise_repository.list_by_workout_id(db, workout.id)
         target_sets = await workout_exercise_target_set_repository.list_by_workout_id(db, workout.id)
-        return self._build_workout_response(workout, workout_exercises, target_sets)
+        completed_workout_ids = await workout_session_repository.list_completed_workout_ids(db, [workout.id])
+        return self._build_workout_response(
+            workout,
+            workout_exercises,
+            target_sets,
+            is_completed=workout.id in completed_workout_ids,
+        )
 
     async def create_workout(
         self,
@@ -189,7 +199,7 @@ class WorkoutService:
         )
         await db.commit()
         await db.refresh(workout)
-        return self._build_workout_response(workout, workout_exercises, target_sets)
+        return self._build_workout_response(workout, workout_exercises, target_sets, is_completed=False)
 
     async def update_workout(
         self,
@@ -253,7 +263,13 @@ class WorkoutService:
         await db.refresh(workout)
         workout_exercises = await workout_exercise_repository.list_by_workout_id(db, workout.id)
         target_sets = await workout_exercise_target_set_repository.list_by_workout_id(db, workout.id)
-        return self._build_workout_response(workout, workout_exercises, target_sets)
+        completed_workout_ids = await workout_session_repository.list_completed_workout_ids(db, [workout.id])
+        return self._build_workout_response(
+            workout,
+            workout_exercises,
+            target_sets,
+            is_completed=workout.id in completed_workout_ids,
+        )
 
     async def delete_workout(
         self,

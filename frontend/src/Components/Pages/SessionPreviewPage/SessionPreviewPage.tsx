@@ -95,7 +95,7 @@ const WorkoutSessionPage = () => {
   const duration = totalTargetSets > 0 ? String(totalTargetSets * MINUTES_PER_SET) : undefined;
 
   const handleStart = () => {
-    if (!workoutId || isStarting) return;
+    if (!workoutId || isStarting || workout?.is_completed) return;
     setIsStarting(true);
 
     void (async () => {
@@ -202,9 +202,22 @@ const WorkoutSessionPage = () => {
       </div>
 
       {/* Start Button */}
-      <Button size="l" color="primary" fullWidth onClick={handleStart} disabled={isStarting} className={styles.startBtn}>
-        {isStarting ? 'Запускаем...' : 'Начать'}
-        <img src="/icons/StartButton.svg"/>
+      <Button
+        size="l"
+        color="primary"
+        fullWidth
+        onClick={handleStart}
+        disabled={isStarting || workout.is_completed}
+        className={styles.startBtn}
+      >
+        {workout.is_completed ? (
+          'Тренировка завершена'
+        ) : (
+          <>
+            {isStarting ? 'Запускаем...' : 'Начать'}
+            <img src="/icons/StartButton.svg"/>
+          </>
+        )}
       </Button>
 
       {modalExercise && (

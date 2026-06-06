@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +12,6 @@ from app.models.workout_exercise import WorkoutExercise
 from app.models.workout_session import WorkoutSession
 from app.models.workout_session_set import WorkoutSessionSet
 from app.repositories import (
-    user_repository,
     workout_exercise_repository,
     workout_repository,
     workout_session_repository,
@@ -92,40 +90,6 @@ class WorkoutSessionService:
         if exercise_id not in allowed_exercise_ids:
             raise BadRequestException("Упражнение не входит в состав выбранной тренировки.")
 
-    async def _update_user_metrics_on_complete(
-        self,
-        db: AsyncSession,
-        current_user: User,
-    ) -> None:
-        now_utc = datetime.now(timezone.utc)
-        current_week_start_date = now_utc.date() - timedelta(days=now_utc.weekday())
-        current_week_start = datetime.combine(current_week_start_date, time.min, tzinfo=timezone.utc)
-        next_week_start = current_week_start + timedelta(days=7)
-
-        weekly_volume_tons = await workout_session_set_repository.calculate_weekly_volume_tons(
-            db=db,
-            user_id=current_user.id,
-            week_start=current_week_start,
-            week_end=next_week_start,
-        )
-        weekly_volume_tons = weekly_volume_tons.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
-
-        completed_week_starts = await workout_session_repository.list_completed_week_starts(db, current_user.id)
-        completed_week_start_dates = {week_start.date() for week_start in completed_week_starts}
-
-        streak_weeks = 0
-        check_week = current_week_start.date()
-        while check_week in completed_week_start_dates:
-            streak_weeks += 1
-            check_week -= timedelta(days=7)
-
-        await user_repository.update_metrics(
-            db=db,
-            user=current_user,
-            streak_weeks=streak_weeks,
-            weekly_volume_tons=weekly_volume_tons,
-        )
-
     async def start_session(
         self,
         db: AsyncSession,
@@ -141,6 +105,10 @@ class WorkoutSessionService:
                     "У вас уже есть активная сессия другой тренировки. Завершите её перед запуском новой."
                 )
             return await self._build_session_response(db, active_session)
+
+        completed_workout_ids = await workout_session_repository.list_completed_workout_ids(db, [workout.id])
+        if workout.id in completed_workout_ids:
+            raise BadRequestException("Эта тренировка уже завершена. Повторный запуск недоступен.")
 
         session = await workout_session_repository.create(
             db=db,
@@ -254,10 +222,8 @@ class WorkoutSessionService:
 
         completed_at = datetime.now(timezone.utc)
         session = await workout_session_repository.complete(db=db, session=session, completed_at=completed_at)
-        await self._update_user_metrics_on_complete(db=db, current_user=current_user)
         await db.commit()
         await db.refresh(session)
-        await db.refresh(current_user)
         return await self._build_session_response(db, session)
 
 

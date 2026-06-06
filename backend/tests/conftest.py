@@ -35,8 +35,6 @@ def mock_user():
     user.height = None
     user.weight = None
     user.avatar_url = None
-    user.streak_weeks = 0
-    user.weekly_volume_tons = 0.0
     user.created_at = datetime.now(timezone.utc)
     user.updated_at = datetime.now(timezone.utc)
     return user

@@ -162,6 +162,7 @@ class WorkoutResponse(BaseModel):
     user_id: UUID
     title: str
     is_planned: bool
+    is_completed: bool
     planned_for: datetime | None
     description: str | None
     exercises: list[WorkoutExerciseResponse]

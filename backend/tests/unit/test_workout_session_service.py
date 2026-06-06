@@ -1,8 +1,6 @@
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
 from uuid import uuid4
-from datetime import datetime, timezone
-from decimal import Decimal
 
 from app.services.workout_session_service import workout_session_service
 from app.schemas.workout_session import WorkoutSessionStartRequest, WorkoutSessionSetUpsertRequest
@@ -26,6 +24,7 @@ async def test_start_session_success(mock_db_session, mock_user):
          patch("app.services.workout_session_service.workout_exercise_repository") as we_repo:
         w_repo.get_by_id_for_user = AsyncMock(return_value=workout)
         s_repo.get_active_by_user_id = AsyncMock(return_value=None)
+        s_repo.list_completed_workout_ids = AsyncMock(return_value=set())
         s_repo.create = AsyncMock(return_value=session)
         set_repo.list_by_session_id = AsyncMock(return_value=[])
         we_repo.list_by_workout_id = AsyncMock(return_value=[])
@@ -139,19 +138,15 @@ async def test_upsert_set_completed_session_error(mock_db_session, mock_user):
 @pytest.mark.asyncio
 async def test_complete_session_success(mock_db_session, mock_user):
     """
-    Успешное завершение сессии: статус меняется на completed, пересчитываются метрики пользователя.
+    Успешное завершение сессии: статус меняется на completed.
     Проверяется, что complete и commit вызваны.
     """
     session = create_mock_workout_session({"id": uuid4(), "status": "in_progress", "workout_id": uuid4()})
     with patch("app.services.workout_session_service.workout_session_repository") as s_repo, \
          patch("app.services.workout_session_service.workout_session_set_repository") as set_repo, \
-         patch("app.services.workout_session_service.workout_exercise_repository") as we_repo, \
-         patch("app.services.workout_session_service.user_repository") as u_repo:
-        set_repo.calculate_weekly_volume_tons = AsyncMock(return_value=Decimal("0"))
+         patch("app.services.workout_session_service.workout_exercise_repository") as we_repo:
         s_repo.get_by_id_for_user = AsyncMock(return_value=session)
         s_repo.complete = AsyncMock(return_value=session)
-        s_repo.list_completed_week_starts = AsyncMock(return_value=[])
-        u_repo.update_metrics = AsyncMock()
         set_repo.list_by_session_id = AsyncMock(return_value=[])
         we_repo.list_by_workout_id = AsyncMock(return_value=[])
 

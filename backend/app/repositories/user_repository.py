@@ -57,18 +57,6 @@ class UserRepository:
         await db.flush()
         return user
 
-    async def update_metrics(
-        self,
-        db: AsyncSession,
-        user: User,
-        streak_weeks: int,
-        weekly_volume_tons: Decimal,
-    ) -> User:
-        user.streak_weeks = streak_weeks
-        user.weekly_volume_tons = weekly_volume_tons
-        await db.flush()
-        return user
-
     async def update_avatar_url(
         self,
         db: AsyncSession,
