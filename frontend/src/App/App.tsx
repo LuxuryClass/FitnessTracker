@@ -17,10 +17,12 @@ import ExerciseSelectPage from '@/Components/Pages/AddPa/components/ExerciseSele
 import CreateExercisePage from '@/Components/Pages/CreateExercisePage/CreateExercisePage';
 import { SessionPreviewPage } from '@/Components/Pages/SessionPreviewPage/SessionPreviewPage';
 import SessionMainPage from '@/Components/Pages/SessionMainPage/SessionMainPage';
+import { DesktopGate } from '@/Components/Common/DesktopGate/DesktopGate';
 
 export function App() {
   return (
     <>
+      <DesktopGate />
       <BrowserRouter basename="/">
         <Routes>
           <Route element={<GuestOnlyRoute />}>
