@@ -5,12 +5,14 @@ import { isAccessTokenExpiredOrExpiring } from '@/Auth/security';
 import styles from './Styles.module.scss';
 import { useEffect, useRef, useState } from 'react';
 import { LogoutModal } from '@/Components/Modals/LogoutModal/LogoutModal';
+import { FeedbackModal } from '@/Components/Modals/FeedbackModal/FeedbackModal';
 
 import avatarIcon from '/SettingsIcons/AvatarEdit.svg';
 import editIcon from '/SettingsIcons/Edit.svg';
 import notificationsIcon from '/SettingsIcons/Notification.svg';
 import privacyIcon from '/SettingsIcons/Privacy.svg';
 import logoutIcon from '/SettingsIcons/Logout.svg';
+import feedbackIcon from '/SettingsIcons/Feedback.svg';
 import defaultAvatar from '/masscot-main.png';
 
 interface MenuItem {
@@ -32,6 +34,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { user, tokens, logout, updateUser, refreshSession } = useAuth();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState(user?.avatar_url ?? defaultAvatar);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -49,7 +52,6 @@ const SettingsPage = () => {
     if (!previewUrlRef.current) {
       return;
     }
-
     URL.revokeObjectURL(previewUrlRef.current);
     previewUrlRef.current = null;
   };
@@ -89,12 +91,10 @@ const SettingsPage = () => {
       if (!(error instanceof ApiError) || (error.status !== 401 && error.status !== 403)) {
         throw error;
       }
-
       const refreshedTokens = await refreshSession();
       if (!refreshedTokens?.accessToken) {
         throw new Error('Сессия истекла. Войдите заново.');
       }
-
       return authApi.uploadAvatar(refreshedTokens.accessToken, file);
     }
   };
@@ -177,6 +177,12 @@ const SettingsPage = () => {
       onClick: () => navigate('/privacy'),
     },
     {
+      id: 'feedback',
+      label: 'Обратная связь',
+      icon: feedbackIcon,
+      onClick: () => setIsFeedbackModalOpen(true),
+    },
+    {
       id: 'logout',
       label: 'Выйти',
       icon: logoutIcon,
@@ -201,8 +207,6 @@ const SettingsPage = () => {
             <img src={avatarIcon} alt="редактировать" className={styles.avatarIcon} />
           </div>
         </div>
-        
-        {/* Скрытый input для выбора файла */}
         <input
           ref={fileInputRef}
           type="file"
@@ -211,7 +215,6 @@ const SettingsPage = () => {
           className={styles.fileInput}
           disabled={isUploadingAvatar}
         />
-        
         <div className={styles.profileInfo}>
           <h2 className={styles.name}>{user?.name || 'Пользователь'}</h2>
           <p className={styles.nickname}>{user?.email || 'Email не указан'}</p>
@@ -237,12 +240,16 @@ const SettingsPage = () => {
         ))}
       </div>
 
-      {/* Попап подтверждения */}
       <LogoutModal
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={handleLogout}
         isLoggingOut={isLoggingOut}
+      />
+
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
       />
     </div>
   );
