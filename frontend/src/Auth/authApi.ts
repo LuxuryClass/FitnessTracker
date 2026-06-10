@@ -172,6 +172,7 @@ export interface NextWorkoutResponse {
   exercises_count: number;
   muscle_groups: string[];
   exercises: NextWorkoutExerciseItem[];
+  is_active: boolean;
 }
 
 export interface ExerciseMediaItem {

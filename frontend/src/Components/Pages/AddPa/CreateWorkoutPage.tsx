@@ -230,8 +230,12 @@ const CreateWorkoutPage = () => {
     };
 
     try {
-      await createWorkoutMutation.mutateAsync(payload);
-      navigate('/');
+      const created = await createWorkoutMutation.mutateAsync(payload);
+      if (formData.startType === 'now') {
+        navigate(`/session/${created.id}`);
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Не удалось сохранить тренировку';
       alert(message);

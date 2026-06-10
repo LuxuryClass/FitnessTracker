@@ -107,7 +107,10 @@ const HomePage = () => {
             targetWeightKgMax: item.target_weight_kg_max !== null ? Number(item.target_weight_kg_max) : null,
           }))}
           workoutId={nextWorkout.id}
-          onStart={() => navigate(`/workout/${nextWorkout.id}`)}
+          actionLabel={nextWorkout.is_active ? 'Продолжить' : undefined}
+          onStart={() =>
+            navigate(nextWorkout.is_active ? `/session/${nextWorkout.id}` : `/workout/${nextWorkout.id}`)
+          }
         />
       ) : (
         <TodayWorkout isEmpty />

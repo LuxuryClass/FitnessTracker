@@ -191,3 +191,4 @@ class NextWorkoutResponse(BaseModel):
     exercises_count: int
     muscle_groups: list[str]
     exercises: list[NextWorkoutExerciseItem]
+    is_active: bool = False

@@ -346,15 +346,34 @@ class WorkoutService:
         db: AsyncSession,
         current_user: User,
     ) -> NextWorkoutResponse | None:
-        now_utc = datetime.now(timezone.utc)
-        # Граница — начало сегодняшнего UTC-дня
-        start_of_today_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+        active_session = await workout_session_repository.get_active_by_user_id(db, current_user.id)
+        workout: Workout | None = None
+        is_active = False
+        if active_session is not None:
+            workout = await workout_repository.get_by_id_for_user(
+                db, active_session.workout_id, current_user.id
+            )
+            is_active = workout is not None
 
-        workout = await workout_repository.find_first_planned_from(
-            db, current_user.id, start_of_today_utc
-        )
-        if workout is None or workout.planned_for is None:
+        if workout is None:
+            now_utc = datetime.now(timezone.utc)
+            start_of_today_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+            workout = await workout_repository.find_first_planned_from(
+                db, current_user.id, start_of_today_utc
+            )
+
+        if workout is None:
             return None
+
+        return await self._build_next_workout_response(db, workout, is_active=is_active)
+
+    async def _build_next_workout_response(
+        self,
+        db: AsyncSession,
+        workout: Workout,
+        is_active: bool = False,
+    ) -> NextWorkoutResponse:
+        planned_for_value = workout.planned_for or workout.created_at
 
         # Подтягиваем упражнения тренировки и сами объекты Exercise (имя, группы мышц).
         workout_exercises = await workout_exercise_repository.list_by_workout_id(db, workout.id)
@@ -362,11 +381,12 @@ class WorkoutService:
             return NextWorkoutResponse(
                 id=workout.id,
                 title=workout.title,
-                planned_for=workout.planned_for,
+                planned_for=planned_for_value,
                 estimated_duration_minutes=None,
                 exercises_count=0,
                 muscle_groups=[],
                 exercises=[],
+                is_active=is_active,
             )
 
         exercise_ids = [we.exercise_id for we in workout_exercises]
@@ -431,11 +451,12 @@ class WorkoutService:
         return NextWorkoutResponse(
             id=workout.id,
             title=workout.title,
-            planned_for=workout.planned_for,
+            planned_for=planned_for_value,
             estimated_duration_minutes=estimated_duration_minutes,
             exercises_count=len(exercise_items),
             muscle_groups=muscle_groups_aggregated,
             exercises=exercise_items,
+            is_active=is_active,
         )
 
 
