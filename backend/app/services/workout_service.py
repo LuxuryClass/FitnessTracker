@@ -387,7 +387,7 @@ class WorkoutService:
         result: list[ScheduleWorkoutItem] = []
         for workout_id in workouts_order:
             workout = workouts_map[workout_id]
-            assert workout.planned_for is not None
+            effective_dt = workout.planned_for or workout.created_at
             muscle_groups_set: list[str] = []
             seen_mg: set[str] = set()
             for we in grouped.get(workout_id, []):
@@ -401,8 +401,8 @@ class WorkoutService:
             result.append(ScheduleWorkoutItem(
                 id=workout.id,
                 title=workout.title,
-                date=workout.planned_for.date(),
-                time=workout.planned_for.strftime("%H:%M"),
+                date=effective_dt.date(),
+                time=workout.planned_for.strftime("%H:%M") if workout.planned_for is not None else None,
                 status="completed" if workout_id in completed_ids else "planned",
                 exercises_count=len(grouped.get(workout_id, [])),
                 muscle_groups=muscle_groups_set,

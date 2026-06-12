@@ -53,7 +53,7 @@ const HomePage = () => {
     return {
       id: item.exercise_id,
       title: item.exercise_name,
-      muscleGroup: labelForPrimary(item.muscle_group),
+      muscleGroup: item.muscle_group ? labelForPrimary(item.muscle_group) : undefined,
       difference: `${sign}${differenceNum}кг`,
     };
   });

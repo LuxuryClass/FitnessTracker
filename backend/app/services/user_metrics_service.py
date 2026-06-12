@@ -27,20 +27,20 @@ async def build_weekly_sessions_progress(db: AsyncSession, user_id: UUID) -> Wee
     now_utc = datetime.now(timezone.utc)
     week_start, week_end = _get_week_bounds(now_utc)
 
-    completed = await workout_session_repository.count_completed_in_range(
+    completed = await workout_session_repository.count_completed_workouts_in_range(
         db=db,
         user_id=user_id,
         range_start=week_start,
         range_end=week_end,
     )
-    planned_this_week = await workout_repository.count_planned_in_range(
+    total_this_week = await workout_repository.count_workouts_in_range(
         db=db,
         user_id=user_id,
         range_start=week_start,
         range_end=week_end,
     )
 
-    return WeeklySessionsProgress(completed=completed, total=planned_this_week)
+    return WeeklySessionsProgress(completed=completed, total=total_this_week)
 
 
 async def build_weekly_volume_tons(db: AsyncSession, user_id: UUID) -> Decimal:

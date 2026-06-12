@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, NotFoundException
@@ -97,25 +98,43 @@ class WorkoutSessionService:
         payload: WorkoutSessionStartRequest,
     ) -> WorkoutSessionResponse:
         workout = await self._get_workout_for_user_or_raise(db, current_user, payload.workout_id)
-        active_session = await workout_session_repository.get_active_by_user_id(db, current_user.id)
+        # Сохраняем идентификаторы в локальные переменные до commit/rollback: после rollback
+        # ORM-объекты истекают, и обращение к current_user.id/workout.id вызвало бы синхронную
+        # подгрузку атрибута, недопустимую в async-сессии (MissingGreenlet).
+        user_id = current_user.id
+        workout_id = workout.id
+
+        active_session = await workout_session_repository.get_active_by_user_id(db, user_id)
 
         if active_session is not None:
-            if active_session.workout_id != workout.id:
+            if active_session.workout_id != workout_id:
                 raise BadRequestException(
                     "У вас уже есть активная сессия другой тренировки. Завершите её перед запуском новой."
                 )
             return await self._build_session_response(db, active_session)
 
-        completed_workout_ids = await workout_session_repository.list_completed_workout_ids(db, [workout.id])
-        if workout.id in completed_workout_ids:
+        completed_workout_ids = await workout_session_repository.list_completed_workout_ids(db, [workout_id])
+        if workout_id in completed_workout_ids:
             raise BadRequestException("Эта тренировка уже завершена. Повторный запуск недоступен.")
 
-        session = await workout_session_repository.create(
-            db=db,
-            user_id=current_user.id,
-            workout_id=workout.id,
-        )
-        await db.commit()
+        try:
+            session = await workout_session_repository.create(
+                db=db,
+                user_id=user_id,
+                workout_id=workout_id,
+            )
+            await db.commit()
+        except IntegrityError:
+            # Гонка двойного старта (например, повторный маунт страницы в dev/StrictMode):
+            # параллельный запрос успел создать активную сессию, и уникальный констрейнт
+            # uq_workout_sessions_one_active_per_user отклонил вставку.
+            # Откатываемся и возвращаем уже существующую активную сессию (идемпотентный старт).
+            await db.rollback()
+            active_session = await workout_session_repository.get_active_by_user_id(db, user_id)
+            if active_session is None:
+                raise
+            return await self._build_session_response(db, active_session)
+
         await db.refresh(session)
         return await self._build_session_response(db, session)
 

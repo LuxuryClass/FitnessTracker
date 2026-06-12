@@ -47,19 +47,18 @@ class WorkoutRepository:
         result = await db.execute(statement)
         return list(result.scalars().all())
 
-    async def count_planned_in_range(
+    async def count_workouts_in_range(
         self,
         db: AsyncSession,
         user_id: UUID,
         range_start: datetime,
         range_end: datetime,
     ) -> int:
+        effective_date = func.coalesce(Workout.planned_for, Workout.created_at)
         statement = select(func.count(Workout.id)).where(
             Workout.user_id == user_id,
-            Workout.is_planned.is_(True),
-            Workout.planned_for.is_not(None),
-            Workout.planned_for >= range_start,
-            Workout.planned_for < range_end,
+            effective_date >= range_start,
+            effective_date < range_end,
         )
         result = await db.execute(statement)
         return int(result.scalar_one())
@@ -101,6 +100,7 @@ class WorkoutRepository:
         date_from: datetime,
         date_to: datetime,
     ) -> list[tuple[Workout, WorkoutExercise | None, Exercise | None, UUID | None]]:
+        effective_date = func.coalesce(Workout.planned_for, Workout.created_at)
         statement = (
             select(
                 Workout,
@@ -110,10 +110,8 @@ class WorkoutRepository:
             )
             .where(
                 Workout.user_id == user_id,
-                Workout.is_planned.is_(True),
-                Workout.planned_for.is_not(None),
-                Workout.planned_for >= date_from,
-                Workout.planned_for <= date_to,
+                effective_date >= date_from,
+                effective_date <= date_to,
             )
             .outerjoin(WorkoutExercise, WorkoutExercise.workout_id == Workout.id)
             .outerjoin(Exercise, Exercise.id == WorkoutExercise.exercise_id)
@@ -126,7 +124,7 @@ class WorkoutRepository:
                 & (WorkoutSession.completed_at >= date_from)
                 & (WorkoutSession.completed_at <= date_to),
             )
-            .order_by(Workout.planned_for)
+            .order_by(effective_date)
         )
         rows = (await db.execute(statement)).all()
         return [(row[0], row[1], row[2], row[3]) for row in rows]

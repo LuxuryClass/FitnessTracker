@@ -23,8 +23,9 @@ class UserProgressService:
 
         Логика расчёта прогресса:
         - Если есть данные за 30-37 дней назад: сравниваем максимум последних 7 дней с максимумом 30-37 дней назад
-        - Если данных за 30-37 дней нет: сравниваем максимум последних 7 дней с самым первым весом упражнения
-        - Если упражнение выполнено только 1 раз: не показываем в прогрессе
+        - Если данных за 30-37 дней нет: сравниваем максимум последних 7 дней с лучшим результатом
+          по всей истории СТРОГО ДО последних 7 дней. Если такой истории нет (упражнение новое —
+          впервые выполнено в последние 7 дней), база сравнения = 0, и весь поднятый вес = прирост.
         """
         now_utc = datetime.now(timezone.utc)
 
@@ -87,31 +88,19 @@ class UserProgressService:
                 previous_max = old_max
                 difference = recent_max - old_max
             else:
-                # Нет данных за месяц назад — сравниваем с первым выполнением
-                first_weight = await workout_session_set_repository.get_first_weight_for_exercise(
+                # Нет данных за месяц назад — база = лучший результат СТРОГО ДО последних 7 дней.
+                # Если истории до недавнего окна нет (упражнение новое), база = 0,
+                # и весь поднятый вес считается приростом.
+                previous_max = await workout_session_set_repository.get_max_weight_before(
                     db=db,
                     user_id=current_user.id,
                     exercise_id=exercise_id,
-                )
+                    before=last_7_days_start,
+                ) or Decimal(0)
+                difference = recent_max - previous_max
 
-                if first_weight is None:
-                    continue
-
-                # Проверяем, что есть хотя бы 2 выполнения (иначе нет прогресса)
-                total_executions = await workout_session_set_repository.count_exercise_executions(
-                    db=db,
-                    user_id=current_user.id,
-                    exercise_id=exercise_id,
-                )
-
-                if total_executions < 2:
-                    continue
-
-                previous_max = first_weight
-                difference = recent_max - first_weight
-
-            # Берём первую primary-группу мышц для отображения
-            muscle_group = exercise.primary_muscle_groups[0] if exercise.primary_muscle_groups else "Неизвестно"
+            # Берём первую primary-группу мышц для отображения; если групп нет — None
+            muscle_group = exercise.primary_muscle_groups[0] if exercise.primary_muscle_groups else None
 
             result.append(
                 RecentProgressResponse(

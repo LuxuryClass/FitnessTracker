@@ -178,52 +178,32 @@ class WorkoutSessionSetRepository:
         max_weight = result.scalar_one_or_none()
         return Decimal(max_weight) if max_weight is not None else None
 
-    async def get_first_weight_for_exercise(
+    async def get_max_weight_before(
         self,
         db: AsyncSession,
         user_id: UUID,
         exercise_id: UUID,
+        before: datetime,
     ) -> Decimal | None:
         """
-        Возвращает самый первый вес для упражнения (по дате завершения сессии).
+        Возвращает максимальный вес упражнения по всей истории СТРОГО ДО даты `before`.
+        Используется как база сравнения для прогресса: если результата нет (упражнение
+        новое, нет истории до недавнего окна) — вернётся None, и сервис примет базу за 0.
         """
         statement = (
-            select(WorkoutSessionSet.weight_kg)
+            select(func.max(WorkoutSessionSet.weight_kg))
             .select_from(WorkoutSessionSet)
             .join(WorkoutSession, WorkoutSession.id == WorkoutSessionSet.session_id)
             .where(
                 WorkoutSession.user_id == user_id,
                 WorkoutSession.status == "completed",
                 WorkoutSessionSet.exercise_id == exercise_id,
-            )
-            .order_by(WorkoutSession.completed_at.asc(), WorkoutSessionSet.created_at.asc())
-            .limit(1)
-        )
-        result = await db.execute(statement)
-        first_weight = result.scalar_one_or_none()
-        return Decimal(first_weight) if first_weight is not None else None
-
-    async def count_exercise_executions(
-        self,
-        db: AsyncSession,
-        user_id: UUID,
-        exercise_id: UUID,
-    ) -> int:
-        """
-        Возвращает количество уникальных завершённых сессий, в которых выполнялось упражнение.
-        """
-        statement = (
-            select(func.count(func.distinct(WorkoutSession.id)))
-            .select_from(WorkoutSessionSet)
-            .join(WorkoutSession, WorkoutSession.id == WorkoutSessionSet.session_id)
-            .where(
-                WorkoutSession.user_id == user_id,
-                WorkoutSession.status == "completed",
-                WorkoutSessionSet.exercise_id == exercise_id,
+                WorkoutSession.completed_at < before,
             )
         )
         result = await db.execute(statement)
-        return int(result.scalar_one())
+        max_weight = result.scalar_one_or_none()
+        return Decimal(max_weight) if max_weight is not None else None
 
 
 workout_session_set_repository = WorkoutSessionSetRepository()

@@ -147,7 +147,7 @@ export interface ScheduleWorkoutItem {
 export interface RecentProgressItem {
   exercise_id: string;
   exercise_name: string;
-  muscle_group: string;
+  muscle_group: string | null;
   difference_kg: number | string;
   recent_max_weight_kg: number | string;
   previous_max_weight_kg: number | string | null;
