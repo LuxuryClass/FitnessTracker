@@ -234,6 +234,13 @@ export interface WorkoutCreateResponse {
   description: string | null;
 }
 
+export interface WorkoutBatchCreatePayload {
+  title: string;
+  description: string | null;
+  planned_for: string[];
+  exercises: WorkoutExerciseCreateItem[];
+}
+
 export interface WorkoutExerciseItem {
   exercise_id: string;
   order_index: number;
@@ -416,6 +423,14 @@ export const authApi = {
 
   async createWorkout(accessToken: string, payload: WorkoutCreatePayload): Promise<WorkoutCreateResponse> {
     return request<WorkoutCreateResponse>("/workouts", {
+      method: "POST",
+      accessToken,
+      body: payload,
+    });
+  },
+
+  async createWorkoutsBatch(accessToken: string, payload: WorkoutBatchCreatePayload): Promise<WorkoutCreateResponse[]> {
+    return request<WorkoutCreateResponse[]>("/workouts/batch", {
       method: "POST",
       accessToken,
       body: payload,

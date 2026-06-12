@@ -131,6 +131,20 @@ class WorkoutRepository:
         rows = (await db.execute(statement)).all()
         return [(row[0], row[1], row[2], row[3]) for row in rows]
 
+    async def list_by_series_id(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        series_id: UUID,
+    ) -> list[Workout]:
+        statement = (
+            select(Workout)
+            .where(Workout.user_id == user_id, Workout.series_id == series_id)
+            .order_by(Workout.planned_for)
+        )
+        result = await db.execute(statement)
+        return list(result.scalars().all())
+
     async def create(
         self,
         db: AsyncSession,
@@ -139,6 +153,7 @@ class WorkoutRepository:
         is_planned: bool,
         planned_for: datetime | None,
         description: str | None,
+        series_id: UUID | None = None,
     ) -> Workout:
         workout = Workout(
             user_id=user_id,
@@ -146,6 +161,7 @@ class WorkoutRepository:
             is_planned=is_planned,
             planned_for=planned_for,
             description=description,
+            series_id=series_id,
         )
         db.add(workout)
         await db.flush()

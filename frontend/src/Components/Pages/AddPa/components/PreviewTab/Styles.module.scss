@@ -40,6 +40,100 @@
   color: #fff;
 }
 
+.scheduleSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--Dark-grey-color);
+  border-radius: 16px;
+}
+
+.summaryTitle {
+  @include text_h2();
+  text-align: start;
+  color: #fff;
+}
+
+.dateList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dateItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateText {
+  flex: 1;
+  font-size: 16px;
+  color: #fff;
+}
+
+.dateTime {
+  font-size: 16px;
+  color: #fff;
+}
+
+.nearestDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--Primary-color);
+  flex-shrink: 0;
+}
+
+.weekdayChips {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+}
+
+.weekdayChip {
+  flex: 1;
+  text-align: center;
+  padding: 6px 0;
+  border-radius: 8px;
+  background: var(--grey-color);
+  color: var(--Accent-grey-color);
+  font-size: 13px;
+
+  &_active {
+    background: var(--Primary-color);
+    color: #080A00;
+    font-weight: 700;
+  }
+}
+
+.summaryRows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summaryLabel {
+  font-size: 16px;
+  color: var(--Accent-grey-color);
+}
+
+.summaryValue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  color: #fff;
+}
+
 .exercisesSection {
   display: flex;
   flex-direction: column;

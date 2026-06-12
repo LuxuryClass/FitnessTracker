@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
 import styles from './Styles.module.scss';
+import cn from 'classnames';
 import { DefaultExerciseRow } from '../../../../Common/DefaultExerciseRow/DefaultExerciseRow';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
 import type { Exercise, ExerciseSet } from '@/Auth/authApi';
 import { labelForPrimary, labelsForPrimaryList, labelsForSecondaryList } from '@/Utils/muscleGroups';
+import { WEEKDAY_UI_ORDER, WEEKDAY_LABELS, formatDateLabel, type SchedulePreview } from '../../scheduleDates';
 
 // Минут на один подход — синхронизировано с backend (MINUTES_PER_SET в workout_service.py).
 const MINUTES_PER_SET = 5;
@@ -13,8 +15,7 @@ interface PreviewTabProps {
   workoutName: string;
   exercises: Exercise[];
   setsByExerciseId: Record<string, ExerciseSet[]>;
-  date?: string;
-  time?: string;
+  schedule?: SchedulePreview | null;
   onReorder?: (exercises: Exercise[]) => void;
 }
 
@@ -22,8 +23,7 @@ export const PreviewTab = ({
   workoutName,
   exercises,
   setsByExerciseId,
-  date,
-  time,
+  schedule,
   onReorder,
 }: PreviewTabProps) => {
   const [items, setItems] = useState<Exercise[]>(exercises);
@@ -87,6 +87,10 @@ export const PreviewTab = ({
     setOverIndex(null);
   };
 
+  const cardBadge = schedule && schedule.count > 1 ? `${schedule.count} тренировок` : undefined;
+  const cardDate = schedule && schedule.count === 1 ? schedule.nearestDate ?? undefined : undefined;
+  const cardTime = schedule && schedule.count === 1 ? schedule.time : undefined;
+
   return (
     <div className={styles.tab}>
       <PreviewCard
@@ -94,10 +98,63 @@ export const PreviewTab = ({
         duration={duration}
         totalWeight={totalWeight}
         exercisesCount={exercisesCount}
-        date={date}
-        time={time}
+        date={cardDate}
+        time={cardTime}
+        badge={cardBadge}
         muscleGroups={muscleGroups}
       />
+
+      {schedule && schedule.count > 1 && (
+        <div className={styles.scheduleSummary}>
+          {schedule.mode === 'multi' ? (
+            <>
+              <h3 className={styles.summaryTitle}>Запланированные даты</h3>
+              <div className={styles.dateList}>
+                {schedule.dates.map((d, i) => (
+                  <div key={d.date} className={styles.dateItem}>
+                    {i === 0 && <span className={styles.nearestDot} />}
+                    <span className={styles.dateText}>{formatDateLabel(d.date)}</span>
+                    <span className={styles.dateTime}>{d.time}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className={styles.summaryTitle}>Расписание</h3>
+              <div className={styles.weekdayChips}>
+                {WEEKDAY_UI_ORDER.map((wd, i) => (
+                  <span
+                    key={wd}
+                    className={cn(styles.weekdayChip, schedule.weekdays.includes(wd) && styles.weekdayChip_active)}
+                  >
+                    {WEEKDAY_LABELS[i]}
+                  </span>
+                ))}
+              </div>
+              <div className={styles.summaryRows}>
+                <div className={styles.summaryRow}>
+                  <span className={styles.summaryLabel}>Период</span>
+                  <span className={styles.summaryValue}>{schedule.endLabel}</span>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span className={styles.summaryLabel}>Время</span>
+                  <span className={styles.summaryValue}>{schedule.time}</span>
+                </div>
+                {schedule.nearestDate && (
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>Ближайшая</span>
+                    <span className={styles.summaryValue}>
+                      <span className={styles.nearestDot} />
+                      {formatDateLabel(schedule.nearestDate)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <div className={styles.exercisesSection}>
         <div className={styles.exercisesList}>

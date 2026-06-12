@@ -1,17 +1,7 @@
-import { useState, useEffect } from 'react';
 import styles from './Styles.module.scss';
 import { Button } from '@/Components/UI/Button/Button';
-import { TabsGroup } from '@/Components/UI/TabsGroup/TabsGroup';
-import cn from 'classnames';
 import { WorkoutFormData } from '../../CreateWorkoutPage';
-
-
-type StartType = 'now' | 'schedule';
-
-const startTabs = [
-  { id: 'now' as StartType, label: 'Сейчас' },
-  { id: 'schedule' as StartType, label: 'Выбрать дату' },
-];
+import { WhenWorkoutBlock } from '../WhenWorkoutBlock/WhenWorkoutBlock';
 
 interface SettingsTabProps {
   formData: WorkoutFormData;
@@ -19,20 +9,6 @@ interface SettingsTabProps {
 }
 
 export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
-  const [scheduleDropdownOpen, setScheduleDropdownOpen] = useState(formData.startType === 'schedule');
-
-  useEffect(() => {
-    setScheduleDropdownOpen(formData.startType === 'schedule');
-  }, [formData.startType]);
-
-  const formatDateForDisplay = (dateStr: string) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Мая', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-    const weekdays = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-    return `${weekdays[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
-  };
-
   return (
     <div className={styles.tab}>
       <div className={styles.section}>
@@ -56,42 +32,7 @@ export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
         />
       </div>
 
-      <div className={cn(styles.section, styles.scheduleSection)}>
-        <h3 className={styles.sectionTitle}>Начать сейчас или выбрать дату</h3>
-        <TabsGroup 
-          tabs={startTabs} 
-          activeTab={formData.startType} 
-          onChange={(id) => updateFormData('startType', id)} 
-        />
-
-        <div className={cn(styles.scheduleDropdown, scheduleDropdownOpen && styles.scheduleDropdown_open)}>
-          <div className={styles.scheduleDropdownInner}>
-            <h4 className={styles.scheduleLabel}>Своя дата</h4>
-            <div className={styles.scheduleInputs}>
-              <div className={styles.dateInputWrapper}>
-                <input
-                  type="date"
-                  value={formData.scheduleDate}
-                  onChange={(e) => updateFormData('scheduleDate', e.target.value)}
-                  className={styles.dateInput}
-                />
-                <span className={styles.dateDisplay}>
-                  {formatDateForDisplay(formData.scheduleDate)}
-                </span>
-              </div>
-              <div className={styles.timeInputWrapper}>
-                <input
-                  type="time"
-                  value={formData.scheduleTime}
-                  onChange={(e) => updateFormData('scheduleTime', e.target.value)}
-                  className={styles.timeInput}
-                />
-                <span className={styles.timeDisplay}>{formData.scheduleTime}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <WhenWorkoutBlock formData={formData} updateFormData={updateFormData} />
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Из шаблона</h3>

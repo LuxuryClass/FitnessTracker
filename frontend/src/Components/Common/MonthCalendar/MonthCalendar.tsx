@@ -19,6 +19,8 @@ import cn from 'classnames';
 interface MonthCalendarProps {
   plannedDates?: Date[];
   completedDates?: Date[];
+  markedDates?: Date[];
+  activeDate?: Date | null;
   onDayClick?: (date: Date) => void;
   onMonthChange?: (monthStart: Date) => void;
   initialDate?: Date;
@@ -59,12 +61,18 @@ const getMonthDays = (
 const MonthCalendarComponent = ({
   plannedDates = [],
   completedDates = [],
+  markedDates,
+  activeDate,
   onDayClick,
   onMonthChange,
   initialDate,
   className,
 }: MonthCalendarProps) => {
   const today = new Date();
+
+  // родитель управляет подсветкой через
+  // markedDates/activeDate, внутренний single-select (selectedDate) не используется.
+  const isControlled = markedDates !== undefined;
 
   const [currentMonth, setCurrentMonth] = useState(
     startOfMonth(initialDate || today)
@@ -106,6 +114,13 @@ const MonthCalendarComponent = ({
       ),
     [completedDates]
   );
+
+  const markedSet = useMemo(
+    () => new Set((markedDates ?? []).map(d => format(d, 'yyyy-MM-dd'))),
+    [markedDates]
+  );
+
+  const activeKey = activeDate ? format(activeDate, 'yyyy-MM-dd') : null;
 
   const prevMonth = subMonths(currentMonth, 1);
   const nextMonth = addMonths(currentMonth, 1);
@@ -225,8 +240,11 @@ const MonthCalendarComponent = ({
   };
 
   const handleDayClick = (date: Date) => {
-    setSelectedDate(date);
-
+    // В контролируемом режиме подсветкой управляет родитель — внутренний
+    // selectedDate не трогаем (иначе появится лишняя сплошная заливка).
+    if (!isControlled) {
+      setSelectedDate(date);
+    }
     onDayClick?.(date);
   };
 
@@ -235,9 +253,14 @@ const MonthCalendarComponent = ({
         <div className={styles.daysGrid}>
         {monthDays.map(day => {
             const dayKey = format(day.date, 'yyyy-MM-dd');
+            // сплошная заливка — только в неконтролируемом режиме.
             const isSelectedDay =
+            !isControlled &&
             day.isCurrentMonth &&
             isSameDay(day.date, selectedDate);
+            // Контролируемый режим: пунктирная обводка (marked) + сплошная обводка (active).
+            const isMarked = day.isCurrentMonth && markedSet.has(dayKey);
+            const isActive = day.isCurrentMonth && activeKey === dayKey;
 
             return (
             <div key={dayKey} className={styles.dayCell}>
@@ -246,7 +269,9 @@ const MonthCalendarComponent = ({
                     styles.day,
                     !day.isCurrentMonth && styles.day_otherMonth,
                     day.isToday && styles.day_today,
-                    isSelectedDay && styles.day_selected
+                    isSelectedDay && styles.day_selected,
+                    isMarked && styles.day_marked,
+                    isActive && styles.day_active
                 )}
                 onClick={() => handleDayClick(day.date)}
                 >

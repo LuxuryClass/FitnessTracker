@@ -8,7 +8,16 @@ import ExercisesTabs from './components/ExercisesTabs/ExercisesTabs';
 import { PreviewTab } from './components/PreviewTab/PreviewTab';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { useCreateWorkoutMutation } from '@/hooks/useCreateWorkoutMutation';
-import type { Exercise, ExerciseSet, WorkoutCreatePayload } from '@/Auth/authApi';
+import { useCreateWorkoutsBatchMutation } from '@/hooks/useCreateWorkoutsBatchMutation';
+import type { Exercise, ExerciseSet, WorkoutCreatePayload, WorkoutBatchCreatePayload } from '@/Auth/authApi';
+import {
+  toPlannedForIso,
+  generateRecurringDates,
+  formatRepeatEndLabel,
+  type ScheduleDateEntry,
+  type RepeatEnd,
+  type SchedulePreview,
+} from './scheduleDates';
 
 type TabType = 'settings' | 'exercises' | 'preview';
 
@@ -24,6 +33,11 @@ export interface WorkoutFormData {
   notes: string;
   scheduleDate: string;
   scheduleTime: string;
+  scheduleDates: ScheduleDateEntry[];
+  activeDateKey: string | null;
+  repeatEnabled: boolean;
+  repeatWeekdays: number[];
+  repeatEnd: RepeatEnd;
   selectedTemplate: string | null;
   selectedExercises: Record<string, string[]>;
   exerciseOrder: string[];
@@ -33,6 +47,7 @@ export interface WorkoutFormData {
 // Подмножество настроек тренировки, которое надо прокидывать через navigate-state
 export type WorkoutFormSettings = Pick<WorkoutFormData,
   'workoutName' | 'startType' | 'notes' | 'scheduleDate' | 'scheduleTime' | 'selectedTemplate'
+  | 'scheduleDates' | 'activeDateKey' | 'repeatEnabled' | 'repeatWeekdays' | 'repeatEnd'
 >;
 
 const CreateWorkoutPage = () => {
@@ -53,13 +68,19 @@ const CreateWorkoutPage = () => {
 
   const { data: allExercises = [] } = useExercisesQuery();
   const createWorkoutMutation = useCreateWorkoutMutation();
+  const createWorkoutsBatchMutation = useCreateWorkoutsBatchMutation();
 
   const [formData, setFormData] = useState<WorkoutFormData>(() => ({
     workoutName: returnedFormSettings?.workoutName ?? '',
-    startType: returnedFormSettings?.startType ?? 'now',
+    startType: returnedFormSettings?.startType ?? 'schedule',
     notes: returnedFormSettings?.notes ?? '',
     scheduleDate: returnedFormSettings?.scheduleDate ?? '',
-    scheduleTime: returnedFormSettings?.scheduleTime ?? '19:30',
+    scheduleTime: returnedFormSettings?.scheduleTime ?? '18:00',
+    scheduleDates: returnedFormSettings?.scheduleDates ?? [],
+    activeDateKey: returnedFormSettings?.activeDateKey ?? null,
+    repeatEnabled: returnedFormSettings?.repeatEnabled ?? false,
+    repeatWeekdays: returnedFormSettings?.repeatWeekdays ?? [],
+    repeatEnd: returnedFormSettings?.repeatEnd ?? { type: 'forever' },
     selectedTemplate: returnedFormSettings?.selectedTemplate ?? null,
     selectedExercises: {},
     exerciseOrder: [],
@@ -95,17 +116,17 @@ const CreateWorkoutPage = () => {
 
   useEffect(() => {
     if (returnedFormSettings) return;
-    const date = passedDate || new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
+    // При заходе с /schedule по конкретной дате — сразу добавляем её в мультивыбор.
+    if (!passedDate) return;
+    const year = passedDate.getFullYear();
+    const month = String(passedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(passedDate.getDate()).padStart(2, '0');
+    const key = `${year}-${month}-${day}`;
     setFormData(prev => ({
       ...prev,
-      scheduleDate: `${year}-${month}-${day}`,
-      scheduleTime: `${hours}:${minutes}`,
+      scheduleDate: key,
+      scheduleDates: [{ date: key, time: prev.scheduleTime }],
+      activeDateKey: key,
     }));
   }, [passedDate, returnedFormSettings]);
 
@@ -193,28 +214,54 @@ const CreateWorkoutPage = () => {
     return formData.workoutName.trim() || 'Тренировка';
   }, [formData.workoutName]);
 
-  const isSaveDisabled = createWorkoutMutation.isPending;
+  const scheduleSummary = useMemo<SchedulePreview | null>(() => {
+    if (formData.startType !== 'schedule') return null;
 
-  const handleSave = async () => {
-    if (isSaveDisabled) return;
+    if (formData.repeatEnabled) {
+      const keys = generateRecurringDates(formData.repeatWeekdays, formData.repeatEnd);
+      return {
+        mode: 'repeat',
+        count: keys.length,
+        nearestDate: keys[0] ?? null,
+        time: formData.scheduleTime,
+        weekdays: formData.repeatWeekdays,
+        endLabel: formatRepeatEndLabel(formData.repeatEnd),
+        dates: [],
+      };
+    }
 
-    // Упражнение может оказаться в нескольких группах — дедупим по id,
-    // иначе бэкенд отклонит дубли exercise_id (422).
+    const dates = [...formData.scheduleDates].sort((a, b) => a.date.localeCompare(b.date));
+    return {
+      mode: 'multi',
+      count: dates.length,
+      nearestDate: dates[0]?.date ?? null,
+      time: dates[0]?.time ?? formData.scheduleTime,
+      weekdays: [],
+      endLabel: '',
+      dates,
+    };
+  }, [
+    formData.startType,
+    formData.repeatEnabled,
+    formData.repeatWeekdays,
+    formData.repeatEnd,
+    formData.scheduleDates,
+    formData.scheduleTime,
+  ]);
+
+  const isSaveDisabled = createWorkoutMutation.isPending || createWorkoutsBatchMutation.isPending;
+
+  // Упражнения тренировки в формате payload (общие для одиночного и batch создания).
+  // Дедупим по id — бэкенд отклоняет дубли exercise_id (422).
+  const buildExercisesPayload = useCallback(() => {
     const seen = new Set<string>();
-    const uniqueExercises = orderedSelectedExercises.filter(ex => {
-      if (seen.has(ex.id)) return false;
-      seen.add(ex.id);
-      return true;
-    });
-
-    const payload: WorkoutCreatePayload = {
-      title: effectiveTitle,
-      is_planned: formData.startType === 'schedule',
-      planned_for: formData.startType === 'schedule'
-        ? new Date(`${formData.scheduleDate}T${formData.scheduleTime}:00`).toISOString()
-        : null,
-      description: formData.notes.trim() || null,
-      exercises: uniqueExercises.map(ex => {
+    return orderedSelectedExercises
+      .filter(ex => {
+        if (seen.has(ex.id)) return false;
+        seen.add(ex.id);
+        return true;
+      })
+      .map(ex => {
         const sets = formData.exerciseSets[ex.id];
         return {
           exercise_id: ex.id,
@@ -226,16 +273,47 @@ const CreateWorkoutPage = () => {
               }))
             : null,
         };
-      }),
-    };
+      });
+  }, [orderedSelectedExercises, formData.exerciseSets]);
+
+  const handleSave = async () => {
+    if (isSaveDisabled) return;
+
+    const exercises = buildExercisesPayload();
+    const description = formData.notes.trim() || null;
 
     try {
-      const created = await createWorkoutMutation.mutateAsync(payload);
       if (formData.startType === 'now') {
+        const payload: WorkoutCreatePayload = {
+          title: effectiveTitle,
+          is_planned: false,
+          planned_for: null,
+          description,
+          exercises,
+        };
+        const created = await createWorkoutMutation.mutateAsync(payload);
         navigate(`/session/${created.id}`);
-      } else {
-        navigate('/');
+        return;
       }
+
+      const plannedFor: string[] = formData.repeatEnabled
+        ? generateRecurringDates(formData.repeatWeekdays, formData.repeatEnd)
+            .map(dateKey => toPlannedForIso(dateKey, formData.scheduleTime))
+        : formData.scheduleDates.map(d => toPlannedForIso(d.date, d.time));
+
+      if (plannedFor.length === 0) {
+        alert('Выберите хотя бы одну дату.');
+        return;
+      }
+
+      const batchPayload: WorkoutBatchCreatePayload = {
+        title: effectiveTitle,
+        description,
+        planned_for: plannedFor,
+        exercises,
+      };
+      await createWorkoutsBatchMutation.mutateAsync(batchPayload);
+      navigate('/');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Не удалось сохранить тренировку';
       alert(message);
@@ -258,6 +336,11 @@ const CreateWorkoutPage = () => {
               scheduleDate: formData.scheduleDate,
               scheduleTime: formData.scheduleTime,
               selectedTemplate: formData.selectedTemplate,
+              scheduleDates: formData.scheduleDates,
+              activeDateKey: formData.activeDateKey,
+              repeatEnabled: formData.repeatEnabled,
+              repeatWeekdays: formData.repeatWeekdays,
+              repeatEnd: formData.repeatEnd,
             }}
             onExercisesChange={(updater) => updateFormData('selectedExercises', updater)}
             initialSearchQuery={exerciseSearchQuery}
@@ -268,8 +351,7 @@ const CreateWorkoutPage = () => {
         return (
           <PreviewTab
             workoutName={effectiveTitle}
-            date={formData.startType === 'schedule' ? formData.scheduleDate : undefined}
-            time={formData.startType === 'schedule' ? formData.scheduleTime : undefined}
+            schedule={scheduleSummary}
             exercises={orderedSelectedExercises}
             setsByExerciseId={formData.exerciseSets}
             onReorder={handlePreviewReorder}
@@ -280,9 +362,13 @@ const CreateWorkoutPage = () => {
     }
   };
 
-  const buttonLabel = createWorkoutMutation.isPending
+  const buttonLabel = isSaveDisabled
     ? 'Сохраняем...'
-    : formData.startType === 'now' ? 'Начать' : 'Запланировать';
+    : formData.startType === 'now'
+      ? 'Начать'
+      : scheduleSummary && scheduleSummary.count > 1
+        ? `Запланировать · ${scheduleSummary.count}`
+        : 'Запланировать';
 
   return (
     <div className={styles.page}>
