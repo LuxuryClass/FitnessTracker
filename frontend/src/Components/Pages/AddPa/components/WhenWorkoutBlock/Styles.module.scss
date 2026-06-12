@@ -6,6 +6,14 @@
   padding: 12px 17px 16px 17px;
   background-color: var(--Dark-grey-color);
   border-radius: 16px;
+
+  opacity: 0;
+  animation: blockSlideIn 0.3s ease-out 0.14s forwards;
+}
+
+@keyframes blockSlideIn {
+  from { opacity: 0; transform: translateX(-15px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .sectionTitle {

@@ -47,6 +47,9 @@
   padding: 16px;
   background: var(--Dark-grey-color);
   border-radius: 16px;
+
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out 0.05s forwards;
 }
 
 .summaryTitle {
