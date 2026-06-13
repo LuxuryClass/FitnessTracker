@@ -151,6 +151,28 @@ class WorkoutSessionSetRepository:
         rows = result.all()
         return [{"exercise_id": row.exercise_id, "total_sets": row.total_sets} for row in rows]
 
+    async def list_session_exercise_pairs_in_range(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        period_start: datetime,
+        period_end: datetime,
+    ) -> list[tuple[UUID, UUID]]:
+        statement = (
+            select(WorkoutSessionSet.session_id, WorkoutSessionSet.exercise_id)
+            .select_from(WorkoutSessionSet)
+            .join(WorkoutSession, WorkoutSession.id == WorkoutSessionSet.session_id)
+            .where(
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.status == "completed",
+                WorkoutSession.completed_at >= period_start,
+                WorkoutSession.completed_at < period_end,
+            )
+            .distinct()
+        )
+        result = await db.execute(statement)
+        return [(row.session_id, row.exercise_id) for row in result.all()]
+
     async def get_max_weight_in_period(
         self,
         db: AsyncSession,

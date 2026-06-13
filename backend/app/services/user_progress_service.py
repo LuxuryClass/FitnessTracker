@@ -1,14 +1,29 @@
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.exercise import Exercise
 from app.models.user import User
 from app.repositories import exercise_repository, workout_session_set_repository
-from app.schemas.user import RecentProgressResponse
+from app.schemas.exercise import KNOWN_MUSCLE_SLUGS, PRIMARY_GROUP_TO_MUSCLE_SLUGS
+from app.schemas.user import RecentProgressResponse, WeeklyMuscleFocusItem
+from app.services.user_metrics_service import _get_week_bounds
+
+
+def _resolve_exercise_muscle_slugs(exercise: Exercise) -> set[str]:
+    if exercise.secondary_muscles:
+        candidates = {slug.strip().lower() for slug in exercise.secondary_muscles}
+    else:
+        candidates = set()
+        for group in exercise.primary_muscle_groups:
+            candidates.update(PRIMARY_GROUP_TO_MUSCLE_SLUGS.get(group, ()))
+
+    return candidates & KNOWN_MUSCLE_SLUGS
 
 
 class UserProgressService:
@@ -114,6 +129,46 @@ class UserProgressService:
             )
 
         return result
+
+    async def get_weekly_muscle_focus(
+        self,
+        db: AsyncSession,
+        current_user: User,
+    ) -> list[WeeklyMuscleFocusItem]:
+        now_utc = datetime.now(timezone.utc)
+        week_start, week_end = _get_week_bounds(now_utc)
+
+        pairs = await workout_session_set_repository.list_session_exercise_pairs_in_range(
+            db=db,
+            user_id=current_user.id,
+            period_start=week_start,
+            period_end=week_end,
+        )
+
+        if not pairs:
+            return []
+
+        exercise_ids = list({exercise_id for _, exercise_id in pairs})
+        exercises = await exercise_repository.get_by_ids(db, exercise_ids)
+        exercise_map = {exercise.id: exercise for exercise in exercises}
+
+        slugs_by_session: dict[UUID, set[str]] = {}
+        for session_id, exercise_id in pairs:
+            exercise = exercise_map.get(exercise_id)
+            if exercise is None:
+                continue
+            slugs_by_session.setdefault(session_id, set()).update(
+                _resolve_exercise_muscle_slugs(exercise)
+            )
+
+        intensity_counter: Counter[str] = Counter()
+        for slugs in slugs_by_session.values():
+            intensity_counter.update(slugs)
+
+        return [
+            WeeklyMuscleFocusItem(muscle=muscle, intensity=intensity)
+            for muscle, intensity in intensity_counter.most_common()
+        ]
 
 
 user_progress_service = UserProgressService()

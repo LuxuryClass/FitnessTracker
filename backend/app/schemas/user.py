@@ -106,3 +106,8 @@ class RecentProgressResponse(BaseModel):
     previous_max_weight_kg: Decimal | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class WeeklyMuscleFocusItem(BaseModel):
+    muscle: str
+    intensity: int

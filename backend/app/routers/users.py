@@ -11,7 +11,12 @@ from app.schemas.notifications import (
     PushSubscriptionDeleteRequest,
     PushSubscriptionRequest,
 )
-from app.schemas.user import RecentProgressResponse, UserResponse, UserUpdateRequest
+from app.schemas.user import (
+    RecentProgressResponse,
+    UserResponse,
+    UserUpdateRequest,
+    WeeklyMuscleFocusItem,
+)
 from app.services import notification_service, user_service
 from app.services.user_progress_service import user_progress_service
 from app.services.storage_service import storage_service
@@ -59,6 +64,14 @@ async def get_recent_progress(
     current_user: User = Depends(get_current_user),
 ) -> list[RecentProgressResponse]:
     return await user_progress_service.get_recent_progress(db=db, current_user=current_user)
+
+
+@router.get("/me/weekly-muscle-focus", response_model=list[WeeklyMuscleFocusItem], status_code=status.HTTP_200_OK)
+async def get_weekly_muscle_focus(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[WeeklyMuscleFocusItem]:
+    return await user_progress_service.get_weekly_muscle_focus(db=db, current_user=current_user)
 
 
 @router.get("/me/notifications", response_model=NotificationSettings, status_code=status.HTTP_200_OK)

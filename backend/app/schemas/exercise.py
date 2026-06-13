@@ -8,6 +8,44 @@ ALLOWED_PRIMARY_MUSCLE_GROUPS: frozenset[str] = frozenset(
     {"chest", "back", "legs", "shoulders", "arms", "core", "cardio"}
 )
 
+KNOWN_MUSCLE_SLUGS: frozenset[str] = frozenset(
+    {
+        "abs",
+        "adductors",
+        "ankles",
+        "biceps",
+        "calves",
+        "chest",
+        "deltoids",
+        "feet",
+        "forearm",
+        "gluteal",
+        "hamstring",
+        "hands",
+        "hair",
+        "head",
+        "knees",
+        "lower-back",
+        "neck",
+        "obliques",
+        "quadriceps",
+        "tibialis",
+        "trapezius",
+        "triceps",
+        "upper-back",
+    }
+)
+
+PRIMARY_GROUP_TO_MUSCLE_SLUGS: dict[str, tuple[str, ...]] = {
+    "chest": ("chest",),
+    "back": ("upper-back", "lower-back", "trapezius"),
+    "arms": ("biceps", "triceps", "forearm"),
+    "shoulders": ("deltoids",),
+    "legs": ("quadriceps", "hamstring", "gluteal", "calves", "adductors", "tibialis"),
+    "core": ("abs", "obliques"),
+    "cardio": (),
+}
+
 
 def _normalize_string_list(values: list[str], field_label: str) -> list[str]:
     normalized: list[str] = []
