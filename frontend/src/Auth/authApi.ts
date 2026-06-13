@@ -153,6 +153,11 @@ export interface RecentProgressItem {
   previous_max_weight_kg: number | string | null;
 }
 
+export interface WeeklyMuscleFocusItem {
+  muscle: string;
+  intensity: number;
+}
+
 export interface NextWorkoutExerciseItem {
   name: string;
   muscle_groups: string[];
@@ -363,6 +368,13 @@ export const authApi = {
 
   async getRecentProgress(accessToken: string): Promise<RecentProgressItem[]> {
     return request<RecentProgressItem[]>("/users/me/recent-progress", {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async getWeeklyMuscleFocus(accessToken: string): Promise<WeeklyMuscleFocusItem[]> {
+    return request<WeeklyMuscleFocusItem[]>("/users/me/weekly-muscle-focus", {
       method: "GET",
       accessToken,
     });

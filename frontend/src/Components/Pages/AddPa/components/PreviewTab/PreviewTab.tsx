@@ -5,8 +5,9 @@ import cn from 'classnames';
 import { DefaultExerciseRow } from '../../../../Common/DefaultExerciseRow/DefaultExerciseRow';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
 import type { Exercise, ExerciseSet } from '@/Auth/authApi';
-import { labelForPrimary, labelsForPrimaryList, labelsForSecondaryList } from '@/Utils/muscleGroups';
+import { labelForPrimary, labelsForPrimaryList, labelsForSecondaryList, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
 import { WEEKDAY_UI_ORDER, WEEKDAY_LABELS, formatDateLabel, type SchedulePreview } from '../../scheduleDates';
+import { useAuth } from '@/Auth';
 
 // Минут на один подход — синхронизировано с backend (MINUTES_PER_SET в workout_service.py).
 const MINUTES_PER_SET = 5;
@@ -26,6 +27,7 @@ export const PreviewTab = ({
   schedule,
   onReorder,
 }: PreviewTabProps) => {
+  const { user } = useAuth();
   const [items, setItems] = useState<Exercise[]>(exercises);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
@@ -42,6 +44,27 @@ export const PreviewTab = ({
       for (const g of ex.primary_muscle_groups) set.add(g);
     }
     return Array.from(set).map(labelForPrimary);
+  }, [items]);
+
+  const muscleFocusData = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const ex of items) {
+      const secondary = new Set(ex.secondary_muscles);
+      const slugs = new Set<string>();
+      const claimed = new Set<string>();
+      for (const g of ex.primary_muscle_groups) {
+        const groupSlugs = PRIMARY_TO_SECONDARY[g] ?? [];
+        const groupSecondary = groupSlugs.filter((s) => secondary.has(s));
+        if (groupSecondary.length > 0) {
+          for (const s of groupSecondary) { slugs.add(s); claimed.add(s); }
+        } else {
+          for (const s of groupSlugs) slugs.add(s);
+        }
+      }
+      for (const s of secondary) if (!claimed.has(s)) slugs.add(s);
+      for (const slug of slugs) counts.set(slug, (counts.get(slug) ?? 0) + 1);
+    }
+    return Array.from(counts, ([muscle, intensity]) => ({ muscle, intensity }));
   }, [items]);
 
   const exercisesCount = items.length;
@@ -179,8 +202,8 @@ export const PreviewTab = ({
       </div>
 
       <div className={styles.accentSection}>
-        {/* <h3 className={styles.sectionTitle}>Акцент на мышцы</h3> */}
-        <MuscleAccentComponent />
+        <h3 className={styles.sectionTitle}>Акцент на мышцы</h3>
+        <MuscleAccentComponent gender={user?.gender ?? "male"} data={muscleFocusData} />
       </div>
     </div>
   );

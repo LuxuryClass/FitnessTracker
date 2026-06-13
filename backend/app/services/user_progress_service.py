@@ -16,12 +16,21 @@ from app.services.user_metrics_service import _get_week_bounds
 
 
 def _resolve_exercise_muscle_slugs(exercise: Exercise) -> set[str]:
-    if exercise.secondary_muscles:
-        candidates = {slug.strip().lower() for slug in exercise.secondary_muscles}
-    else:
-        candidates = set()
-        for group in exercise.primary_muscle_groups:
-            candidates.update(PRIMARY_GROUP_TO_MUSCLE_SLUGS.get(group, ()))
+    secondary = {slug.strip().lower() for slug in exercise.secondary_muscles}
+    candidates: set[str] = set()
+    claimed: set[str] = set()
+
+    for group in exercise.primary_muscle_groups:
+        group_slugs = set(PRIMARY_GROUP_TO_MUSCLE_SLUGS.get(group, ()))
+        group_secondary = secondary & group_slugs
+        if group_secondary:
+            candidates |= group_secondary
+            claimed |= group_secondary
+        else:
+            candidates |= group_slugs
+
+    # Вторичные, не попавшие ни в одну группу, добавляем как есть.
+    candidates |= secondary - claimed
 
     return candidates & KNOWN_MUSCLE_SLUGS
 
