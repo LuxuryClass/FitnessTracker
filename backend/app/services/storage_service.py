@@ -190,6 +190,49 @@ class StorageService:
             error_message="Не удалось сформировать ссылку для медиа.",
         )
 
+    async def upload_exercise_media_bytes(
+        self,
+        *,
+        content: bytes,
+        content_type: str,
+        filename: str | None,
+    ) -> tuple[str, str]:
+        self._ensure_configured()
+
+        normalized_type = content_type or ""
+        if normalized_type.startswith("image/"):
+            media_type = "image"
+            size_limit = MAX_EXERCISE_IMAGE_SIZE_BYTES
+            limit_message = "Размер изображения не должен превышать 5 MB."
+        elif normalized_type.startswith("video/"):
+            media_type = "video"
+            size_limit = MAX_EXERCISE_VIDEO_SIZE_BYTES
+            limit_message = "Размер видео не должен превышать 50 MB."
+        else:
+            raise BadRequestException("Разрешены только изображения (image/*) и видео (video/*).")
+
+        if not content:
+            raise BadRequestException("Файл медиа пустой.")
+
+        if len(content) > size_limit:
+            raise BadRequestException(limit_message)
+
+        object_key = self._build_guide_object_key(prefix="exercise-media/system", filename=filename)
+
+        try:
+            async with self._create_client() as s3_client:
+                await s3_client.put_object(
+                    Bucket=settings.aws_s3_bucket_name,
+                    Key=object_key,
+                    Body=content,
+                    ContentType=normalized_type,
+                    CacheControl=MEDIA_CACHE_CONTROL,
+                )
+        except (ClientError, BotoCoreError) as exc:
+            raise BadRequestException("Не удалось загрузить медиа в хранилище.") from exc
+
+        return object_key, media_type
+
     async def upload_guide_asset(
         self,
         *,
