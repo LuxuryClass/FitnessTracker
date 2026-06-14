@@ -56,6 +56,12 @@ const CreateWorkoutPage = () => {
   const passedDate = (location.state as any)?.scheduleDate as Date | undefined;
   const passedStartType = (location.state as any)?.startType as string | undefined;
   const passedActiveTab = (location.state as any)?.activeTab as TabType | undefined;
+  const passedTemplateData = (location.state as any)?.templateData as {
+    workoutName: string;
+    notes: string;
+    selectedTemplate: string;
+    exercises: { exerciseId: string; sets: { reps: number; weight: number }[] }[];
+  } | undefined;
   const returnedSelectedExercises = (location.state as any)?.selectedExercises as Record<string, string[]> | undefined;
   const returnedExerciseSets = (location.state as any)?.exerciseSets as Record<string, ExerciseSet[]> | undefined;
   const returnedExerciseSearchQuery = (location.state as any)?.exerciseSearchQuery as string | undefined;
@@ -113,6 +119,44 @@ const CreateWorkoutPage = () => {
       if (observer) observer.disconnect();
     };
   }, []);
+
+
+  useEffect(() => {
+  if (!passedTemplateData) return;
+  
+  setFormData(prev => {
+    const selectedExercises: Record<string, string[]> = {};
+    const exerciseSets: Record<string, ExerciseSet[]> = {};
+    const exerciseOrder: string[] = [];
+    
+    for (const ex of passedTemplateData.exercises) {
+      const fullExercise = allExercises.find(e => e.id === ex.exerciseId);
+      if (!fullExercise) continue;
+      
+      const groupKey = fullExercise.primary_muscle_groups[0] ?? 'other';
+      if (!selectedExercises[groupKey]) selectedExercises[groupKey] = [];
+      selectedExercises[groupKey].push(ex.exerciseId);
+      
+      exerciseSets[ex.exerciseId] = ex.sets.map((s, i) => ({
+        set_index: i + 1,
+        reps: s.reps,
+        weight: s.weight,
+      }));
+      
+      exerciseOrder.push(ex.exerciseId);
+    }
+    
+    return {
+      ...prev,
+      workoutName: passedTemplateData.workoutName,
+      notes: passedTemplateData.notes,
+      selectedTemplate: passedTemplateData.selectedTemplate,
+      selectedExercises,
+      exerciseSets,
+      exerciseOrder,
+    };
+  });
+}, [passedTemplateData, allExercises]);
 
   useEffect(() => {
     if (returnedFormSettings) return;

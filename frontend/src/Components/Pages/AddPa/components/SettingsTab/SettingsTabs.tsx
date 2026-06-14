@@ -2,6 +2,7 @@ import styles from './Styles.module.scss';
 import { Button } from '@/Components/UI/Button/Button';
 import { WorkoutFormData } from '../../CreateWorkoutPage';
 import { WhenWorkoutBlock } from '../WhenWorkoutBlock/WhenWorkoutBlock';
+import { useNavigate } from 'react-router-dom';
 
 interface SettingsTabProps {
   formData: WorkoutFormData;
@@ -9,6 +10,9 @@ interface SettingsTabProps {
 }
 
 export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
+
+  const navigate = useNavigate();
+  
   return (
     <div className={styles.tab}>
       <div className={styles.section}>
@@ -40,7 +44,7 @@ export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
           <span className={styles.templatePlaceholder}>
             {formData.selectedTemplate || 'Нет выбранного шаблона'}
           </span>
-          <Button className={styles.add_template_button} size="m" color="accent" fullWidth onClick={() => {}}>
+          <Button className={styles.add_template_button} size="m" color="accent" fullWidth onClick={() => navigate("/templates")}>
             Выбрать шаблон
           </Button>
         </div>

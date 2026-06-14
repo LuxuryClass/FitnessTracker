@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 import styles from './Styles.module.scss';
 import exercisesIcon from '/icons/ExerciseCounter_Grey.svg';
+import cn from 'classnames';
 
 interface WorkoutCardProps {
   title: string;
@@ -10,6 +11,8 @@ interface WorkoutCardProps {
   exercisesCount?: number;
   muscleGroups?: string[];
   onClick?: () => void;
+  onArrowClick?: () => void;
+  className?: string;
 }
 
 const MONTH_NAMES = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
@@ -36,12 +39,14 @@ const WorkoutCardComponent = ({
   time,
   exercisesCount,
   muscleGroups,
+  className,
   onClick,
+  onArrowClick,
 }: WorkoutCardProps) => {
   const displayDate = useMemo(() => formatDate(date || new Date()), [date]);
 
   return (
-    <div className={styles.card} onClick={onClick}>
+    <div className={cn(styles.card, className)} onClick={onClick}>
       <div className={styles.cardContent}>
         <div className={styles.topRow}>
           <span className={styles.dateText}>{displayDate}</span>
@@ -64,7 +69,7 @@ const WorkoutCardComponent = ({
         </div>
       </div>
 
-      <div className={styles.arrow}>
+      <div className={styles.arrow} onClick={onArrowClick}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
           <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>

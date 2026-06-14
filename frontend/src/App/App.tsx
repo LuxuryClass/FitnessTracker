@@ -18,6 +18,7 @@ import CreateExercisePage from '@/Components/Pages/CreateExercisePage/CreateExer
 import { SessionPreviewPage } from '@/Components/Pages/SessionPreviewPage/SessionPreviewPage';
 import SessionMainPage from '@/Components/Pages/SessionMainPage/SessionMainPage';
 import { DesktopGate } from '@/Components/Common/DesktopGate/DesktopGate';
+import TemplatesPage from '@/Components/Pages/TemplatesPage/TemplatesPage';
 
 export function App() {
   return (
@@ -41,6 +42,8 @@ export function App() {
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             
+            <Route path="/templates" element={<TemplatesPage />} />
+
             <Route path="/createExercise" element={<CreateExercisePage />} />
 
             <Route path="/exercises/:groupId" element={<ExerciseSelectPage />} />
@@ -51,7 +54,6 @@ export function App() {
             <Route path="/schedule" element={<SchedulePage />} />
 
             <Route path="/workout/:workoutId" element={<SessionPreviewPage />} />
-            <Route path="/workout/test" element={<SessionPreviewPage />} />
             <Route path="/session/:workoutId" element={<SessionMainPage />} />
 
           </Route>
