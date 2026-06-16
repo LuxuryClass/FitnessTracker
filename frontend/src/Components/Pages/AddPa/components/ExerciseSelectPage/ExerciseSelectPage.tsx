@@ -230,6 +230,7 @@ const ExerciseSelectPage = () => {
                 muscleGroups={exercise.primary_muscle_groups.map(labelForPrimary)}
                 targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
                 equipment={exercise.equipment}
+                imageUrl={exercise.media.find(m => m.type === 'image')?.url}
                 onToggle={handleToggleExercise}
                 isSelected={isExerciseSelected(exercise.id)}
                 onClick={() => handleExerciseClick(exercise)}

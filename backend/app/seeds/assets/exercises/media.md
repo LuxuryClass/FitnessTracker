@@ -1,0 +1,1 @@
+Все медиа хранятся по ссылке: [https://disk.yandex.ru/d/KcqSclz4LK3_7A](https://disk.yandex.ru/d/KcqSclz4LK3_7A)
