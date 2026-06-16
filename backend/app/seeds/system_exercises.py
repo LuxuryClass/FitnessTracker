@@ -16,6 +16,21 @@ from app.services.storage_service import storage_service
 # Папка с локальными медиа системных упражнений
 ASSETS_DIR = Path(__file__).resolve().parent / "assets" / "exercises"
 
+# Расширения изображений в порядке приоритета и расширение видео
+IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".avif", ".jfif")
+VIDEO_EXTENSION = ".mp4"
+
+# MIME-типы для всех используемых расширений
+EXTRA_CONTENT_TYPES = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".jfif": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".avif": "image/avif",
+    ".mp4": "video/mp4",
+}
+
 @dataclass(frozen=True)
 class SystemExerciseSeed:
     name: str
@@ -576,8 +591,24 @@ def _normalize_name(value: str) -> str:
     return value.strip().lower()
 
 def _guess_content_type(filename: str) -> str:
+    extension = Path(filename).suffix.lower()
+    if extension in EXTRA_CONTENT_TYPES:
+        return EXTRA_CONTENT_TYPES[extension]
     content_type, _ = mimetypes.guess_type(filename)
     return content_type or "application/octet-stream"
+
+def _resolve_media_filenames(exercise_name: str) -> list[str]:
+    """сначала фото, затем видео"""
+    filenames: list[str] = []
+    for extension in IMAGE_EXTENSIONS:
+        candidate = ASSETS_DIR / f"{exercise_name}{extension}"
+        if candidate.is_file():
+            filenames.append(candidate.name)
+            break
+    video = ASSETS_DIR / f"{exercise_name}{VIDEO_EXTENSION}"
+    if video.is_file():
+        filenames.append(video.name)
+    return filenames
 
 async def _upload_exercise_asset(filename: str) -> tuple[str, str] | None:
     file_path = ASSETS_DIR / filename
@@ -632,6 +663,7 @@ async def seed_system_exercises() -> tuple[int, int, int, int, int]:
         for seed_item in SYSTEM_EXERCISES:
             normalized_name = _normalize_name(seed_item.name)
             existing_exercise = existing_by_name.get(normalized_name)
+            media_filenames = seed_item.media_filenames or _resolve_media_filenames(seed_item.name)
 
             if existing_exercise is None:
                 new_exercise = Exercise(
@@ -643,13 +675,13 @@ async def seed_system_exercises() -> tuple[int, int, int, int, int]:
                     equipment=seed_item.equipment,
                 )
                 db.add(new_exercise)
-                media_added += await _attach_media(new_exercise, seed_item.media_filenames)
+                media_added += await _attach_media(new_exercise, media_filenames)
                 inserted += 1
                 continue
 
             # Догрузка медиа для уже существующих упражнений, у которых его ещё нет.
-            if seed_item.media_filenames and not existing_exercise.media:
-                media_added += await _attach_media(existing_exercise, seed_item.media_filenames)
+            if media_filenames and not existing_exercise.media:
+                media_added += await _attach_media(existing_exercise, media_filenames)
 
             changed = False
             if existing_exercise.name != seed_item.name:
