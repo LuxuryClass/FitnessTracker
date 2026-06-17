@@ -74,7 +74,6 @@ const ExerciseModal = ({
   sets: initialSets,
   type = 'default',
   editable = true,
-  forceSaveLabel = false,
   showSaveButton = false,
   onDescriptionChange,
   onConfirm,
