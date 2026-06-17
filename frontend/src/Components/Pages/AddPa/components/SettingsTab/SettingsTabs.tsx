@@ -4,6 +4,7 @@ import { TemplateCard } from '@/Components/Common/TemplateCard/TemplateCard';
 import { WorkoutFormData } from '../../CreateWorkoutPage';
 import { WhenWorkoutBlock } from '../WhenWorkoutBlock/WhenWorkoutBlock';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 
 interface SettingsTabProps {
   formData: WorkoutFormData;
@@ -22,6 +23,20 @@ export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
     updateFormData('exerciseOrder', []);
     updateFormData('exerciseSets', {});
   };
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    updateFormData('notes', e.target.value);
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  };
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }, [formData.notes]);
 
   const hasData = 
     formData.workoutName.trim() !== '' ||
@@ -44,10 +59,12 @@ export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Заметки к тренировке</h3>
         <textarea
+          ref={textareaRef}
           className={styles.textarea}
           placeholder="Добавьте заметки к этой тренировке"
           value={formData.notes}
-          onChange={(e) => updateFormData('notes', e.target.value)}
+          onChange={handleTextareaChange}
+          rows={1}
         />
       </div>
 

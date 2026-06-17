@@ -53,8 +53,10 @@
   padding: 12px;
   font-size: 14px;
   color: #fff;
-  resize: vertical;
+  resize: none;
   font-family: inherit;
+  min-height: 44px;
+  overflow: hidden;
   
   &::placeholder {
     color: var(--Accent-grey-color);
@@ -65,7 +67,6 @@
     border-color: var(--Primary-color);
   }
 }
-
 .scheduleDropdown {
   max-height: 0;
   opacity: 0;

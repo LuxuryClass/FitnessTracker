@@ -162,24 +162,6 @@ const CreateWorkoutPage = () => {
     });
   }, [passedTemplateData, allExercises]);
 
-useEffect(() => {
-  if (returnedSelectedExercises) {
-    setFormData(prev => {
-      const flatIds = Object.values(returnedSelectedExercises).flat();
-      const stillSelected = prev.exerciseOrder.filter(id => flatIds.includes(id));
-      const newOnes = flatIds.filter(id => !stillSelected.includes(id));
-      return {
-        ...prev,
-        selectedExercises: returnedSelectedExercises,
-        exerciseOrder: [...stillSelected, ...newOnes],
-        // Сбрасываем шаблон, если он был
-        selectedTemplate: prev.selectedTemplateData ? null : prev.selectedTemplate,
-        selectedTemplateData: null,
-      };
-    });
-  }
-}, [returnedSelectedExercises]);
-
   useEffect(() => {
     if (passedActiveTab === 'exercises') {
       setActiveTab('exercises');
@@ -192,33 +174,31 @@ useEffect(() => {
     }
   }, [passedStartType]);
 
-  // Принимаем обновлённый список выбранных упражнений с экрана выбора группы.
-  useEffect(() => {
-    if (returnedSelectedExercises) {
-      setFormData(prev => {
-        const flatIds = Object.values(returnedSelectedExercises).flat();
-        // Сохраняем порядок: сначала ранее зафиксированные id, которые остались выбраны;
-        // затем — новые id в порядке появления.
-        const stillSelected = prev.exerciseOrder.filter(id => flatIds.includes(id));
-        const newOnes = flatIds.filter(id => !stillSelected.includes(id));
-        return {
-          ...prev,
-          selectedExercises: returnedSelectedExercises,
-          exerciseOrder: [...stillSelected, ...newOnes],
-        };
-      });
-    }
-  }, [returnedSelectedExercises]);
-
-  // Принимаем введённые подходы с экрана выбора (ключ — id упражнения).
-  useEffect(() => {
-    if (returnedExerciseSets) {
-      setFormData(prev => ({
+// Принимаем обновлённый список выбранных упражнений с экрана выбора группы.
+useEffect(() => {
+  if (returnedSelectedExercises) {
+    setFormData(prev => {
+      const flatIds = Object.values(returnedSelectedExercises).flat();
+      const stillSelected = prev.exerciseOrder.filter(id => flatIds.includes(id));
+      const newOnes = flatIds.filter(id => !stillSelected.includes(id));
+      return {
         ...prev,
-        exerciseSets: returnedExerciseSets,
-      }));
-    }
-  }, [returnedExerciseSets]);
+        selectedExercises: returnedSelectedExercises,
+        exerciseOrder: [...stillSelected, ...newOnes],
+      };
+    });
+  }
+}, [returnedSelectedExercises]);
+
+// Принимаем введённые подходы с экрана выбора (ключ — id упражнения).
+useEffect(() => {
+  if (returnedExerciseSets) {
+    setFormData(prev => ({
+      ...prev,
+      exerciseSets: returnedExerciseSets,
+    }));
+  }
+}, [returnedExerciseSets]);
 
   // Подхватываем поисковый запрос, который пользователь оставил на /exercises/:id.
   useEffect(() => {
