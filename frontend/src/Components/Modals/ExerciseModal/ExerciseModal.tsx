@@ -114,8 +114,6 @@ const ExerciseModal = ({
     textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
   };
 
-   const hasExistingSets = forceSaveLabel || (initialSets && initialSets.length > 0);
-
   // ─── Open / Close ─────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
