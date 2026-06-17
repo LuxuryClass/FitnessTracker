@@ -223,6 +223,7 @@ export const PreviewTab = ({
           media={modalExercise.media}
           description=""
           sets={setsByExerciseId[modalExercise.id] ?? []}
+          editable={true}
           onConfirm={handleModalConfirm}
         />
       )}
