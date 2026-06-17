@@ -79,13 +79,9 @@ export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
               <TemplateCard
                 template={formData.selectedTemplateData}
                 isSelected={false}
-                onSelect={() => {}}
-                onArrowClick={() => {
-                  navigate(`/template/${formData.selectedTemplateData?.id}`, {
-                    state: { template: formData.selectedTemplateData },
-                  });
-                }}              
+                onSelect={() => {}}          
                 className={styles.templateCardInner}
+                showArrow={false}
               />
               <button
                 className={styles.templateRemove}

@@ -8,7 +8,6 @@
   cursor: pointer;
   transition: border-color 0.2s ease, background-color 0.2s ease;
   user-select: none;
-  position: relative;
 }
 
 .cardSelected {
@@ -21,12 +20,6 @@
   min-width: 0;
 }
 
-.topRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
 .title {
   @include button_text_h1();
   line-height: 34px;
@@ -34,6 +27,7 @@
   transition: color 0.2s ease;
   width: 100%;
   word-break: break-all;
+
   &Selected {
     color: var(--Primary-color);
   }
@@ -67,18 +61,59 @@
     color: var(--Primary-color);
 
     &::after {
-      // background: linear-gradient(to bottom, transparent, rgba(159, 218, 22, 0.05));
       background: transparent;
     }
+  }
+}
+
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // justify-content: space-between;
+  flex-shrink: 0;
+  align-self: stretch;
+  position: relative;
+  width: min-content;
+}
+
+.likeBtn {
+  display: flex;
+  align-items: center;
+  align-self: end;
+  justify-content: center;
+  justify-self: start;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--Accent-grey-color);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    color: var(--Primary-color);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &_active {
+    color: var(--Primary-color);
+    background: rgba(159, 218, 22, 0.1);
   }
 }
 
 .arrow {
   display: flex;
   align-items: center;
+  align-self: end;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  justify-self: center;
+  width: 28px;
+  height: 32px;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -98,8 +133,9 @@
 }
 
 .date {
-  position: absolute;
   @include text_subtitle();
-  bottom: 5%;
-  right: 5%;
+  white-space: nowrap;
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }

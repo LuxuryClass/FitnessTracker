@@ -223,18 +223,21 @@ const ExerciseSelectPage = () => {
         <div className={styles.exercisesList}>
           {filteredExercises.length > 0 ? (
             filteredExercises.map(exercise => (
-              <ExerciseCard
-                key={exercise.id}
-                id={exercise.id}
-                name={exercise.name}
-                muscleGroups={exercise.primary_muscle_groups.map(labelForPrimary)}
-                targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
-                equipment={exercise.equipment}
-                imageUrl={exercise.media.find(m => m.type === 'image')?.url}
-                onToggle={handleToggleExercise}
-                isSelected={isExerciseSelected(exercise.id)}
-                onClick={() => handleExerciseClick(exercise)}
-              />
+<ExerciseCard
+  key={exercise.id}
+  id={exercise.id}
+  name={exercise.name}
+  muscleGroups={exercise.primary_muscle_groups.map(labelForPrimary)}
+  targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
+  equipment={exercise.equipment}
+  imageUrl={exercise.media.find(m => m.type === 'image')?.url}
+  onToggle={handleToggleExercise}
+  onArrowClick={(id) => {
+    const ex = filteredExercises.find(e => e.id === id);
+    if (ex) handleExerciseClick(ex);
+  }}
+  isSelected={isExerciseSelected(exercise.id)}
+/>
             ))
           ) : (
             <div className={styles.emptyState}>
