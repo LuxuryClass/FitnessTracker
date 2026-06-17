@@ -31,7 +31,9 @@ interface ExerciseModalProps {
   description?: string;
   sets?: ExerciseSet[];
   type?: 'default' | 'session';
+  forceSaveLabel?: boolean;
   editable?: boolean;
+  showSaveButton?: boolean;
   onDescriptionChange?: (value: string) => void;
   onConfirm?: (sets: ExerciseSet[], description: string) => void;
 }
@@ -72,6 +74,8 @@ const ExerciseModal = ({
   sets: initialSets,
   type = 'default',
   editable = true,
+  forceSaveLabel = false,
+  showSaveButton = false,
   onDescriptionChange,
   onConfirm,
 }: ExerciseModalProps) => {
@@ -109,6 +113,8 @@ const ExerciseModal = ({
     textarea.style.height = 'auto';
     textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
   };
+
+   const hasExistingSets = forceSaveLabel || (initialSets && initialSets.length > 0);
 
   // ─── Open / Close ─────────────────────────────────────
   useEffect(() => {
@@ -428,7 +434,10 @@ const ExerciseModal = ({
           {type === 'default' && editable && (
             <div className={styles.buttons}>
               <Button size="l" className={styles.confirmBtn} onClick={handleConfirm}>
-                {initialSets && initialSets.length > 0 ? 'Сохранить' : 'Добавить'}
+                {showSaveButton 
+                  ? 'Сохранить' 
+                  : (initialSets && initialSets.length > 0 ? 'Сохранить' : 'Добавить')
+                }
               </Button>
             </div>
           )}
