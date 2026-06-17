@@ -21,9 +21,7 @@
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.2;
+  @include text_h1();
   text-align: start;
 }
 
@@ -31,6 +29,8 @@
 .sortWrapper {
   position: relative;
   z-index: 10;
+  opacity: 0;
+  animation: fadeInDown 0.25s ease-out 0.1s forwards;
 }
 
 .sortButton {
@@ -43,11 +43,11 @@
   color: #fff;
   font-size: 14px;
   cursor: pointer;
-  width: 60%;
+  width: 100%;
 }
 
 .sortArrow {
-  transition: transform 0.2s ease;;
+  transition: transform 0.2s ease;
   &_open { transform: rotate(180deg); }
 }
 
@@ -63,6 +63,8 @@
   border-radius: 12px;
   overflow: hidden;
   z-index: 10;
+  opacity: 0;
+  animation: fadeInDown 0.2s ease-out forwards;
 }
 
 .sortOption {
@@ -76,34 +78,37 @@
   text-align: left;
   cursor: pointer;
 
-
   &_active { color: var(--Primary-color); }
 }
 
 .sortPrimary {
-    color: var(--Primary-color);
-    margin-left: 5px;
+  color: var(--Primary-color);
+  margin-left: 5px;
 }
 
 // Content
 .content {
-    @include scrollable();
-    height: 100vh;
-    padding-bottom: 20px;
-    flex: 1;
-    border-radius: 16px;
+  @include scrollable();
+  flex: 1;
+  border-radius: 16px;
+  padding-bottom: 20px;
 
-    &Active {
-      padding-bottom: 90px;
-    }
+  &Active {
+    padding-bottom: 90px;
+  }
 }
 
 .templateList {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
 
+  > * {
+    opacity: 0;
+    animation: fadeInUp 0.3s ease-out forwards;
+    @include staggerAnimation(0.05s, 20);
+  }
+}
 // Template Card
 .templateCard {
   display: flex;
@@ -114,27 +119,7 @@
   transition: all 0.2s ease;
   opacity: 0;
   animation: fadeInUp 0.3s ease-out forwards;
-
-  &:nth-child(1) { animation-delay: 0.05s; }
-  &:nth-child(2) { animation-delay: 0.10s; }
-  &:nth-child(3) { animation-delay: 0.15s; }
-  &:nth-child(4) { animation-delay: 0.20s; }
-  &:nth-child(5) { animation-delay: 0.25s; }
-  &:nth-child(6) { animation-delay: 0.30s; }
-  &:nth-child(7) { animation-delay: 0.35s; }
-  &:nth-child(8) { animation-delay: 0.40s; }
-  &:nth-child(9) { animation-delay: 0.45s; }
-  &:nth-child(10) { animation-delay: 0.50s; }
-  &:nth-child(11) { animation-delay: 0.55s; }
-  &:nth-child(12) { animation-delay: 0.60s; }
-  &:nth-child(13) { animation-delay: 0.65s; }
-  &:nth-child(14) { animation-delay: 0.70s; }
-  &:nth-child(15) { animation-delay: 0.75s; }
-  &:nth-child(16) { animation-delay: 0.80s; }
-  &:nth-child(17) { animation-delay: 0.85s; }
-  &:nth-child(18) { animation-delay: 0.90s; }
-  &:nth-child(19) { animation-delay: 0.95s; }
-  &:nth-child(20) { animation-delay: 1.00s; }
+  @include staggerAnimation(0.05s, 20);
 
   &_selected {
     border-color: var(--Primary-color);
@@ -155,9 +140,7 @@
 }
 
 .templateTitle {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.3;
+  @include text_h2();
   color: #fff;
   text-align: start;
   margin-bottom: 4px;
@@ -217,5 +200,6 @@
 .addBtn {
   position: absolute;
   bottom: 20px;
-  animation: fadeInUp 0.3s ease-out forwards;
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out 0.1s forwards;
 }

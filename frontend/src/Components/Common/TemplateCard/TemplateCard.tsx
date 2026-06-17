@@ -1,41 +1,26 @@
 import { memo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 
 interface TemplateCardProps {
-  id: string;
-  title: string;
-  description: string;
-  muscleGroups: string[];
-  primaryGroups?: string[];
-  savedAt?: string;
+  template: any; // заменим на тип позже
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+  onArrowClick: (template: any) => void;
   className?: string;
-  onSelect?: (id: string) => void;
-  isSelected?: boolean;
 }
 
 const TemplateCardComponent = ({
-  id,
-  title,
-  description,
-  muscleGroups,
-  primaryGroups = [],
-  className,
+  template,
+  isSelected,
   onSelect,
-  isSelected = false,
+  onArrowClick,
+  className,
 }: TemplateCardProps) => {
-  const navigate = useNavigate();
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest(`.${styles.arrow}`)) return;
-    onSelect?.(id);
-  };
-
-  const handleArrowClick = () => {
-    navigate(`/template/${id}`);
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
   };
 
   return (
@@ -45,26 +30,32 @@ const TemplateCardComponent = ({
         isSelected && styles.cardSelected,
         className
       )}
-      onClick={handleCardClick}
+      onClick={() => onSelect(template.id)}
     >
       <div className={styles.content}>
         <div className={styles.topRow}>
           <h3 className={cn(styles.title, isSelected && styles.titleSelected)}>
-            {title}
+            {template.title}
           </h3>
+          {template.savedAt && (
+            <span className={styles.date}>{formatDate(template.savedAt)}</span>
+          )}
         </div>
         <p className={cn(styles.description, isSelected && styles.descriptionSelected)}>
-          {description}
+          {template.description}
         </p>
         <MuscleGroupBadge
-          groups={muscleGroups}
-          primaryGroups={primaryGroups}
+          groups={template.muscleGroups}
+          primaryGroups={template.primaryGroups}
           type="block"
         />
       </div>
       <button
         className={styles.arrow}
-        onClick={handleArrowClick}
+        onClick={(e) => {
+          e.stopPropagation();
+          onArrowClick(template);
+        }}
         aria-label="Перейти к шаблону"
       >
         <span className={styles.arrowIcon}>›</span>

@@ -3,14 +3,17 @@ import { Button } from '@/Components/UI/Button/Button';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 
-interface LogoutModalProps {
+interface ConfirmTemplateModalProps {
   isOpen: boolean;
-  onClose: () => void;
   onConfirm: () => void;
-  isLoggingOut?: boolean;
+  onCancel: () => void;
 }
 
-const LogoutModalComponent = ({ isOpen, onClose, onConfirm, isLoggingOut }: LogoutModalProps) => {
+const ConfirmTemplateModalComponent = ({
+  isOpen,
+  onConfirm,
+  onCancel,
+}: ConfirmTemplateModalProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
@@ -42,9 +45,9 @@ const LogoutModalComponent = ({ isOpen, onClose, onConfirm, isLoggingOut }: Logo
   const handleClose = useCallback(() => {
     setIsAnimating(false);
     setTimeout(() => {
-      onClose();
+      onCancel();
     }, 300);
-  }, [onClose]);
+  }, [onCancel]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     isDragging.current = true;
@@ -103,25 +106,16 @@ const LogoutModalComponent = ({ isOpen, onClose, onConfirm, isLoggingOut }: Logo
           <div className={styles.handle} />
         </div>
 
-        <p className={styles.text}>Вы уверены что хотите выйти?</p>
+        <p className={styles.text}>
+          Все текущие данные тренировки будут заменены на данные из шаблона. <br />Продолжить?
+        </p>
 
         <div className={styles.buttons}>
-          <Button
-            size="l"
-            color="accent-2"
-            onClick={handleClose}
-            className={styles.button}
-          >
-            Назад
+          <Button size="l" color="accent-2" onClick={handleClose}>
+            Отмена
           </Button>
-          <Button
-            size="l"
-            color="primary"
-            onClick={onConfirm}
-            disabled={isLoggingOut}
-            className={styles.button}
-          >
-            {isLoggingOut ? 'Выход...' : 'Да, выйти'}
+          <Button size="l" color="primary" onClick={onConfirm}>
+            Заменить
           </Button>
         </div>
       </div>
@@ -129,4 +123,4 @@ const LogoutModalComponent = ({ isOpen, onClose, onConfirm, isLoggingOut }: Logo
   );
 };
 
-export const LogoutModal = memo(LogoutModalComponent);
+export const ConfirmTemplateModal = memo(ConfirmTemplateModalComponent);

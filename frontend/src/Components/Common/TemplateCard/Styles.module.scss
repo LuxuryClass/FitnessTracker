@@ -8,6 +8,7 @@
   cursor: pointer;
   transition: border-color 0.2s ease, background-color 0.2s ease;
   user-select: none;
+  position: relative;
 }
 
 .cardSelected {
@@ -41,15 +42,34 @@
 .description {
   @include text_h2();
   font-weight: 400;
+  line-height: normal;
+  margin-top: 5px;
   margin-bottom: 8px;
   transition: color 0.2s ease;
   display: -webkit-box;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(to bottom, transparent, var(--Dark-grey-color));
+    pointer-events: none;
+  }
 
   &Selected {
     color: var(--Primary-color);
 
+    &::after {
+      // background: linear-gradient(to bottom, transparent, rgba(159, 218, 22, 0.05));
+      background: transparent;
+    }
   }
 }
 
@@ -75,4 +95,11 @@
   font-size: 38px;
   line-height: 1;
   font-weight: 300;
+}
+
+.date {
+  position: absolute;
+  @include text_subtitle();
+  bottom: 5%;
+  right: 5%;
 }

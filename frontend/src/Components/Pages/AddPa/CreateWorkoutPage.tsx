@@ -18,6 +18,7 @@ import {
   type RepeatEnd,
   type SchedulePreview,
 } from './scheduleDates';
+import type { Template } from '@/Components/Pages/TemplatesPage/TemplatesPage';
 
 type TabType = 'settings' | 'exercises' | 'preview';
 
@@ -39,6 +40,7 @@ export interface WorkoutFormData {
   repeatWeekdays: number[];
   repeatEnd: RepeatEnd;
   selectedTemplate: string | null;
+  selectedTemplateData: Template | null;
   selectedExercises: Record<string, string[]>;
   exerciseOrder: string[];
   exerciseSets: Record<string, ExerciseSet[]>;
@@ -46,20 +48,18 @@ export interface WorkoutFormData {
 
 // Подмножество настроек тренировки, которое надо прокидывать через navigate-state
 export type WorkoutFormSettings = Pick<WorkoutFormData,
-  'workoutName' | 'startType' | 'notes' | 'scheduleDate' | 'scheduleTime' | 'selectedTemplate'
+  'workoutName' | 'startType' | 'notes' | 'scheduleDate' | 'scheduleTime' | 'selectedTemplate' | 'selectedTemplateData'
   | 'scheduleDates' | 'activeDateKey' | 'repeatEnabled' | 'repeatWeekdays' | 'repeatEnd'
 >;
 
 const CreateWorkoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const passedDate = (location.state as any)?.scheduleDate as Date | undefined;
+  // const passedDate = (location.state as any)?.scheduleDate as Date | undefined;
   const passedStartType = (location.state as any)?.startType as string | undefined;
   const passedActiveTab = (location.state as any)?.activeTab as TabType | undefined;
   const passedTemplateData = (location.state as any)?.templateData as {
-    workoutName: string;
-    notes: string;
-    selectedTemplate: string;
+    template: Template;
     exercises: { exerciseId: string; sets: { reps: number; weight: number }[] }[];
   } | undefined;
   const returnedSelectedExercises = (location.state as any)?.selectedExercises as Record<string, string[]> | undefined;
@@ -87,10 +87,11 @@ const CreateWorkoutPage = () => {
     repeatEnabled: returnedFormSettings?.repeatEnabled ?? false,
     repeatWeekdays: returnedFormSettings?.repeatWeekdays ?? [],
     repeatEnd: returnedFormSettings?.repeatEnd ?? { type: 'forever' },
-    selectedTemplate: returnedFormSettings?.selectedTemplate ?? null,
     selectedExercises: {},
     exerciseOrder: [],
     exerciseSets: {},
+    selectedTemplate: returnedFormSettings?.selectedTemplate ?? null,
+    selectedTemplateData: returnedFormSettings?.selectedTemplateData ?? null,
   }));
 
   useLayoutEffect(() => {
@@ -122,57 +123,62 @@ const CreateWorkoutPage = () => {
 
 
   useEffect(() => {
-  if (!passedTemplateData) return;
-  
-  setFormData(prev => {
-    const selectedExercises: Record<string, string[]> = {};
-    const exerciseSets: Record<string, ExerciseSet[]> = {};
-    const exerciseOrder: string[] = [];
-    
-    for (const ex of passedTemplateData.exercises) {
-      const fullExercise = allExercises.find(e => e.id === ex.exerciseId);
-      if (!fullExercise) continue;
-      
-      const groupKey = fullExercise.primary_muscle_groups[0] ?? 'other';
-      if (!selectedExercises[groupKey]) selectedExercises[groupKey] = [];
-      selectedExercises[groupKey].push(ex.exerciseId);
-      
-      exerciseSets[ex.exerciseId] = ex.sets.map((s, i) => ({
-        set_index: i + 1,
-        reps: s.reps,
-        weight: s.weight,
-      }));
-      
-      exerciseOrder.push(ex.exerciseId);
-    }
-    
-    return {
-      ...prev,
-      workoutName: passedTemplateData.workoutName,
-      notes: passedTemplateData.notes,
-      selectedTemplate: passedTemplateData.selectedTemplate,
-      selectedExercises,
-      exerciseSets,
-      exerciseOrder,
-    };
-  });
-}, [passedTemplateData, allExercises]);
+    if (!passedTemplateData) return;
 
-  useEffect(() => {
-    if (returnedFormSettings) return;
-    // При заходе с /schedule по конкретной дате — сразу добавляем её в мультивыбор.
-    if (!passedDate) return;
-    const year = passedDate.getFullYear();
-    const month = String(passedDate.getMonth() + 1).padStart(2, '0');
-    const day = String(passedDate.getDate()).padStart(2, '0');
-    const key = `${year}-${month}-${day}`;
-    setFormData(prev => ({
-      ...prev,
-      scheduleDate: key,
-      scheduleDates: [{ date: key, time: prev.scheduleTime }],
-      activeDateKey: key,
-    }));
-  }, [passedDate, returnedFormSettings]);
+    const { template } = passedTemplateData;
+
+    setFormData(prev => {
+      const selectedExercises: Record<string, string[]> = {};
+      const exerciseSets: Record<string, ExerciseSet[]> = {};
+      const exerciseOrder: string[] = [];
+
+      for (const ex of passedTemplateData.exercises) {
+        const fullExercise = allExercises.find(e => e.id === ex.exerciseId);
+        if (!fullExercise) continue;
+
+        const groupKey = fullExercise.primary_muscle_groups[0] ?? 'other';
+        if (!selectedExercises[groupKey]) selectedExercises[groupKey] = [];
+        selectedExercises[groupKey].push(ex.exerciseId);
+
+        exerciseSets[ex.exerciseId] = ex.sets.map((s, i) => ({
+          set_index: i + 1,
+          reps: s.reps,
+          weight: s.weight,
+        }));
+
+        exerciseOrder.push(ex.exerciseId);
+      }
+
+      return {
+        ...prev,
+        workoutName: template.title,
+        notes: template.description,
+        selectedTemplate: template.title,
+        selectedTemplateData: template,
+        selectedExercises,
+        exerciseSets,
+        exerciseOrder,
+      };
+    });
+  }, [passedTemplateData, allExercises]);
+
+useEffect(() => {
+  if (returnedSelectedExercises) {
+    setFormData(prev => {
+      const flatIds = Object.values(returnedSelectedExercises).flat();
+      const stillSelected = prev.exerciseOrder.filter(id => flatIds.includes(id));
+      const newOnes = flatIds.filter(id => !stillSelected.includes(id));
+      return {
+        ...prev,
+        selectedExercises: returnedSelectedExercises,
+        exerciseOrder: [...stillSelected, ...newOnes],
+        // Сбрасываем шаблон, если он был
+        selectedTemplate: prev.selectedTemplateData ? null : prev.selectedTemplate,
+        selectedTemplateData: null,
+      };
+    });
+  }
+}, [returnedSelectedExercises]);
 
   useEffect(() => {
     if (passedActiveTab === 'exercises') {
@@ -225,10 +231,19 @@ const CreateWorkoutPage = () => {
     key: K,
     value: WorkoutFormData[K] | ((prev: WorkoutFormData[K]) => WorkoutFormData[K])
   ) => {
-    setFormData(prev => ({
-      ...prev,
-      [key]: typeof value === 'function' ? (value as Function)(prev[key]) : value,
-    }));
+    setFormData(prev => {
+      const newValue = typeof value === 'function' ? (value as Function)(prev[key]) : value;
+
+      // Если шаблон выбран и меняется название, заметки или упражнения — сбрасываем шаблон
+      const templateFields: (keyof WorkoutFormData)[] = ['workoutName', 'notes', 'selectedExercises', 'exerciseSets'];
+      const shouldClearTemplate = prev.selectedTemplateData !== null && templateFields.includes(key);
+
+      return {
+        ...prev,
+        [key]: newValue,
+        ...(shouldClearTemplate ? { selectedTemplate: null, selectedTemplateData: null } : {}),
+      };
+    });
   }, []);
 
   const exerciseById = useMemo(() => {
@@ -380,6 +395,7 @@ const CreateWorkoutPage = () => {
               scheduleDate: formData.scheduleDate,
               scheduleTime: formData.scheduleTime,
               selectedTemplate: formData.selectedTemplate,
+              selectedTemplateData: formData.selectedTemplateData,
               scheduleDates: formData.scheduleDates,
               activeDateKey: formData.activeDateKey,
               repeatEnabled: formData.repeatEnabled,
@@ -425,15 +441,26 @@ const CreateWorkoutPage = () => {
         {renderTabContent()}
       </div>
 
-      <Button
-        className={styles.create_button}
-        size="l"
-        fullWidth
-        onClick={handleSave}
-        disabled={isSaveDisabled}
-      >
-        {buttonLabel}
-      </Button>
+      <div className={styles.buttons}>
+        <Button
+          className={styles.create_button}
+          size="l"
+          onClick={handleSave}
+          disabled={isSaveDisabled}
+        >
+          {buttonLabel}
+        </Button>
+
+        <Button
+          className={styles.save_button}
+          size="l"
+          color="accent"
+          onClick={handleSave}
+          disabled={true}
+        >
+          Сохранить
+        </Button>
+      </div>
     </div>
   );
 };

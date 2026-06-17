@@ -19,6 +19,7 @@ import { SessionPreviewPage } from '@/Components/Pages/SessionPreviewPage/Sessio
 import SessionMainPage from '@/Components/Pages/SessionMainPage/SessionMainPage';
 import { DesktopGate } from '@/Components/Common/DesktopGate/DesktopGate';
 import TemplatesPage from '@/Components/Pages/TemplatesPage/TemplatesPage';
+import TemplateInfoPage from '@/Components/Pages/TemplateInfoPage/TemplateInfoPage';
 
 export function App() {
   return (
@@ -42,16 +43,17 @@ export function App() {
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             
-            <Route path="/templates" element={<TemplatesPage />} />
+            <Route path="/schedule" element={<SchedulePage />} />
 
-            <Route path="/createExercise" element={<CreateExercisePage />} />
-
-            <Route path="/exercises/:groupId" element={<ExerciseSelectPage />} />
             <Route path="/edit-profile" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
 
-            <Route path="/schedule" element={<SchedulePage />} />
+            <Route path="/templates" element={<TemplatesPage />} />
+            <Route path="/template/:id" element={<TemplateInfoPage />} />
+
+            <Route path="/exercises/:groupId" element={<ExerciseSelectPage />} />
+            <Route path="/createExercise" element={<CreateExercisePage />} />
 
             <Route path="/workout/:workoutId" element={<SessionPreviewPage />} />
             <Route path="/session/:workoutId" element={<SessionMainPage />} />

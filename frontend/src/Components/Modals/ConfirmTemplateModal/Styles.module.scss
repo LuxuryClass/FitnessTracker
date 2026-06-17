@@ -64,8 +64,9 @@
 }
 
 .text {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
   color: #fff;
   text-align: center;
   margin-bottom: 24px;
@@ -74,9 +75,9 @@
 .buttons {
   display: flex;
   gap: 12px;
-  margin-bottom: 10px;
-}
 
-.button {
-  flex: 1;
+
+  button {
+    flex: 1;
+  }
 }

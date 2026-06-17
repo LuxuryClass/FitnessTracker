@@ -190,6 +190,7 @@ export const PreviewTab = ({
                 targetMuscles={labelsForSecondaryList(exercise.secondary_muscles)}
                 sets={setsByExerciseId[exercise.id] ?? []}
                 index={index}
+                showDrag={true}
                 isDragging={dragIndex === index}
                 isOver={overIndex === index}
                 onDragStart={() => handleDragStart(index)}

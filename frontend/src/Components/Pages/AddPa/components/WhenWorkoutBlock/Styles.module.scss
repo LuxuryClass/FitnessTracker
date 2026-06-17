@@ -252,11 +252,10 @@
 }
 
 .clockIcon {
-  width: 16px;
+  width: 24px;
   height: 16px;
-  margin-left: 6px;
+  flex-shrink: 0;
   background-color: var(--Primary-color);
   mask: url('/icons/Clock.svg') no-repeat center / contain;
   -webkit-mask: url('/icons/Clock.svg') no-repeat center / contain;
-  pointer-events: none;
 }

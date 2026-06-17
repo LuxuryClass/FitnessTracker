@@ -29,7 +29,7 @@ interface WhenWorkoutBlockProps {
 
 export const WhenWorkoutBlock = ({ formData, updateFormData }: WhenWorkoutBlockProps) => {
   const isSchedule = formData.startType === 'schedule';
-  const [endOpen, setEndOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false); 
   const [untilDraft, setUntilDraft] = useState(
     formData.repeatEnd.type === 'until' ? formData.repeatEnd.untilDate : ''
   );
@@ -233,19 +233,19 @@ export const WhenWorkoutBlock = ({ formData, updateFormData }: WhenWorkoutBlockP
             </>
           )}
 
-          <div className={styles.timeRow}>
-            <span className={styles.rowLabel}>Время для выбранной даты</span>
-            <div className={styles.timeWrapper}>
-              <input
-                type="time"
-                className={styles.timeInput}
-                value={timeValue}
-                onChange={(e) => handleTimeChange(e.target.value)}
-              />
-              <span className={styles.timeDisplay}>{timeValue}</span>
-              <span className={styles.clockIcon} />
-            </div>
+        <div className={styles.timeRow}>
+          <span className={styles.clockIcon} />
+          <span className={styles.rowLabel}>Время для выбранной даты</span>
+          <div className={styles.timeWrapper}>
+            <input
+              type="time"
+              className={styles.timeInput}
+              value={timeValue}
+              onChange={(e) => handleTimeChange(e.target.value)}
+            />
+            <span className={styles.timeDisplay}>{timeValue}</span>
           </div>
+        </div>
         </div>
       )}
     </div>

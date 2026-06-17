@@ -1,25 +1,24 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation} from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import { TemplateCard } from '@/Components/Common/TemplateCard/TemplateCard';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
-
-// TemplatesPage.tsx — расширенный интерфейс и моки
+import { ConfirmTemplateModal } from '@/Components/Modals/ConfirmTemplateModal/ConfirmTemplateModal';
 
 interface TemplateExercise {
   exerciseId: string;
   sets: { reps: number; weight: number }[];
 }
 
-interface Template {
+export interface Template {
   id: string;
   title: string;
   description: string;
   muscleGroups: string[];
   primaryGroups?: string[];
   savedAt: string;
-  notes: string;
+  equipment: string[];
   exercises: TemplateExercise[];
 }
 
@@ -27,74 +26,71 @@ const MOCK_TEMPLATES: Template[] = [
   {
     id: '1',
     title: 'День груди',
-    description: 'Базовые упражнения на грудь',
+    description: 'Базовые упражнения на грудь. Работаем на силу, жим 80% от максимума.',
     muscleGroups: ['Грудь', 'Трицепс'],
     primaryGroups: ['Грудь'],
     savedAt: '2026-06-10',
-    notes: 'Работаем на силу, жим 80% от максимума',
+    equipment: ['Штанга', 'Гантели', 'Трос'],
     exercises: [
-      { exerciseId: 'ex_bench_press', sets: [{ reps: 8, weight: 80 }, { reps: 8, weight: 80 }, { reps: 6, weight: 85 }] },
-      { exerciseId: 'ex_incline_dumbbell', sets: [{ reps: 10, weight: 30 }, { reps: 10, weight: 30 }, { reps: 8, weight: 32 }] },
-      { exerciseId: 'ex_cable_fly', sets: [{ reps: 12, weight: 20 }, { reps: 12, weight: 20 }, { reps: 15, weight: 15 }] },
-      { exerciseId: 'ex_triceps_pushdown', sets: [{ reps: 12, weight: 35 }, { reps: 12, weight: 35 }, { reps: 10, weight: 40 }] },
+      { exerciseId: 'e6d530e5-1e94-41c3-8279-451f52c70cb9', sets: [{ reps: 8, weight: 80 }, { reps: 8, weight: 80 }, { reps: 6, weight: 85 }] },
+      { exerciseId: 'd94b4711-7a26-4f36-871a-ecfb7eb6614b', sets: [{ reps: 10, weight: 30 }, { reps: 10, weight: 30 }, { reps: 8, weight: 32 }] },
+      { exerciseId: '9ae88bac-933c-43c7-9ace-e581f1efc661', sets: [{ reps: 12, weight: 20 }, { reps: 12, weight: 20 }, { reps: 15, weight: 15 }] },
+      { exerciseId: '2d61d48f-500b-4f22-b9f0-7d9fd84b7f2c', sets: [{ reps: 12, weight: 35 }, { reps: 12, weight: 35 }, { reps: 10, weight: 40 }] },
     ],
   },
   {
     id: '2',
     title: 'День ног',
-    description: 'Тяжёлая тренировка ног',
+    description: 'Тяжёлая тренировка ног. Приседания в первую очередь.',
     muscleGroups: ['Ноги', 'Ягодицы'],
     primaryGroups: ['Ноги'],
     savedAt: '2026-06-14',
-    notes: 'Приседания в первую очередь, не забыть разминку',
+    equipment: ['Штанга', 'Тренажёр'],
     exercises: [
-      { exerciseId: 'ex_squat', sets: [{ reps: 8, weight: 100 }, { reps: 8, weight: 100 }, { reps: 6, weight: 110 }, { reps: 5, weight: 110 }] },
-      { exerciseId: 'ex_leg_press', sets: [{ reps: 10, weight: 150 }, { reps: 10, weight: 150 }, { reps: 10, weight: 150 }] },
-      { exerciseId: 'ex_romanian_deadlift', sets: [{ reps: 10, weight: 60 }, { reps: 10, weight: 60 }, { reps: 8, weight: 65 }] },
+      { exerciseId: 'e6d530e5-1e94-41c3-8279-451f52c70cb9', sets: [{ reps: 8, weight: 100 }, { reps: 8, weight: 100 }, { reps: 6, weight: 110 }] },
+      { exerciseId: '8439937f-555a-4258-8118-bad396e2811d', sets: [{ reps: 10, weight: 150 }, { reps: 10, weight: 150 }] },
+      { exerciseId: 'b6f7ab21-eccb-458c-a5ec-a0964158db6d', sets: [{ reps: 10, weight: 60 }, { reps: 10, weight: 60 }] },
     ],
   },
   {
     id: '3',
     title: 'День спины',
-    description: 'Подтягивания и тяги',
+    description: 'Подтягивания и тяги. Фокус на ширину спины.',
     muscleGroups: ['Спина', 'Бицепс'],
     primaryGroups: ['Спина'],
     savedAt: '2026-06-08',
-    notes: 'Фокус на ширину спины',
+    equipment: ['Турник', 'Штанга', 'Трос', 'Гантели'],
     exercises: [
-      { exerciseId: 'ex_pull_up', sets: [{ reps: 10, weight: 0 }, { reps: 8, weight: 0 }, { reps: 8, weight: 0 }] },
-      { exerciseId: 'ex_barbell_row', sets: [{ reps: 8, weight: 70 }, { reps: 8, weight: 70 }, { reps: 6, weight: 75 }] },
-      { exerciseId: 'ex_lat_pulldown', sets: [{ reps: 12, weight: 55 }, { reps: 12, weight: 55 }, { reps: 10, weight: 60 }] },
-      { exerciseId: 'ex_bicep_curl', sets: [{ reps: 12, weight: 15 }, { reps: 12, weight: 15 }, { reps: 10, weight: 17 }] },
+      { exerciseId: 'd94b4711-7a26-4f36-871a-ecfb7eb6614b', sets: [{ reps: 10, weight: 0 }, { reps: 8, weight: 0 }] },
+      { exerciseId: '9ae88bac-933c-43c7-9ace-e581f1efc661', sets: [{ reps: 8, weight: 70 }, { reps: 8, weight: 70 }] },
+      { exerciseId: '2d61d48f-500b-4f22-b9f0-7d9fd84b7f2c', sets: [{ reps: 12, weight: 55 }, { reps: 12, weight: 55 }] },
     ],
   },
   {
     id: '4',
     title: 'День плеч',
-    description: 'Дельты и трапеции',
+    description: 'Дельты и трапеции. Лёгкая тренировка после груди.',
     muscleGroups: ['Плечи'],
     primaryGroups: ['Плечи'],
     savedAt: '2026-06-12',
-    notes: 'Лёгкая тренировка после груди',
+    equipment: ['Штанга', 'Гантели', 'Трос'],
     exercises: [
-      { exerciseId: 'ex_ohp', sets: [{ reps: 8, weight: 50 }, { reps: 8, weight: 50 }, { reps: 6, weight: 55 }] },
-      { exerciseId: 'ex_lateral_raise', sets: [{ reps: 15, weight: 10 }, { reps: 15, weight: 10 }, { reps: 12, weight: 12 }] },
-      { exerciseId: 'ex_face_pull', sets: [{ reps: 15, weight: 25 }, { reps: 15, weight: 25 }, { reps: 12, weight: 30 }] },
+      { exerciseId: '8439937f-555a-4258-8118-bad396e2811d', sets: [{ reps: 8, weight: 50 }, { reps: 8, weight: 50 }] },
+      { exerciseId: 'b6f7ab21-eccb-458c-a5ec-a0964158db6d', sets: [{ reps: 15, weight: 10 }, { reps: 15, weight: 10 }] },
     ],
   },
   {
     id: '5',
     title: 'Full Body',
-    description: 'Тренировка на всё тело',
+    description: 'Тренировка на всё тело. Фулбади для общего тонуса.',
     muscleGroups: ['Грудь', 'Спина', 'Ноги'],
     primaryGroups: ['Грудь', 'Спина'],
     savedAt: '2026-05-20',
-    notes: 'Фулбади для общего тонуса',
+    equipment: ['Штанга', 'Тренажёр'],
     exercises: [
-      { exerciseId: 'ex_squat', sets: [{ reps: 10, weight: 80 }, { reps: 10, weight: 80 }, { reps: 8, weight: 85 }] },
-      { exerciseId: 'ex_bench_press', sets: [{ reps: 10, weight: 60 }, { reps: 10, weight: 60 }, { reps: 8, weight: 65 }] },
-      { exerciseId: 'ex_barbell_row', sets: [{ reps: 10, weight: 60 }, { reps: 10, weight: 60 }, { reps: 8, weight: 65 }] },
-      { exerciseId: 'ex_ohp', sets: [{ reps: 10, weight: 40 }, { reps: 10, weight: 40 }, { reps: 8, weight: 45 }] },
+      { exerciseId: 'e6d530e5-1e94-41c3-8279-451f52c70cb9', sets: [{ reps: 10, weight: 80 }, { reps: 10, weight: 80 }] },
+      { exerciseId: 'd94b4711-7a26-4f36-871a-ecfb7eb6614b', sets: [{ reps: 10, weight: 60 }, { reps: 10, weight: 60 }] },
+      { exerciseId: '9ae88bac-933c-43c7-9ace-e581f1efc661', sets: [{ reps: 10, weight: 60 }, { reps: 10, weight: 60 }] },
     ],
   },
 ];
@@ -103,9 +99,15 @@ const SORT_OPTIONS = ['дате', 'названию', 'упражнениям'];
 
 const TemplatesPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const passedHasData = (location.state as any)?.hasData as boolean;
   const [sortBy, setSortBy] = useState('По дате');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+ 
+  const hasExistingData = (location.state as any)?.hasData as boolean;
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingTemplate, setPendingTemplate] = useState<Template | null>(null);
 
   const sortedTemplates = useMemo(() => {
     const templates = [...MOCK_TEMPLATES];
@@ -130,23 +132,51 @@ const TemplatesPage = () => {
     setSelectedTemplateId(prev => prev === id ? null : id);
   };
 
-    const handleAdd = () => {
+const handleTemplateArrow = (template: Template) => {
+  navigate(`/template/${template.id}`, {
+    state: { 
+      template,
+      hasData: passedHasData,  // ← пробрасываем дальше
+    },
+  });
+};
+
+  const handleAdd = () => {
     if (selectedTemplateId) {
-        const template = MOCK_TEMPLATES.find(t => t.id === selectedTemplateId);
-        if (template) {
-        navigate('/add', {
-            state: {
-            templateData: {
-                workoutName: template.title,
-                notes: template.notes,
-                selectedTemplate: template.title,
-                exercises: template.exercises,
-            },
-            },
-        });
-        }
+      const template = MOCK_TEMPLATES.find(t => t.id === selectedTemplateId);
+      if (!template) return;
+
+      if (hasExistingData) {
+        setPendingTemplate(template);
+        setShowConfirm(true);
+      } else {
+        applyTemplate(template);
+      }
     }
-    };
+  };
+
+  const applyTemplate = (template: Template) => {
+    navigate('/add', {
+      state: {
+        templateData: {
+          template,
+          exercises: template.exercises.map(ex => ({
+            exerciseId: ex.exerciseId,
+            sets: ex.sets,
+          })),
+        },
+      },
+    });
+  };
+
+  const handleConfirmReplace = () => {
+    setShowConfirm(false);
+    if (pendingTemplate) {
+      applyTemplate(pendingTemplate);
+      setPendingTemplate(null);
+    }
+  };
+
 
   return (
     <div className={styles.page}>
@@ -159,11 +189,24 @@ const TemplatesPage = () => {
       {/* Sort */}
       <div className={styles.sortWrapper}>
         <button className={styles.sortButton} onClick={() => setIsSortOpen(!isSortOpen)}>
-          <span>Сортировать по: 
+          <span>
+            Сортировать по:{' '}
             <span className={styles.sortPrimary}>{sortBy}</span>
-            </span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={cn(styles.sortArrow, isSortOpen && styles.sortArrow_open)}>
-            <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            className={cn(styles.sortArrow, isSortOpen && styles.sortArrow_open)}
+          >
+            <path
+              d="M6 9L12 15L18 9"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
 
@@ -188,14 +231,10 @@ const TemplatesPage = () => {
           {sortedTemplates.map(template => (
             <TemplateCard
               key={template.id}
-              id={template.id}
-              title={template.title}
-              description={template.description}
-              muscleGroups={template.muscleGroups}
-              primaryGroups={template.primaryGroups}
-              savedAt={template.savedAt}
+              template={template}
               isSelected={selectedTemplateId === template.id}
               onSelect={handleTemplateSelect}
+              onArrowClick={handleTemplateArrow}
             />
           ))}
         </div>
@@ -207,7 +246,17 @@ const TemplatesPage = () => {
           Выбрать
         </Button>
       )}
+
+      {showConfirm && (
+  <ConfirmTemplateModal
+    isOpen={showConfirm}
+    onConfirm={handleConfirmReplace}
+    onCancel={() => setShowConfirm(false)}
+  />
+)}
     </div>
+
+    
   );
 };
 
