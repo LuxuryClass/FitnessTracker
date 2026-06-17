@@ -225,6 +225,7 @@ export const PreviewTab = ({
           sets={setsByExerciseId[modalExercise.id] ?? []}
           editable={true}
           onConfirm={handleModalConfirm}
+          showSaveButton={true}
         />
       )}
     </div>

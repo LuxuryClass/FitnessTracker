@@ -220,20 +220,21 @@ const WorkoutSessionPage = () => {
         )}
       </Button>
 
-      {modalExercise && (
-        <ExerciseModal
-          isOpen={!!modalExercise}
-          onClose={() => setModalExercise(null)}
-          name={modalExercise.name}
-          muscleGroups={modalExercise.muscleGroups}
-          targetMuscles={modalExercise.targetMuscles}
-          equipment={modalExercise.equipment}
-          media={modalExercise.media}
-          description=""
-          sets={modalExercise.sets}
-          onConfirm={handleModalConfirm}
-        />
-      )}
+{modalExercise && (
+  <ExerciseModal
+    isOpen={!!modalExercise}
+    onClose={() => setModalExercise(null)}
+    name={modalExercise.name}
+    muscleGroups={modalExercise.muscleGroups}
+    targetMuscles={modalExercise.targetMuscles}
+    equipment={modalExercise.equipment}
+    media={modalExercise.media}
+    description=""
+    sets={modalExercise.sets}
+    onConfirm={handleModalConfirm}
+    showSaveButton={true}
+  />
+)}
 
     </div>
   );
