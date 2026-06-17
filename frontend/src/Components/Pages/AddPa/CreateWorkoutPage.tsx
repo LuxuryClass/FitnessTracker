@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './Styles.module.scss';
-import { useState, useEffect, useCallback, useLayoutEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { SettingsTab } from './components/SettingsTab/SettingsTabs';
 import { Button } from '@/Components/UI/Button/Button';
 import { TabsGroup } from '@/Components/UI/TabsGroup/TabsGroup';
@@ -76,6 +76,9 @@ const CreateWorkoutPage = () => {
   const createWorkoutMutation = useCreateWorkoutMutation();
   const createWorkoutsBatchMutation = useCreateWorkoutsBatchMutation();
 
+  const exercisesSnapshotRef = useRef<Record<string, string[]> | null>(null);
+  const exercisesSnapshot = (location.state as any)?.exercisesSnapshot as Record<string, string[]> | undefined;
+
   const [formData, setFormData] = useState<WorkoutFormData>(() => ({
     workoutName: returnedFormSettings?.workoutName ?? '',
     startType: returnedFormSettings?.startType ?? 'schedule',
@@ -121,6 +124,11 @@ const CreateWorkoutPage = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (activeTab === 'exercises') {
+      exercisesSnapshotRef.current = { ...formData.selectedExercises };
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (!passedTemplateData) return;
@@ -174,17 +182,25 @@ const CreateWorkoutPage = () => {
     }
   }, [passedStartType]);
 
-// Принимаем обновлённый список выбранных упражнений с экрана выбора группы.
 useEffect(() => {
   if (returnedSelectedExercises) {
     setFormData(prev => {
       const flatIds = Object.values(returnedSelectedExercises).flat();
       const stillSelected = prev.exerciseOrder.filter(id => flatIds.includes(id));
       const newOnes = flatIds.filter(id => !stillSelected.includes(id));
+
+      const exercisesChanged = exercisesSnapshot
+        ? JSON.stringify(returnedSelectedExercises) !== JSON.stringify(exercisesSnapshot)
+        : false;
+
       return {
         ...prev,
         selectedExercises: returnedSelectedExercises,
         exerciseOrder: [...stillSelected, ...newOnes],
+        ...(exercisesChanged && prev.selectedTemplateData ? { 
+          selectedTemplate: null, 
+          selectedTemplateData: null 
+        } : {}),
       };
     });
   }

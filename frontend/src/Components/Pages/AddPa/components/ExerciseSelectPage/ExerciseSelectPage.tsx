@@ -147,18 +147,19 @@ const ExerciseSelectPage = () => {
     setModalExercise(exercise);
   };
 
-  const handleBack = () => {
-    navigate('/add', {
-      state: {
-        returnedGroupId: groupId,
-        selectedExercises: allSelectedExercises,
-        exerciseSets,
-        formSettings,
-        activeTab: 'exercises',
-        exerciseSearchQuery: searchQuery,
-      },
-    });
-  };
+const handleBack = () => {
+  navigate('/add', {
+    state: {
+      returnedGroupId: groupId,
+      selectedExercises: allSelectedExercises,
+      exerciseSets,
+      formSettings,
+      activeTab: 'exercises',
+      exerciseSearchQuery: searchQuery,
+      exercisesSnapshot: (location.state as any)?.exercisesSnapshot, // ← добавить
+    },
+  });
+};
 
   const handleCreateExercise = () => {
     navigate("/createExercise");
