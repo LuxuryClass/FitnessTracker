@@ -5,7 +5,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0);
-  z-index: 200;
+  z-index: 200000;
   transition: background 0.3s ease;
   pointer-events: none;
 
@@ -27,7 +27,7 @@
   border-top: 2px solid var(--Primary-color);
   border-radius: clamp(20px, 24/393 * 100vw, 28px) clamp(20px, 24/393 * 100vw, 28px) 0 0;
   padding: clamp(12px, 16/393 * 100vw, 20px) clamp(14px, 20/393 * 100vw, 24px) clamp(20px, 32/393 * 100vw, 40px);
-  z-index: 201;
+  z-index: 200001;
   display: flex;
   flex-direction: column;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -211,15 +211,15 @@ user-select: none;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid transparent;
   border-radius: clamp(10px, 12/393 * 100vw, 14px);
-  color: #fff;
   @include text-subtitle();
+  color: #fff;
   line-height: 1.4;
   text-align: start;
   font-family: inherit;
   resize: vertical;
   box-sizing: border-box;
   max-height: 200px;
-  overflow-y: auto;
+  overflow: hidden;
   
   &::placeholder { 
     color: var(--Accent-grey-color); 
@@ -296,7 +296,9 @@ user-select: none;
   overflow: hidden;
   width: 100%;
   max-width: clamp(90px, 140/393 * 100vw, 160px);
+  height: 34px;
   justify-self: center;
+
 }
 
 .groupFieldPrimary {
@@ -306,8 +308,7 @@ user-select: none;
 .setBtn, 
 .groupBtn {
   width: clamp(24px, 32/393 * 100vw, 36px);
-  height: clamp(24px, 30/393 * 100vw, 34px);
-  min-width: clamp(22px, 28/393 * 100vw, 32px);
+  height: 100%;  min-width: clamp(22px, 28/393 * 100vw, 32px);
   background: rgba(255, 255, 255, 0.08);
   border: none;
   color: #fff;
@@ -380,4 +381,10 @@ user-select: none;
 
 .buttons {
   margin-top: clamp(6px, 10/393 * 100vw, 14px);
+}
+
+.setBtn_disabled,
+.groupBtn_disabled {
+  pointer-events: none;
+  color: transparent;
 }

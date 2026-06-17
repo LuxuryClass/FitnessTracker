@@ -44,8 +44,9 @@ const SessionMainPage = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
   
-  const handleExerciseImageClick = (exercise: any) => {
-    setModalExercise(exercise);
+  const handleExerciseImageClick = (exercise: SessionExercise) => {
+    const fullExercise = catalogById.get(exercise.exerciseId);
+    setModalExercise(fullExercise || null);
   };
 
   // id серверных записей подходов по ключу "exerciseId:setIndex" — для DELETE при удалении строки
@@ -283,11 +284,11 @@ const SessionMainPage = () => {
     isOpen={!!modalExercise}
     onClose={() => setModalExercise(null)}
     name={modalExercise.name}
-    targetMuscles={modalExercise.primary_muscle_groups}
-    muscleGroups={modalExercise.secondary_muscles}
+    muscleGroups={modalExercise.primary_muscle_groups}
+    targetMuscles={modalExercise.secondary_muscles}
     equipment={modalExercise.equipment}
     media={modalExercise.media}
-    // description={modalExercise.description}
+    editable={false}
   />
 )}
     </div>

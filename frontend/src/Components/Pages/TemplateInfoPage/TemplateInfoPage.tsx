@@ -4,6 +4,7 @@ import { Button } from '@/Components/UI/Button/Button';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 import { DefaultExerciseRow } from '@/Components/Common/DefaultExerciseRow/DefaultExerciseRow';
 import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
+import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { useAuth } from '@/Auth';
 import { labelForPrimary, labelForSecondary, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
@@ -36,6 +37,8 @@ const TemplateInfoPage = () => {
   const template = (location.state as any)?.template as Template | undefined;
   const { data: catalog = [], isPending: isCatalogPending } = useExercisesQuery();
 
+  const [modalExercise, setModalExercise] = useState<any>(null);
+
   const catalogById = useMemo(() => {
     const map = new Map<string, (typeof catalog)[number]>();
     for (const ex of catalog) map.set(ex.id, ex);
@@ -57,6 +60,7 @@ const TemplateInfoPage = () => {
           rawTargetSlugs: info.secondary_muscles,
           equipment: info.equipment,
           imageUrl: info.media?.[0]?.url,
+          media: info.media,
           sets: te.sets,
         };
       })
@@ -93,35 +97,35 @@ const TemplateInfoPage = () => {
     return Array.from(set);
   }, [enrichedExercises]);
 
-const handleSelect = () => {
-  if (!template) return;
+  const handleSelect = () => {
+    if (!template) return;
 
-  if (hasExistingData) {
-    setShowConfirm(true);
-  } else {
-    applyTemplate();
-  }
-};
+    if (hasExistingData) {
+      setShowConfirm(true);
+    } else {
+      applyTemplate();
+    }
+  };
 
-const applyTemplate = () => {
-  if (!template) return;
-  navigate('/add', {
-    state: {
-      templateData: {
-        template,
-        exercises: template.exercises.map(ex => ({
-          exerciseId: ex.exerciseId,
-          sets: ex.sets,
-        })),
+  const applyTemplate = () => {
+    if (!template) return;
+    navigate('/add', {
+      state: {
+        templateData: {
+          template,
+          exercises: template.exercises.map(ex => ({
+            exerciseId: ex.exerciseId,
+            sets: ex.sets,
+          })),
+        },
       },
-    },
-  });
-};
+    });
+  };
 
-const handleConfirmReplace = () => {
-  setShowConfirm(false);
-  applyTemplate();
-};
+  const handleConfirmReplace = () => {
+    setShowConfirm(false);
+    applyTemplate();
+  };
 
   if (!template) {
     return (
@@ -192,6 +196,7 @@ const handleConfirmReplace = () => {
                 onDragStart={() => {}}
                 onDragOver={() => {}}
                 onDragEnd={() => {}}
+                onClick={() => setModalExercise(exercise)}
               />
             ))}
           </div>
@@ -207,10 +212,8 @@ const handleConfirmReplace = () => {
           </div>
         )}
 
-
       </div>
 
-      {/* Select Button */}
       <Button
         size="l"
         color="primary"
@@ -223,11 +226,31 @@ const handleConfirmReplace = () => {
 
       {showConfirm && (
         <ConfirmTemplateModal
-            isOpen={showConfirm}
-            onConfirm={handleConfirmReplace}
-            onCancel={() => setShowConfirm(false)}
+          isOpen={showConfirm}
+          onConfirm={handleConfirmReplace}
+          onCancel={() => setShowConfirm(false)}
         />
-        )}
+      )}
+
+      {modalExercise && (
+        <ExerciseModal
+          isOpen={!!modalExercise}
+          onClose={() => setModalExercise(null)}
+          name={modalExercise.name}
+          muscleGroups={modalExercise.muscleGroups}
+          targetMuscles={modalExercise.targetMuscles}
+          equipment={modalExercise.equipment}
+          media={modalExercise.media}
+          description=""
+          sets={modalExercise.sets.map((s: any, i: number) => ({
+            set_index: i + 1,
+            reps: s.reps,
+            weight: s.weight,
+          }))}
+  type="default"
+          editable={false}
+        />
+      )}
     </div>
   );
 };

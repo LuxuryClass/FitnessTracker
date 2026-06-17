@@ -4,12 +4,12 @@ import styles from './Styles.module.scss';
 import cn from 'classnames';
 import { DefaultExerciseRow } from '../../../../Common/DefaultExerciseRow/DefaultExerciseRow';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
+import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
 import type { Exercise, ExerciseSet } from '@/Auth/authApi';
 import { labelForPrimary, labelsForPrimaryList, labelsForSecondaryList, PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
 import { WEEKDAY_UI_ORDER, WEEKDAY_LABELS, formatDateLabel, type SchedulePreview } from '../../scheduleDates';
 import { useAuth } from '@/Auth';
 
-// Минут на один подход — синхронизировано с backend (MINUTES_PER_SET в workout_service.py).
 const MINUTES_PER_SET = 5;
 
 interface PreviewTabProps {
@@ -32,12 +32,12 @@ export const PreviewTab = ({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
-  // Синхронизируем локальный список с пропсами, когда родитель прокинул другой набор.
+  const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
+
   useEffect(() => {
     setItems(exercises);
   }, [exercises]);
 
-  // Уникальные primary-группы из выбранных упражнений (для шапки превью).
   const muscleGroups = useMemo(() => {
     const set = new Set<string>();
     for (const ex of items) {
@@ -69,7 +69,6 @@ export const PreviewTab = ({
 
   const exercisesCount = items.length;
 
-  // Оценка длительности как на бэкенде: сумма подходов × 5 минут (MINUTES_PER_SET).
   const duration = useMemo(() => {
     const totalSets = items.reduce(
       (acc, ex) => acc + (setsByExerciseId[ex.id]?.length ?? 0),
@@ -78,8 +77,6 @@ export const PreviewTab = ({
     return `${totalSets * MINUTES_PER_SET}`;
   }, [items, setsByExerciseId]);
 
-  // Суммарный тоннаж (тонны): сумма вес × повторы по всем подходам, делённая на 1000.
-  // Одна цифра после запятой, хвост «.0» убирается.
   const totalWeight = useMemo(() => {
     const kg = items.reduce((acc, ex) => {
       const sets = setsByExerciseId[ex.id] ?? [];
@@ -108,6 +105,13 @@ export const PreviewTab = ({
     }
     setDragIndex(null);
     setOverIndex(null);
+  };
+
+  const handleModalConfirm = (sets: ExerciseSet[], _description: string) => {
+    if (modalExercise) {
+      setsByExerciseId[modalExercise.id] = sets;
+    }
+    setModalExercise(null);
   };
 
   const cardBadge = schedule && schedule.count > 1 ? `${schedule.count} тренировок` : undefined;
@@ -196,6 +200,7 @@ export const PreviewTab = ({
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
+                onClick={() => setModalExercise(exercise)}
               />
             );
           })}
@@ -206,6 +211,21 @@ export const PreviewTab = ({
         <h3 className={styles.sectionTitle}>Акцент на мышцы</h3>
         <MuscleAccentComponent gender={user?.gender ?? "male"} data={muscleFocusData} />
       </div>
+
+      {modalExercise && (
+        <ExerciseModal
+          isOpen={!!modalExercise}
+          onClose={() => setModalExercise(null)}
+          name={modalExercise.name}
+          muscleGroups={labelsForPrimaryList(modalExercise.primary_muscle_groups)}
+          targetMuscles={labelsForSecondaryList(modalExercise.secondary_muscles)}
+          equipment={modalExercise.equipment}
+          media={modalExercise.media}
+          description=""
+          sets={setsByExerciseId[modalExercise.id] ?? []}
+          onConfirm={handleModalConfirm}
+        />
+      )}
     </div>
   );
 };
