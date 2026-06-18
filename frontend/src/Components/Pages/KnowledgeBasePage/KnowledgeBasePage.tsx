@@ -103,7 +103,7 @@ const AlmanahPage = () => {
             </div>
           </div>
           <img
-            src="/public/AlmanahIcons/Book.svg"
+            src="/AlmanahIcons/Book.svg"
             className={styles.heroIcon}
           />
         </div>
