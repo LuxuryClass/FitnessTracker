@@ -20,6 +20,7 @@ import SessionMainPage from '@/Components/Pages/SessionMainPage/SessionMainPage'
 import { DesktopGate } from '@/Components/Common/DesktopGate/DesktopGate';
 import TemplatesPage from '@/Components/Pages/TemplatesPage/TemplatesPage';
 import TemplateInfoPage from '@/Components/Pages/TemplateInfoPage/TemplateInfoPage';
+import AlmanahPage from '@/Components/Pages/KnowledgeBasePage/KnowledgeBasePage';
 
 export function App() {
   return (
@@ -37,7 +38,7 @@ export function App() {
             <Route path="/" element={<OutletWrapper />}>
               <Route index element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomePage />} />
-              <Route path="/almanah" />
+              <Route path="/almanah" element={<AlmanahPage />} />
               <Route path="/add" element={<CreateWorkoutPage />} />
               <Route path="/progress" />
               <Route path="/settings" element={<SettingsPage />} />
