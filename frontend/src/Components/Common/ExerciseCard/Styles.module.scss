@@ -50,6 +50,7 @@
 .cardInfo {
   flex: 1;
   min-width: 0;
+  padding-right: 34px;
 }
 
 .title {
@@ -59,7 +60,7 @@
   color: #fff;
   margin: 0 0 4px 0;
   word-break: break-word;
-  padding-right: 60px;
+
 }
 
 .equipment {
@@ -67,7 +68,7 @@
   color: var(--Accent-grey-color);
   margin-bottom: 8px;
   word-break: break-word;
-  padding-right: 60px;
+
 }
 
 .actions {

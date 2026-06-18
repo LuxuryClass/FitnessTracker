@@ -27,19 +27,21 @@
   margin: 0 6px;
 }
 
-// Тип chips — новый дизайн (отдельные бейджи)
 .chips {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
-  padding: 2px 0;
-  max-width: 100%;
+  overflow-y: hidden;
+  mask-image: linear-gradient(to right, black 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
   
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
 .chip {
   @include text-h3();
   color: var(--Accent-grey-color);
