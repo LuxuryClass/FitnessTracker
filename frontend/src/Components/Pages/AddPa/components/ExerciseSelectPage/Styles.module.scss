@@ -63,42 +63,7 @@
   flex: 1;
 }
 
-.filtersWrapper {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  
-  &::-webkit-scrollbar { display: none; }
-  scrollbar-width: none;
-}
 
-.filters {
-  display: flex;
-  gap: 8px;
-  width: max-content;
-  min-width: 100%;
-}
-
-.filter {
-  padding: 8px 16px;
-  background: var(--Dark-grey-color);
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--Accent-grey-color);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-  border: none;
-  border-radius: 12px;
-  
-  &Active {
-    background: var(--Primary-color);
-    color: #000;
-  }
-}
 
 .resetButton {
   flex-shrink: 0;

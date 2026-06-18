@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import styles from './Styles.module.scss';
-import cn from 'classnames';
 import ExerciseCard from '@/Components/Common/ExerciseCard/ExerciseCard';
 import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
 import { useAuth } from '@/Auth';
@@ -12,6 +11,7 @@ import { filterExercisesByCategory } from '../../exerciseFiltering';
 import type { ExerciseSet } from '@/Auth/authApi';
 import type { WorkoutFormSettings } from '../../CreateWorkoutPage';
 import { SearchBar } from '@/Components/UI/Search/Search';
+import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 
 interface Filter {
   id: string;
@@ -205,19 +205,18 @@ const handleBack = () => {
           </div>
 
           {filters.length > 0 && (
-            <div className={styles.filtersWrapper}>
-              <div className={styles.filters}>
-                {filters.map(filter => (
-                  <button
-                    key={filter.id}
-                    className={cn(styles.filter, selectedFilters.includes(filter.id) && styles.filterActive)}
-                    onClick={() => handleToggleFilter(filter.id)}
-                  >
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <MuscleGroupBadge
+              type="filter"
+              groups={filters.map(f => f.label)} 
+              primaryGroups={selectedFilters.map(id => {
+                const f = filters.find(x => x.id === id);
+                return f?.label ?? '';
+              })}
+              onToggle={(label) => {
+                const filter = filters.find(f => f.label === label);
+                if (filter) handleToggleFilter(filter.id);
+              }}
+            />
           )}
         </div>
 
