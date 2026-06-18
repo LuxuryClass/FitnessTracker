@@ -44,22 +44,31 @@ user-select: none;
   }
 }
 
+
+.handleArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 15px;  
+  cursor: grab;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  flex-shrink: 0;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
 .handle {
   width: clamp(36px, 48/393 * 100vw, 56px);
   height: clamp(4px, 5/393 * 100vw, 6px);
   background: var(--Accent-grey-color);
   border-radius: clamp(2px, 3/393 * 100vw, 4px);
-  margin: 0 auto clamp(10px, 16/393 * 100vw, 20px);
-  cursor: grab;
-  touch-action: none;
   flex-shrink: 0;
-user-select: none;
+  user-select: none;
   -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  
-  &:active { 
-    cursor: grabbing; 
-  }
 }
 
 .content {

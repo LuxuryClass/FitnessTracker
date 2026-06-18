@@ -283,8 +283,14 @@ const ExerciseModal = ({
     <>
       <div className={cn(styles.overlay, isAnimating && styles.overlay_visible)} onClick={onClose} />
       <div ref={modalRef} className={cn(styles.modal, isAnimating && styles.modal_open)} style={{ height: `${heightPercent}vh` }}>
-        <div className={styles.handle} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} />
-
+        <div 
+          className={styles.handleArea}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className={styles.handle} />
+        </div>
         <div className={styles.content}>
           <div className={styles.header}>
             <h3 className={styles.name}>{name}</h3>
