@@ -7,6 +7,8 @@ interface Category {
   title: string;
   subtitle: string;
   icon: string;
+  count?: number;
+  countLabel?: string; // 'статей' | 'тем' | 'вопросов'
   highlighted?: boolean;
 }
 
@@ -16,42 +18,49 @@ const categories: Category[] = [
     title: "Правильное питание",
     subtitle: "Основы здорового рациона",
     icon: "/AlmanahIcons/Calculate.svg",
+    count: 12,
   },
   {
     id: "kcal",
     title: "КБЖУ",
     subtitle: "Калории, белки, жиры, углеводы",
     icon: "/AlmanahIcons/Calculate.svg",
+    count: 8,
   },
   {
     id: "exercises",
     title: "Упражнения",
     subtitle: "Техника выполнения",
     icon: "/AlmanahIcons/Calculate.svg",
+    count: 240,
   },
   {
     id: "templates",
     title: "Шаблоны тренировок",
     subtitle: "Готовые программы",
     icon: "/AlmanahIcons/Templates.svg",
+    count: 6,
   },
   {
     id: "plans",
     title: "Тренировочные планы",
     subtitle: "Построение программы",
     icon: "/AlmanahIcons/Shedule.svg",
+    count: 4,
   },
   {
     id: "safety",
     title: "Техника безопасности",
     subtitle: "Как избежать травм",
     icon: "/AlmanahIcons/Shield.svg",
+    count: 5,
   },
   {
     id: "faq",
     title: "FAQ",
     subtitle: "Часто задаваемые вопросы",
     icon: "/AlmanahIcons/Question.svg",
+    count: 15,
   },
   {
     id: "suggest",
@@ -126,11 +135,15 @@ const AlmanahPage = () => {
                   <img src={cat.icon} alt={cat.title} />
                 </div>
                 <div className={styles.categoryInfo}>
-                  <span className={styles.categoryTitle}>{cat.title}</span>
-                  <span className={styles.categorySubtitle}>
-                    {cat.subtitle}
-                  </span>
+                <span className={styles.categoryTitle}>{cat.title}</span>
+                <span className={styles.categorySubtitle}>{cat.subtitle}</span>
                 </div>
+
+                {cat.count && (
+                <span className={styles.categoryCount}>
+                    {cat.count} {cat.countLabel || ''}
+                </span>
+                )}
                 <svg
                   className={styles.categoryChevron}
                   width="20"
