@@ -270,29 +270,29 @@ const ExerciseModal = ({
           </div>
 
           <div className={styles.media} onTouchStart={handleMediaTouchStart} onTouchEnd={handleMediaTouchEnd}>
-  {currentSlide ? (
-    <>
-      {currentSlide.type === 'video' ? (
-        <video ref={videoRef} src={currentSlide.url} controls className={styles.mediaContent}
-          onClick={() => videoRef.current?.paused ? videoRef.current.play() : videoRef.current?.pause()} />
-      ) : (
-        <img src={currentSlide.url} alt={name} className={styles.mediaContent} onClick={() => setIsFullscreen(true)} />
-      )}
-      {slides.length > 1 && (
-        <div className={styles.dots}>
-          {slides.map((slide, i) => (
-            <button key={slide.id} className={cn(styles.dot, i === slideIndex && styles.dotActive)} onClick={() => setSlideIndex(i)} />
-          ))}
-        </div>
-      )}
-    </>
-  ) : (
-    <div className={styles.mediaPlaceholder}>
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="1.5"/></svg>
-      <span className={styles.mediaText}>Нет фото или видео</span>
-    </div>
-  )}
-</div>
+            {currentSlide ? (
+              <>
+                {currentSlide.type === 'video' ? (
+                  <video ref={videoRef} src={currentSlide.url} controls className={styles.mediaContent}
+                    onClick={() => videoRef.current?.paused ? videoRef.current.play() : videoRef.current?.pause()} />
+                ) : (
+                  <img src={currentSlide.url} alt={name} className={styles.mediaContent} onClick={() => setIsFullscreen(true)} />
+                )}
+                {slides.length > 1 && (
+                  <div className={styles.dots}>
+                    {slides.map((slide, i) => (
+                      <button key={slide.id} className={cn(styles.dot, i === slideIndex && styles.dotActive)} onClick={() => setSlideIndex(i)} />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className={styles.mediaPlaceholder}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="1.5"/></svg>
+                <span className={styles.mediaText}>Нет фото или видео</span>
+              </div>
+            )}
+          </div>
 
           {isFullscreen && currentSlide && currentSlide.type === 'image' && createPortal(
             <div className={styles.fullscreen} onClick={() => setIsFullscreen(false)}>
@@ -318,84 +318,100 @@ const ExerciseModal = ({
             </div>
           )}
 
-          <div className={styles.section}>
-            <textarea className={styles.textarea} value={localDescription}
-              onChange={e => { setLocalDescription(e.target.value); onDescriptionChange?.(e.target.value); }}
-              placeholder="Добавьте описание..." rows={3} />
-          </div>
+          {(type === 'default' || (type === 'session' && localDescription)) && (
+            <div className={styles.section}>
+              {type === 'default' ? (
+                <textarea
+                  className={styles.textarea}
+                  value={localDescription}
+                  onChange={e => {
+                    setLocalDescription(e.target.value);
+                    onDescriptionChange?.(e.target.value);
+                  }}
+                  placeholder="Добавьте описание (необязательно)"
+                  rows={3}
+                />
+              ) : (
+                <div className={styles.descriptionReadonly}>
+                  <span className={styles.sectionLabel}>Описание:</span>
+                  <p className={styles.descriptionText}>{localDescription}</p>
+                </div>
+              )}
+            </div>
+          )}
 
-{type === 'default' && (
-  <div className={styles.section}>
-    <div className={styles.setsHeader}>
-      <span className={cn(styles.sectionLabel, styles.sectionLabel_settings)}>Настройки упражнения</span>
-      {hasSets && (
-        <button className={styles.modeToggle} onClick={mode === 'expanded' ? handleCollapse : handleExpand}>
-          {mode === 'expanded' ? 'Свернуть' : 'Развернуть'}
-        </button>
-      )}
-    </div>
+          {type === 'default' && (
+            <div className={styles.section}>
+              <div className={styles.setsHeader}>
+                <span className={cn(styles.sectionLabel, styles.sectionLabel_settings)}>Настройки упражнения</span>
+                {hasSets && (
+                  <button className={styles.modeToggle} onClick={mode === 'expanded' ? handleCollapse : handleExpand}>
+                    {mode === 'expanded' ? 'Свернуть' : 'Развернуть'}
+                  </button>
+                )}
+              </div>
 
-    {mode === 'expanded' && (
-      <>
-        {allSets.length > 0 && (
-          <div className={styles.setGrid}>
-            <span className={styles.columnLabel}>№</span>
-            <span className={styles.columnLabel}>Повторения</span>
-            <span className={styles.columnLabel}>Вес</span>
-            {allSets.map((set, i) => (
-              <React.Fragment key={i}>
-                <span className={styles.setIndex}>{i + 1}</span>
-                <div className={styles.setField}>
-                  <button className={styles.setBtn} onClick={() => changeSet(i, 'reps', -1)}>−</button>
-                  <input type="number" className={styles.setInput} value={set.reps} onChange={e => inputSet(i, 'reps', e.target.value)} />
-                  <button className={styles.setBtn} onClick={() => changeSet(i, 'reps', 1)}>+</button>
-                </div>
-                <div className={styles.setField}>
-                  <button className={styles.setBtn} onClick={() => changeSet(i, 'weight', -1)}>−</button>
-                  <input type="number" className={styles.setInput} value={set.weight} onChange={e => inputSet(i, 'weight', e.target.value)} />
-                  <button className={styles.setBtn} onClick={() => changeSet(i, 'weight', 1)}>+</button>
-                </div>
-              </React.Fragment>
-            ))}
-          </div>
-        )}
-        <button className={styles.addSetBtn} onClick={addSet}>+ Добавить подход</button>
-      </>
-    )}
+              {mode === 'expanded' && (
+                <>
+                  {allSets.length > 0 && (
+                    <div className={styles.setGrid}>
+                      <span className={styles.columnLabel}>№</span>
+                      <span className={styles.columnLabel}>Повторения</span>
+                      <span className={styles.columnLabel}>Вес</span>
+                      {allSets.map((set, i) => (
+                        <React.Fragment key={i}>
+                          <span className={styles.setIndex}>{i + 1}</span>
+                          <div className={styles.setField}>
+                            <button className={styles.setBtn} onClick={() => changeSet(i, 'reps', -1)}>−</button>
+                            <input type="number" className={styles.setInput} value={set.reps} onChange={e => inputSet(i, 'reps', e.target.value)} />
+                            <button className={styles.setBtn} onClick={() => changeSet(i, 'reps', 1)}>+</button>
+                          </div>
+                          <div className={styles.setField}>
+                            <button className={styles.setBtn} onClick={() => changeSet(i, 'weight', -1)}>−</button>
+                            <input type="number" className={styles.setInput} value={set.weight} onChange={e => inputSet(i, 'weight', e.target.value)} />
+                            <button className={styles.setBtn} onClick={() => changeSet(i, 'weight', 1)}>+</button>
+                          </div>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
+                  <button className={styles.addSetBtn} onClick={addSet}>+ Добавить подход</button>
+                </>
+              )}
 
-    {mode === 'collapsed' && (
-      <>
-        {groups.length > 0 && (
-          <div className={styles.groupGrid}>
-            <span className={styles.columnLabel}>Подходы</span>
-            <span className={styles.columnLabel}>Повторения</span>
-            <span className={styles.columnLabel}>Вес</span>
-            {groups.map(group => (
-              <React.Fragment key={group.id}>
-                <div className={cn(styles.groupField, styles.groupFieldPrimary)}>
-                  <button className={cn(styles.groupBtn, styles.groupBtnPrimary)} onClick={() => deltaGroup(group.id, 'count', -1)}>−</button>
-                  <input type="number" className={styles.compactInput} value={group.count} onChange={e => changeGroup(group.id, 'count', e.target.value)} />
-                  <button className={cn(styles.groupBtn, styles.groupBtnPrimary)} onClick={() => deltaGroup(group.id, 'count', 1)}>+</button>
-                </div>
-                <div className={styles.groupField}>
-                  <button className={styles.groupBtn} onClick={() => deltaGroup(group.id, 'reps', -1)}>−</button>
-                  <input type="number" className={styles.compactInput} value={group.reps} onChange={e => changeGroup(group.id, 'reps', e.target.value)} />
-                  <button className={styles.groupBtn} onClick={() => deltaGroup(group.id, 'reps', 1)}>+</button>
-                </div>
-                <div className={styles.groupField}>
-                  <button className={styles.groupBtn} onClick={() => deltaGroup(group.id, 'weight', -1)}>−</button>
-                  <input type="number" className={styles.compactInput} value={group.weight} onChange={e => changeGroup(group.id, 'weight', e.target.value)} />
-                  <button className={styles.groupBtn} onClick={() => deltaGroup(group.id, 'weight', 1)}>+</button>
-                </div>
-              </React.Fragment>
-            ))}
-          </div>
-        )}
-        <button className={styles.addGroupBtn} onClick={addGroup}>+ Добавить подходы</button>
-      </>
-    )}
-  </div>
-)}
+              {mode === 'collapsed' && (
+                <>
+                  {groups.length > 0 && (
+                    <div className={styles.groupGrid}>
+                      <span className={styles.columnLabel}>Подходы</span>
+                      <span className={styles.columnLabel}>Повторения</span>
+                      <span className={styles.columnLabel}>Вес</span>
+                      {groups.map(group => (
+                        <React.Fragment key={group.id}>
+                          <div className={cn(styles.groupField, styles.groupFieldPrimary)}>
+                            <button className={cn(styles.groupBtn, styles.groupBtnPrimary)} onClick={() => deltaGroup(group.id, 'count', -1)}>−</button>
+                            <input type="number" className={styles.compactInput} value={group.count} onChange={e => changeGroup(group.id, 'count', e.target.value)} />
+                            <button className={cn(styles.groupBtn, styles.groupBtnPrimary)} onClick={() => deltaGroup(group.id, 'count', 1)}>+</button>
+                          </div>
+                          <div className={styles.groupField}>
+                            <button className={styles.groupBtn} onClick={() => deltaGroup(group.id, 'reps', -1)}>−</button>
+                            <input type="number" className={styles.compactInput} value={group.reps} onChange={e => changeGroup(group.id, 'reps', e.target.value)} />
+                            <button className={styles.groupBtn} onClick={() => deltaGroup(group.id, 'reps', 1)}>+</button>
+                          </div>
+                          <div className={styles.groupField}>
+                            <button className={styles.groupBtn} onClick={() => deltaGroup(group.id, 'weight', -1)}>−</button>
+                            <input type="number" className={styles.compactInput} value={group.weight} onChange={e => changeGroup(group.id, 'weight', e.target.value)} />
+                            <button className={styles.groupBtn} onClick={() => deltaGroup(group.id, 'weight', 1)}>+</button>
+                          </div>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
+                  <button className={styles.addGroupBtn} onClick={addGroup}>+ Добавить подходы</button>
+                </>
+              )}
+            </div>
+          )}
 
           {type === 'default' && (
             <div className={styles.buttons}>

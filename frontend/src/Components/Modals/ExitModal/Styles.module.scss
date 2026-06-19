@@ -1,0 +1,60 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 200;
+  transition: background 0.3s ease;
+  pointer-events: none;
+  
+  &_visible {
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+  }
+}
+
+.modal {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 420px;
+  background: var(--Dark-grey-color, #1a1a1a);
+  border-radius: 24px 24px 0 0;
+  padding: 16px 20px 32px;
+  z-index: 201;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &_open {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.handle {
+  width: 40px;
+  height: 4px;
+  background: var(--Accent-grey-color, #666);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.finishButton, .exitButton {
+  width: 100%;
+}

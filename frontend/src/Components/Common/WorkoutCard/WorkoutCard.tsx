@@ -51,8 +51,8 @@ const WorkoutCardComponent = ({
         <h3 className={styles.title}>{title}</h3>
 
         <div className={styles.bottomRow}>
-          {exercisesCount && (
-              <span className={styles.count}>
+          {exercisesCount !== undefined && exercisesCount > 0 && (
+            <span className={styles.count}>
               <img src={exercisesIcon} alt="" className={styles.countIcon} />
               {exercisesCount} упр
             </span>

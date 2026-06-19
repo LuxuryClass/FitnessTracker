@@ -381,3 +381,21 @@ user-select: none;
 .buttons {
   margin-top: clamp(6px, 10/393 * 100vw, 14px);
 }
+
+.descriptionReadonly {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.descriptionText {
+  @include text-subtitle();
+  color: #fff;
+  word-break: break-word;
+  white-space: pre-wrap;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin: 0;
+}
