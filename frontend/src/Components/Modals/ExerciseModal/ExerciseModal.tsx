@@ -103,16 +103,6 @@ const ExerciseModal = ({
 
   const currentSlide = slides[slideIndex] ?? null;
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setLocalDescription(e.target.value);
-    onDescriptionChange?.(e.target.value);
-    
-    const textarea = e.target;
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
-  };
-
   // ─── Open / Close ─────────────────────────────────────
   useEffect(() => {
     if (isOpen) {

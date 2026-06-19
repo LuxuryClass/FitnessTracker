@@ -264,7 +264,6 @@ const SessionMainPage = () => {
   // --- добавление упражнения ---
   const handleAddExercise = () => {
     if (!workout) return;
-    const currentSelected: Record<string, string[]> = {};
     const ids = workout.exercises.map(e => e.exercise_id);
     navigate('/exercises/myself', {
       state: {
