@@ -1,17 +1,10 @@
-import { useState, useEffect } from 'react';
 import styles from './Styles.module.scss';
 import { Button } from '@/Components/UI/Button/Button';
-import { TabsGroup } from '@/Components/UI/TabsGroup/TabsGroup';
-import cn from 'classnames';
+import { TemplateCard } from '@/Components/Common/TemplateCard/TemplateCard';
 import { WorkoutFormData } from '../../CreateWorkoutPage';
-
-
-type StartType = 'now' | 'schedule';
-
-const startTabs = [
-  { id: 'now' as StartType, label: 'Сейчас' },
-  { id: 'schedule' as StartType, label: 'Выбрать дату' },
-];
+import { WhenWorkoutBlock } from '../WhenWorkoutBlock/WhenWorkoutBlock';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 
 interface SettingsTabProps {
   formData: WorkoutFormData;
@@ -19,19 +12,36 @@ interface SettingsTabProps {
 }
 
 export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
-  const [scheduleDropdownOpen, setScheduleDropdownOpen] = useState(formData.startType === 'schedule');
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    setScheduleDropdownOpen(formData.startType === 'schedule');
-  }, [formData.startType]);
-
-  const formatDateForDisplay = (dateStr: string) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Мая', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-    const weekdays = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-    return `${weekdays[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+  const handleClearTemplate = () => {
+    updateFormData('selectedTemplate', null);
+    updateFormData('selectedTemplateData', null);
+    updateFormData('workoutName', '');
+    updateFormData('notes', '');
+    updateFormData('selectedExercises', {});
+    updateFormData('exerciseOrder', []);
+    updateFormData('exerciseSets', {});
   };
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    updateFormData('notes', e.target.value);
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  };
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }, [formData.notes]);
+
+  const hasData = 
+    formData.workoutName.trim() !== '' ||
+    formData.notes.trim() !== '' ||
+    Object.keys(formData.selectedExercises).length > 0;
 
   return (
     <div className={styles.tab}>
@@ -48,61 +58,65 @@ export const SettingsTab = ({ formData, updateFormData }: SettingsTabProps) => {
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Заметки к тренировке</h3>
-        <input
-          className={styles.input}
+        <textarea
+          ref={textareaRef}
+          className={styles.textarea}
           placeholder="Добавьте заметки к этой тренировке"
           value={formData.notes}
-          onChange={(e) => updateFormData('notes', e.target.value)}
+          onChange={handleTextareaChange}
+          rows={1}
         />
       </div>
 
-      <div className={cn(styles.section, styles.scheduleSection)}>
-        <h3 className={styles.sectionTitle}>Начать сейчас или выбрать дату</h3>
-        <TabsGroup 
-          tabs={startTabs} 
-          activeTab={formData.startType} 
-          onChange={(id) => updateFormData('startType', id)} 
-        />
-
-        <div className={cn(styles.scheduleDropdown, scheduleDropdownOpen && styles.scheduleDropdown_open)}>
-          <div className={styles.scheduleDropdownInner}>
-            <h4 className={styles.scheduleLabel}>Своя дата</h4>
-            <div className={styles.scheduleInputs}>
-              <div className={styles.dateInputWrapper}>
-                <input
-                  type="date"
-                  value={formData.scheduleDate}
-                  onChange={(e) => updateFormData('scheduleDate', e.target.value)}
-                  className={styles.dateInput}
-                />
-                <span className={styles.dateDisplay}>
-                  {formatDateForDisplay(formData.scheduleDate)}
-                </span>
-              </div>
-              <div className={styles.timeInputWrapper}>
-                <input
-                  type="time"
-                  value={formData.scheduleTime}
-                  onChange={(e) => updateFormData('scheduleTime', e.target.value)}
-                  className={styles.timeInput}
-                />
-                <span className={styles.timeDisplay}>{formData.scheduleTime}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <WhenWorkoutBlock formData={formData} updateFormData={updateFormData} />
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Из шаблона</h3>
-        <div className={styles.templateSelector}>
-          <span className={styles.templatePlaceholder}>
-            {formData.selectedTemplate || 'Нет выбранного шаблона'}
-          </span>
-          <Button className={styles.add_template_button} size="m" color="accent" fullWidth onClick={() => {}}>
-            Выбрать шаблон
-          </Button>
-        </div>
+
+        {formData.selectedTemplateData ? (
+          <div className={styles.templateSelected}>
+            <div className={styles.templateHeader}>
+              <TemplateCard
+                template={formData.selectedTemplateData}
+                isSelected={false}
+                onSelect={() => {}}          
+                className={styles.templateCardInner}
+                showArrow={false}
+              />
+              <button
+                className={styles.templateRemove}
+                onClick={handleClearTemplate}
+                aria-label="Убрать шаблон"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <Button
+              size="s"
+              color="accent"
+              fullWidth
+              onClick={() => navigate('/templates', { state: { hasData } })}
+              className={styles.changeTemplateBtn}
+            >
+              Сменить шаблон
+            </Button>
+          </div>
+        ) : (
+          <div className={styles.templateEmpty}>
+            <span className={styles.templatePlaceholder}>Нет выбранного шаблона</span>
+            <Button
+              size="s"
+              color="accent"
+              fullWidth
+              onClick={() => navigate('/templates', { state: { hasData } })}
+              className={styles.addTemplateBtn}
+            >
+              Выбрать шаблон
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 from datetime import date
+from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -10,6 +11,7 @@ from app.models.user import User
 from app.schemas.schedule import ScheduleWorkoutItem
 from app.schemas.workout import (
     NextWorkoutResponse,
+    WorkoutBatchCreateRequest,
     WorkoutCreateRequest,
     WorkoutResponse,
     WorkoutUpdateRequest,
@@ -72,6 +74,19 @@ async def create_workout(
     )
 
 
+@router.post("/batch", response_model=list[WorkoutResponse], status_code=status.HTTP_201_CREATED)
+async def create_workouts_batch(
+    payload: WorkoutBatchCreateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[WorkoutResponse]:
+    return await workout_service.create_workouts_batch(
+        db=db,
+        current_user=current_user,
+        payload=payload,
+    )
+
+
 @router.patch("/{workout_id}", response_model=WorkoutResponse, status_code=status.HTTP_200_OK)
 async def update_workout(
     workout_id: UUID,
@@ -90,8 +105,14 @@ async def update_workout(
 @router.delete("/{workout_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_workout(
     workout_id: UUID,
+    scope: Literal["this", "following", "all"] = "this",
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Response:
-    await workout_service.delete_workout(db=db, current_user=current_user, workout_id=workout_id)
+    await workout_service.delete_workout(
+        db=db,
+        current_user=current_user,
+        workout_id=workout_id,
+        scope=scope,
+    )
     return Response(status_code=status.HTTP_204_NO_CONTENT)

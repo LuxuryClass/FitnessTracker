@@ -1,7 +1,8 @@
 from collections import defaultdict
 from datetime import date, datetime, time, timezone
 from decimal import Decimal
-from uuid import UUID
+from typing import Literal
+from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +23,7 @@ from app.schemas.schedule import ScheduleWorkoutItem
 from app.schemas.workout import (
     NextWorkoutExerciseItem,
     NextWorkoutResponse,
+    WorkoutBatchCreateRequest,
     WorkoutCreateRequest,
     WorkoutExerciseCreateItem,
     WorkoutExerciseResponse,
@@ -201,6 +203,50 @@ class WorkoutService:
         await db.refresh(workout)
         return self._build_workout_response(workout, workout_exercises, target_sets, is_completed=False)
 
+    async def create_workouts_batch(
+        self,
+        db: AsyncSession,
+        current_user: User,
+        payload: WorkoutBatchCreateRequest,
+    ) -> list[WorkoutResponse]:
+        exercise_ids = [item.exercise_id for item in payload.exercises]
+        await self._validate_exercises_access(db, current_user, exercise_ids)
+        flat_target_sets = self._flatten_target_sets(payload.exercises)
+
+        series_id: UUID | None = uuid4() if len(payload.planned_for) > 1 else None
+
+        responses: list[WorkoutResponse] = []
+        created: list[tuple[Workout, list[WorkoutExercise], list[WorkoutExerciseTargetSet]]] = []
+        for planned_for in payload.planned_for:
+            workout = await workout_repository.create(
+                db=db,
+                user_id=current_user.id,
+                title=payload.title,
+                is_planned=True,
+                planned_for=planned_for,
+                description=payload.description,
+                series_id=series_id,
+            )
+            workout_exercises = await workout_exercise_repository.create_many(
+                db=db,
+                workout_id=workout.id,
+                exercise_ids=exercise_ids,
+            )
+            target_sets = await workout_exercise_target_set_repository.replace_for_workout(
+                db=db,
+                workout_id=workout.id,
+                items=flat_target_sets,
+            )
+            created.append((workout, workout_exercises, target_sets))
+
+        await db.commit()
+        for workout, workout_exercises, target_sets in created:
+            await db.refresh(workout)
+            responses.append(
+                self._build_workout_response(workout, workout_exercises, target_sets, is_completed=False)
+            )
+        return responses
+
     async def update_workout(
         self,
         db: AsyncSession,
@@ -276,9 +322,32 @@ class WorkoutService:
         db: AsyncSession,
         current_user: User,
         workout_id: UUID,
+        scope: Literal["this", "following", "all"] = "this",
     ) -> None:
         workout = await self._get_workout_for_user_or_raise(db, current_user, workout_id)
-        await workout_repository.delete(db, workout)
+
+        # Одиночная тренировка или scope='this' — удаляем только её.
+        if scope == "this" or workout.series_id is None:
+            await workout_repository.delete(db, workout)
+            await db.commit()
+            return
+
+        # Серия: собираем кандидатов по выбранному scope.
+        series = await workout_repository.list_by_series_id(db, current_user.id, workout.series_id)
+        if scope == "following":
+            anchor = workout.planned_for
+            candidates = [w for w in series if w.planned_for is not None and anchor is not None and w.planned_for >= anchor]
+        else:  # all
+            candidates = series
+
+        # Завершённые тренировки (есть completed-сессия) не трогаем — это история.
+        candidate_ids = [w.id for w in candidates]
+        completed_ids = await workout_session_repository.list_completed_workout_ids(db, candidate_ids)
+
+        for w in candidates:
+            if w.id in completed_ids:
+                continue
+            await workout_repository.delete(db, w)
         await db.commit()
 
     async def get_schedule(
@@ -318,7 +387,7 @@ class WorkoutService:
         result: list[ScheduleWorkoutItem] = []
         for workout_id in workouts_order:
             workout = workouts_map[workout_id]
-            assert workout.planned_for is not None
+            effective_dt = workout.planned_for or workout.created_at
             muscle_groups_set: list[str] = []
             seen_mg: set[str] = set()
             for we in grouped.get(workout_id, []):
@@ -332,8 +401,8 @@ class WorkoutService:
             result.append(ScheduleWorkoutItem(
                 id=workout.id,
                 title=workout.title,
-                date=workout.planned_for.date(),
-                time=workout.planned_for.strftime("%H:%M"),
+                date=effective_dt.date(),
+                time=workout.planned_for.strftime("%H:%M") if workout.planned_for is not None else None,
                 status="completed" if workout_id in completed_ids else "planned",
                 exercises_count=len(grouped.get(workout_id, [])),
                 muscle_groups=muscle_groups_set,
@@ -346,15 +415,34 @@ class WorkoutService:
         db: AsyncSession,
         current_user: User,
     ) -> NextWorkoutResponse | None:
-        now_utc = datetime.now(timezone.utc)
-        # Граница — начало сегодняшнего UTC-дня
-        start_of_today_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+        active_session = await workout_session_repository.get_active_by_user_id(db, current_user.id)
+        workout: Workout | None = None
+        is_active = False
+        if active_session is not None:
+            workout = await workout_repository.get_by_id_for_user(
+                db, active_session.workout_id, current_user.id
+            )
+            is_active = workout is not None
 
-        workout = await workout_repository.find_first_planned_from(
-            db, current_user.id, start_of_today_utc
-        )
-        if workout is None or workout.planned_for is None:
+        if workout is None:
+            now_utc = datetime.now(timezone.utc)
+            start_of_today_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+            workout = await workout_repository.find_first_planned_from(
+                db, current_user.id, start_of_today_utc
+            )
+
+        if workout is None:
             return None
+
+        return await self._build_next_workout_response(db, workout, is_active=is_active)
+
+    async def _build_next_workout_response(
+        self,
+        db: AsyncSession,
+        workout: Workout,
+        is_active: bool = False,
+    ) -> NextWorkoutResponse:
+        planned_for_value = workout.planned_for or workout.created_at
 
         # Подтягиваем упражнения тренировки и сами объекты Exercise (имя, группы мышц).
         workout_exercises = await workout_exercise_repository.list_by_workout_id(db, workout.id)
@@ -362,11 +450,12 @@ class WorkoutService:
             return NextWorkoutResponse(
                 id=workout.id,
                 title=workout.title,
-                planned_for=workout.planned_for,
+                planned_for=planned_for_value,
                 estimated_duration_minutes=None,
                 exercises_count=0,
                 muscle_groups=[],
                 exercises=[],
+                is_active=is_active,
             )
 
         exercise_ids = [we.exercise_id for we in workout_exercises]
@@ -431,11 +520,12 @@ class WorkoutService:
         return NextWorkoutResponse(
             id=workout.id,
             title=workout.title,
-            planned_for=workout.planned_for,
+            planned_for=planned_for_value,
             estimated_duration_minutes=estimated_duration_minutes,
             exercises_count=len(exercise_items),
             muscle_groups=muscle_groups_aggregated,
             exercises=exercise_items,
+            is_active=is_active,
         )
 
 

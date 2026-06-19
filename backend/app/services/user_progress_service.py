@@ -1,14 +1,38 @@
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.exercise import Exercise
 from app.models.user import User
 from app.repositories import exercise_repository, workout_session_set_repository
-from app.schemas.user import RecentProgressResponse
+from app.schemas.exercise import KNOWN_MUSCLE_SLUGS, PRIMARY_GROUP_TO_MUSCLE_SLUGS
+from app.schemas.user import RecentProgressResponse, WeeklyMuscleFocusItem
+from app.services.user_metrics_service import _get_week_bounds
+
+
+def _resolve_exercise_muscle_slugs(exercise: Exercise) -> set[str]:
+    secondary = {slug.strip().lower() for slug in exercise.secondary_muscles}
+    candidates: set[str] = set()
+    claimed: set[str] = set()
+
+    for group in exercise.primary_muscle_groups:
+        group_slugs = set(PRIMARY_GROUP_TO_MUSCLE_SLUGS.get(group, ()))
+        group_secondary = secondary & group_slugs
+        if group_secondary:
+            candidates |= group_secondary
+            claimed |= group_secondary
+        else:
+            candidates |= group_slugs
+
+    # Вторичные, не попавшие ни в одну группу, добавляем как есть.
+    candidates |= secondary - claimed
+
+    return candidates & KNOWN_MUSCLE_SLUGS
 
 
 class UserProgressService:
@@ -23,8 +47,9 @@ class UserProgressService:
 
         Логика расчёта прогресса:
         - Если есть данные за 30-37 дней назад: сравниваем максимум последних 7 дней с максимумом 30-37 дней назад
-        - Если данных за 30-37 дней нет: сравниваем максимум последних 7 дней с самым первым весом упражнения
-        - Если упражнение выполнено только 1 раз: не показываем в прогрессе
+        - Если данных за 30-37 дней нет: сравниваем максимум последних 7 дней с лучшим результатом
+          по всей истории СТРОГО ДО последних 7 дней. Если такой истории нет (упражнение новое —
+          впервые выполнено в последние 7 дней), база сравнения = 0, и весь поднятый вес = прирост.
         """
         now_utc = datetime.now(timezone.utc)
 
@@ -87,31 +112,19 @@ class UserProgressService:
                 previous_max = old_max
                 difference = recent_max - old_max
             else:
-                # Нет данных за месяц назад — сравниваем с первым выполнением
-                first_weight = await workout_session_set_repository.get_first_weight_for_exercise(
+                # Нет данных за месяц назад — база = лучший результат СТРОГО ДО последних 7 дней.
+                # Если истории до недавнего окна нет (упражнение новое), база = 0,
+                # и весь поднятый вес считается приростом.
+                previous_max = await workout_session_set_repository.get_max_weight_before(
                     db=db,
                     user_id=current_user.id,
                     exercise_id=exercise_id,
-                )
+                    before=last_7_days_start,
+                ) or Decimal(0)
+                difference = recent_max - previous_max
 
-                if first_weight is None:
-                    continue
-
-                # Проверяем, что есть хотя бы 2 выполнения (иначе нет прогресса)
-                total_executions = await workout_session_set_repository.count_exercise_executions(
-                    db=db,
-                    user_id=current_user.id,
-                    exercise_id=exercise_id,
-                )
-
-                if total_executions < 2:
-                    continue
-
-                previous_max = first_weight
-                difference = recent_max - first_weight
-
-            # Берём первую primary-группу мышц для отображения
-            muscle_group = exercise.primary_muscle_groups[0] if exercise.primary_muscle_groups else "Неизвестно"
+            # Берём первую primary-группу мышц для отображения; если групп нет — None
+            muscle_group = exercise.primary_muscle_groups[0] if exercise.primary_muscle_groups else None
 
             result.append(
                 RecentProgressResponse(
@@ -125,6 +138,46 @@ class UserProgressService:
             )
 
         return result
+
+    async def get_weekly_muscle_focus(
+        self,
+        db: AsyncSession,
+        current_user: User,
+    ) -> list[WeeklyMuscleFocusItem]:
+        now_utc = datetime.now(timezone.utc)
+        week_start, week_end = _get_week_bounds(now_utc)
+
+        pairs = await workout_session_set_repository.list_session_exercise_pairs_in_range(
+            db=db,
+            user_id=current_user.id,
+            period_start=week_start,
+            period_end=week_end,
+        )
+
+        if not pairs:
+            return []
+
+        exercise_ids = list({exercise_id for _, exercise_id in pairs})
+        exercises = await exercise_repository.get_by_ids(db, exercise_ids)
+        exercise_map = {exercise.id: exercise for exercise in exercises}
+
+        slugs_by_session: dict[UUID, set[str]] = {}
+        for session_id, exercise_id in pairs:
+            exercise = exercise_map.get(exercise_id)
+            if exercise is None:
+                continue
+            slugs_by_session.setdefault(session_id, set()).update(
+                _resolve_exercise_muscle_slugs(exercise)
+            )
+
+        intensity_counter: Counter[str] = Counter()
+        for slugs in slugs_by_session.values():
+            intensity_counter.update(slugs)
+
+        return [
+            WeeklyMuscleFocusItem(muscle=muscle, intensity=intensity)
+            for muscle, intensity in intensity_counter.most_common()
+        ]
 
 
 user_progress_service = UserProgressService()

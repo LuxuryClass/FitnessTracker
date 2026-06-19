@@ -10,6 +10,7 @@ interface PreviewCardProps {
   exercisesCount?: number;
   date?: string;
   time?: string;
+  badge?: string;
   muscleGroups?: string[];
   description?: string;
   type?: 'default' | 'sessionPreview';
@@ -32,15 +33,18 @@ const PreviewCardComponent = ({
   exercisesCount,
   date,
   time,
+  badge,
   muscleGroups = [],
   description,
   type = 'default',
   onEdit,
   className,
 }: PreviewCardProps) => {
-  const displayDate = date
-    ? `${formatDateDisplay(date)}${time ? ` • ${time}` : ''}`
-    : '';
+  const displayDate = badge
+    ? badge
+    : date
+      ? `${formatDateDisplay(date)}${time ? ` • ${time}` : ''}`
+      : '';
 
   if (type === 'sessionPreview') {
     return (

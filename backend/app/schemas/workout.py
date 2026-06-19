@@ -87,6 +87,52 @@ class WorkoutCreateRequest(BaseModel):
         return self
 
 
+class WorkoutBatchCreateRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=2000)
+    planned_for: list[datetime] = Field(min_length=1, max_length=100)
+    exercises: list[WorkoutExerciseCreateItem] = Field(default_factory=list, max_length=100)
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Название тренировки не может быть пустым.")
+        return normalized
+
+    @field_validator("description")
+    @classmethod
+    def normalize_description(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+    @field_validator("planned_for")
+    @classmethod
+    def validate_planned_for(cls, value: list[datetime]) -> list[datetime]:
+        # Отсекаем дубли дат, сохраняя порядок появления.
+        seen: set[datetime] = set()
+        unique: list[datetime] = []
+        for item in value:
+            if item in seen:
+                continue
+            seen.add(item)
+            unique.append(item)
+        return unique
+
+    @field_validator("exercises")
+    @classmethod
+    def validate_exercises(cls, value: list[WorkoutExerciseCreateItem]) -> list[WorkoutExerciseCreateItem]:
+        seen: set[UUID] = set()
+        for item in value:
+            if item.exercise_id in seen:
+                raise ValueError("Упражнения в тренировке не должны повторяться.")
+            seen.add(item.exercise_id)
+        return value
+
+
 class WorkoutUpdateRequest(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     is_planned: bool | None = None
@@ -191,3 +237,4 @@ class NextWorkoutResponse(BaseModel):
     exercises_count: int
     muscle_groups: list[str]
     exercises: list[NextWorkoutExerciseItem]
+    is_active: bool = False

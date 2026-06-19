@@ -17,7 +17,7 @@ export const PRIMARY_TO_SECONDARY: Record<string, string[]> = {
   chest: ['chest'],
   back: ['upper-back', 'lower-back', 'trapezius'],
   legs: ['quadriceps', 'hamstring', 'gluteal', 'calves', 'adductors', 'abductors', 'tibialis'],
-  shoulders: ['deltoids', 'trapezius'],
+  shoulders: ['deltoids'],
   arms: ['biceps', 'triceps', 'forearm'],
   core: ['abs', 'obliques'],
   cardio: [],

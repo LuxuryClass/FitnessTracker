@@ -18,6 +18,9 @@ import CreateExercisePage from '@/Components/Pages/CreateExercisePage/CreateExer
 import { SessionPreviewPage } from '@/Components/Pages/SessionPreviewPage/SessionPreviewPage';
 import SessionMainPage from '@/Components/Pages/SessionMainPage/SessionMainPage';
 import { DesktopGate } from '@/Components/Common/DesktopGate/DesktopGate';
+import TemplatesPage from '@/Components/Pages/TemplatesPage/TemplatesPage';
+import TemplateInfoPage from '@/Components/Pages/TemplateInfoPage/TemplateInfoPage';
+import AlmanahPage from '@/Components/Pages/KnowledgeBasePage/KnowledgeBasePage';
 
 export function App() {
   return (
@@ -35,23 +38,25 @@ export function App() {
             <Route path="/" element={<OutletWrapper />}>
               <Route index element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomePage />} />
-              <Route path="/almanah" />
+              <Route path="/almanah" element={<AlmanahPage />} />
               <Route path="/add" element={<CreateWorkoutPage />} />
               <Route path="/progress" />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             
-            <Route path="/createExercise" element={<CreateExercisePage />} />
+            <Route path="/schedule" element={<SchedulePage />} />
 
-            <Route path="/exercises/:groupId" element={<ExerciseSelectPage />} />
             <Route path="/edit-profile" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
 
-            <Route path="/schedule" element={<SchedulePage />} />
+            <Route path="/templates" element={<TemplatesPage />} />
+            <Route path="/template/:id" element={<TemplateInfoPage />} />
+
+            <Route path="/exercises/:groupId" element={<ExerciseSelectPage />} />
+            <Route path="/createExercise" element={<CreateExercisePage />} />
 
             <Route path="/workout/:workoutId" element={<SessionPreviewPage />} />
-            <Route path="/workout/test" element={<SessionPreviewPage />} />
             <Route path="/session/:workoutId" element={<SessionMainPage />} />
 
           </Route>

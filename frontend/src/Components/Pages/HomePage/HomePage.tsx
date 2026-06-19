@@ -13,6 +13,7 @@ import { WorkoutCard } from '@/Components/Common/WorkoutCard/WorkoutCard';
 import { useScheduleQuery } from '@/hooks/useScheduleQuery';
 import { useRecentProgressQuery } from '@/hooks/useRecentProgressQuery';
 import { useNextWorkoutQuery } from '@/hooks/useNextWorkoutQuery';
+import { useWeeklyMuscleFocusQuery } from '@/hooks/useWeeklyMuscleFocusQuery';
 import { labelForPrimary, labelsForPrimaryList } from '@/Utils/muscleGroups';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,6 +40,7 @@ const HomePage = () => {
   const { data: scheduleData = [] } = useScheduleQuery(weekRange.from, weekRange.to);
   const { data: recentProgressData = [] } = useRecentProgressQuery();
   const { data: nextWorkout, isPending: isNextWorkoutPending } = useNextWorkoutQuery();
+  const { data: muscleFocusData = [] } = useWeeklyMuscleFocusQuery();
 
   const userName = user?.name ?? "Пользователь";
   const userAvatar = user?.avatar_url ?? defaultAvatar;
@@ -53,7 +55,7 @@ const HomePage = () => {
     return {
       id: item.exercise_id,
       title: item.exercise_name,
-      muscleGroup: labelForPrimary(item.muscle_group),
+      muscleGroup: item.muscle_group ? labelForPrimary(item.muscle_group) : undefined,
       difference: `${sign}${differenceNum}кг`,
     };
   });
@@ -107,7 +109,10 @@ const HomePage = () => {
             targetWeightKgMax: item.target_weight_kg_max !== null ? Number(item.target_weight_kg_max) : null,
           }))}
           workoutId={nextWorkout.id}
-          onStart={() => navigate(`/workout/${nextWorkout.id}`)}
+          actionLabel={nextWorkout.is_active ? 'Продолжить' : undefined}
+          onStart={() =>
+            navigate(nextWorkout.is_active ? `/session/${nextWorkout.id}` : `/workout/${nextWorkout.id}`)
+          }
         />
       ) : (
         <TodayWorkout isEmpty />
@@ -135,7 +140,11 @@ const HomePage = () => {
       {/* Блок "Акцент на мышщы на этой неделе" */}
       <div className={styles.accentSection}>
         <h3 className={styles.accentSection_title}>Акцент на мышцы на этой неделе</h3>
-        <MuscleAccentComponent className={styles.accentSection_component}/>
+        <MuscleAccentComponent
+          className={styles.accentSection_component}
+          gender={user?.gender ?? "male"}
+          data={muscleFocusData}
+        />
       </div>
 
       {/* Блок "Далее" */}

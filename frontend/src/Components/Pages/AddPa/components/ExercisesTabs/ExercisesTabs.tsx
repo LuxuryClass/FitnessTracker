@@ -78,18 +78,19 @@ const ExercisesTabs = ({
     return selectedExercises[groupId]?.length || 0;
   };
 
-  const handleCardClick = (group: MuscleGroup) => {
-    navigate(`/exercises/${group.id}`, {
-      state: {
-        muscleGroup: group,
-        currentSelectedExercises: selectedExercises,
-        currentExerciseSets: exerciseSets,
-        currentFormSettings: formSettings,
-        exerciseSearchQuery: searchQuery,
-      }
-    });
-  };
-
+const handleCardClick = (group: MuscleGroup) => {
+  // Сохраняем снимок выбранных упражнений перед переходом
+  navigate(`/exercises/${group.id}`, {
+    state: {
+      muscleGroup: group,
+      currentSelectedExercises: selectedExercises,
+      currentExerciseSets: exerciseSets,
+      currentFormSettings: formSettings,
+      exerciseSearchQuery: searchQuery,
+      exercisesSnapshot: selectedExercises, // ← снимок
+    }
+  });
+};
   const handleCreateExercise = () => {
     // TODO: реализовать создание упражнения через POST /exercises (отдельная итерация).
     navigate("/createExercise");

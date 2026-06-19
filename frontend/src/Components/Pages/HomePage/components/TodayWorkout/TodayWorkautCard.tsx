@@ -25,7 +25,8 @@ interface TodayWorkoutProps {
   isEmpty?: boolean;
   isLoading?: boolean;
   className?: string;
-  workoutId?: string; 
+  workoutId?: string;
+  actionLabel?: string;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -73,6 +74,7 @@ export const TodayWorkout = ({
   isEmpty = false,
   isLoading = false,
   className,
+  actionLabel,
 }: TodayWorkoutProps) => {
   const headerTitle = formatHeaderTitle(plannedFor);
   
@@ -107,7 +109,7 @@ export const TodayWorkout = ({
     );
   }
 
-  if (isEmpty || !title || !exercises || exercises.length === 0) {
+  if (isEmpty || !title) {
     return (
       <div className={cn(className, styles.card, styles.card__empty)}>
         <h2 className={styles.header__title}>{headerTitle}</h2>
@@ -116,8 +118,9 @@ export const TodayWorkout = ({
     );
   }
 
-  const visibleExercises = exercises.slice(0, 3);
-  const remainingCount = exercises.length - visibleExercises.length;
+  const safeExercises = exercises ?? [];
+  const visibleExercises = safeExercises.slice(0, 3);
+  const remainingCount = safeExercises.length - visibleExercises.length;
 
   return (
     <div className={cn(className, styles.card, styles.card__notEmpty)}>
@@ -130,7 +133,7 @@ export const TodayWorkout = ({
                 {durationMinutes != null && (
                   <span className={styles.meta__duration}>~ {durationMinutes} мин</span>
                 )}
-                <span className={styles.meta__Count}>{exercisesCount ?? exercises.length} упр</span>
+                <span className={styles.meta__Count}>{exercisesCount ?? safeExercises.length} упр</span>
             </div>
             {muscleGroups && muscleGroups.length > 0 && (
               <span className={styles.meta__muscleGroups}>{muscleGroups.join(" • ")}</span>
@@ -139,6 +142,9 @@ export const TodayWorkout = ({
       </div>
 
       <div className={styles.exercises}>
+        {safeExercises.length === 0 && (
+          <p className={styles.moreExercises}>Упражнения не добавлены</p>
+        )}
         {visibleExercises.map((exercise, index) => {
           const setsLabel = formatSetsLabel(exercise);
           return (
@@ -167,7 +173,7 @@ export const TodayWorkout = ({
         className={styles.start_button}
         onClick={onStart}
       >
-        <span className={styles.start_button__text}>Перейти</span>
+        <span className={styles.start_button__text}>{actionLabel ?? 'Перейти'}</span>
         <img src={startImage} />
       </Button>
     </div>

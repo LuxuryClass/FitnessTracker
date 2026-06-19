@@ -6,6 +6,7 @@
 }
 
 .section {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -52,8 +53,10 @@
   padding: 12px;
   font-size: 14px;
   color: #fff;
-  resize: vertical;
+  resize: none;
   font-family: inherit;
+  min-height: 44px;
+  overflow: hidden;
   
   &::placeholder {
     color: var(--Accent-grey-color);
@@ -64,7 +67,6 @@
     border-color: var(--Primary-color);
   }
 }
-
 .scheduleDropdown {
   max-height: 0;
   opacity: 0;
@@ -165,15 +167,63 @@
   border-radius: 8px;
 }
 
-.templateSelector {
+// Template — пусто
+.templateEmpty {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   align-items: center;
-  justify-content: space-between;
 }
 
 .templatePlaceholder {
   color: var(--Accent-grey-color);
   font-size: 14px;
+}
+
+// Template — выбрано
+.templateSelected {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+}
+
+.templateHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid var(--Accent-grey-color);
+  border-radius: 16px;
+}
+
+.templateCardInner {
+  flex: 1;
+  padding: 0;
+}
+
+.templateRemove {
+  position: absolute;
+  top: 7px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--Accent-grey-color);
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    color: var(--error-color);
+    background: var(--error-background-color);
+  }
+}
+
+.changeTemplateBtn {
+  margin-top: 5px;
 }

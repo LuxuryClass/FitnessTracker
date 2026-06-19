@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
 from uuid import uuid4
 
+from sqlalchemy.exc import IntegrityError
+
 from app.services.workout_session_service import workout_session_service
 from app.schemas.workout_session import WorkoutSessionStartRequest, WorkoutSessionSetUpsertRequest
 from app.core.exceptions import BadRequestException, NotFoundException
@@ -63,6 +65,41 @@ async def test_start_session_already_active_same_workout(mock_db_session, mock_u
             payload=WorkoutSessionStartRequest(workout_id=workout_id),
         )
     assert result.id == active.id
+
+@pytest.mark.asyncio
+async def test_start_session_race_returns_existing(mock_db_session, mock_user):
+    """
+    Гонка двойного старта: первая проверка активной сессии вернула None, но INSERT
+    упал на уникальном констрейнте (параллельный запрос успел создать сессию).
+    Сервис откатывается и возвращает уже существующую активную сессию.
+    """
+    workout_id = uuid4()
+    workout = MagicMock()
+    workout.id = workout_id
+    active = create_mock_workout_session({"workout_id": workout_id})
+
+    with patch("app.services.workout_session_service.workout_repository") as w_repo, \
+         patch("app.services.workout_session_service.workout_session_repository") as s_repo, \
+         patch("app.services.workout_session_service.workout_session_set_repository") as set_repo, \
+         patch("app.services.workout_session_service.workout_exercise_repository") as we_repo:
+        w_repo.get_by_id_for_user = AsyncMock(return_value=workout)
+        # Первый вызов — None (активной нет), второй (после IntegrityError) — существующая сессия
+        s_repo.get_active_by_user_id = AsyncMock(side_effect=[None, active])
+        s_repo.list_completed_workout_ids = AsyncMock(return_value=set())
+        s_repo.create = AsyncMock(return_value=create_mock_workout_session({"workout_id": workout_id}))
+        mock_db_session.commit = AsyncMock(side_effect=IntegrityError("stmt", {}, Exception("dup")))
+        mock_db_session.rollback = AsyncMock()
+        set_repo.list_by_session_id = AsyncMock(return_value=[])
+        we_repo.list_by_workout_id = AsyncMock(return_value=[])
+
+        result = await workout_session_service.start_session(
+            db=mock_db_session,
+            current_user=mock_user,
+            payload=WorkoutSessionStartRequest(workout_id=workout_id),
+        )
+
+    assert result.id == active.id
+    mock_db_session.rollback.assert_awaited_once()
 
 @pytest.mark.asyncio
 async def test_start_session_another_active_conflict(mock_db_session, mock_user):

@@ -4,19 +4,19 @@ import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGro
 
 interface RecentCardProps {
   title: string;
-  muscleGroup: string;
+  muscleGroup?: string;
   difference: string;
   daysCount?: number;
 }
 
-const RecentCardComponent = ({ 
-  title, 
-  muscleGroup, 
-  difference, 
+const RecentCardComponent = ({
+  title,
+  muscleGroup,
+  difference,
   daysCount = 7,
 }: RecentCardProps) => {
-  // Разбиваем строку в массив для MuscleGroupBadge
-  const groups = muscleGroup.split(',').map(g => g.trim());
+  // Разбиваем строку в массив для MuscleGroupBadge; без группы пилюля не рендерится
+  const groups = muscleGroup ? muscleGroup.split(',').map(g => g.trim()) : [];
 
   return (
     <div className={styles.card}>

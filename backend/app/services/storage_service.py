@@ -16,6 +16,8 @@ from app.core.exceptions import BadRequestException
 MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024
 MAX_EXERCISE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 MAX_EXERCISE_VIDEO_SIZE_BYTES = 50 * 1024 * 1024
+MAX_GUIDE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+MAX_GUIDE_VIDEO_SIZE_BYTES = 50 * 1024 * 1024
 AVATAR_URL_EXPIRES_SECONDS = 60 * 60 * 24 * 7  # 7 дней
 MEDIA_URL_EXPIRES_SECONDS = 60 * 60 * 24 * 7  # 7 дней
 AVATAR_CACHE_CONTROL = "public, max-age=31536000, immutable"
@@ -71,6 +73,11 @@ class StorageService:
     def _build_exercise_media_object_key(user_id: UUID, exercise_id: UUID, filename: str | None) -> str:
         extension = Path(filename or "").suffix.lower()
         return f"exercise-media/{user_id}/{exercise_id}/{uuid4().hex}{extension}"
+
+    @staticmethod
+    def _build_guide_object_key(prefix: str, filename: str | None) -> str:
+        extension = Path(filename or "").suffix.lower()
+        return f"{prefix}/{uuid4().hex}{extension}"
 
     @staticmethod
     def _extract_object_key(stored_avatar_value: str) -> str:
@@ -181,6 +188,104 @@ class StorageService:
         return await self._build_access_url(
             stored_media_value,
             error_message="Не удалось сформировать ссылку для медиа.",
+        )
+
+    async def upload_exercise_media_bytes(
+        self,
+        *,
+        content: bytes,
+        content_type: str,
+        filename: str | None,
+    ) -> tuple[str, str]:
+        self._ensure_configured()
+
+        normalized_type = content_type or ""
+        if normalized_type.startswith("image/"):
+            media_type = "image"
+            size_limit = MAX_EXERCISE_IMAGE_SIZE_BYTES
+            limit_message = "Размер изображения не должен превышать 5 MB."
+        elif normalized_type.startswith("video/"):
+            media_type = "video"
+            size_limit = MAX_EXERCISE_VIDEO_SIZE_BYTES
+            limit_message = "Размер видео не должен превышать 50 MB."
+        else:
+            raise BadRequestException("Разрешены только изображения (image/*) и видео (video/*).")
+
+        if not content:
+            raise BadRequestException("Файл медиа пустой.")
+
+        if len(content) > size_limit:
+            raise BadRequestException(limit_message)
+
+        object_key = self._build_guide_object_key(prefix="exercise-media/system", filename=filename)
+
+        try:
+            async with self._create_client() as s3_client:
+                await s3_client.put_object(
+                    Bucket=settings.aws_s3_bucket_name,
+                    Key=object_key,
+                    Body=content,
+                    ContentType=normalized_type,
+                    CacheControl=MEDIA_CACHE_CONTROL,
+                )
+        except (ClientError, BotoCoreError) as exc:
+            raise BadRequestException("Не удалось загрузить медиа в хранилище.") from exc
+
+        return object_key, media_type
+
+    async def upload_guide_asset(
+        self,
+        *,
+        prefix: str,
+        content: bytes,
+        content_type: str,
+        filename: str | None,
+    ) -> str:
+        self._ensure_configured()
+
+        normalized_type = content_type or ""
+        if normalized_type.startswith("image/"):
+            size_limit = MAX_GUIDE_IMAGE_SIZE_BYTES
+            limit_message = "Размер изображения справочника не должен превышать 5 MB."
+        elif normalized_type.startswith("video/"):
+            size_limit = MAX_GUIDE_VIDEO_SIZE_BYTES
+            limit_message = "Размер видео справочника не должен превышать 50 MB."
+        else:
+            raise BadRequestException("Разрешены только изображения (image/*) и видео (video/*).")
+
+        if not content:
+            raise BadRequestException("Файл справочника пустой.")
+
+        if len(content) > size_limit:
+            raise BadRequestException(limit_message)
+
+        object_key = self._build_guide_object_key(prefix=prefix, filename=filename)
+
+        try:
+            async with self._create_client() as s3_client:
+                await s3_client.put_object(
+                    Bucket=settings.aws_s3_bucket_name,
+                    Key=object_key,
+                    Body=content,
+                    ContentType=normalized_type,
+                    CacheControl=MEDIA_CACHE_CONTROL,
+                )
+        except (ClientError, BotoCoreError) as exc:
+            raise BadRequestException("Не удалось загрузить файл справочника в хранилище.") from exc
+
+        return object_key
+
+    async def delete_guide_asset(self, stored_value: str | None, *, ignore_missing: bool = False) -> None:
+        await self._delete_object(
+            stored_value,
+            ignore_missing=ignore_missing,
+            error_message="Не удалось удалить файл справочника из хранилища.",
+        )
+
+    async def build_guide_asset_access_url(self, stored_value: str | None) -> str | None:
+        return await self._build_access_url(
+            stored_value,
+            error_message="Не удалось сформировать ссылку для файла справочника.",
         )
 
     async def _delete_object(

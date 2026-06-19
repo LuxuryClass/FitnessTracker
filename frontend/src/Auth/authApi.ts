@@ -147,10 +147,15 @@ export interface ScheduleWorkoutItem {
 export interface RecentProgressItem {
   exercise_id: string;
   exercise_name: string;
-  muscle_group: string;
+  muscle_group: string | null;
   difference_kg: number | string;
   recent_max_weight_kg: number | string;
   previous_max_weight_kg: number | string | null;
+}
+
+export interface WeeklyMuscleFocusItem {
+  muscle: string;
+  intensity: number;
 }
 
 export interface NextWorkoutExerciseItem {
@@ -172,6 +177,7 @@ export interface NextWorkoutResponse {
   exercises_count: number;
   muscle_groups: string[];
   exercises: NextWorkoutExerciseItem[];
+  is_active: boolean;
 }
 
 export interface ExerciseMediaItem {
@@ -231,6 +237,13 @@ export interface WorkoutCreateResponse {
   is_planned: boolean;
   planned_for: string | null;
   description: string | null;
+}
+
+export interface WorkoutBatchCreatePayload {
+  title: string;
+  description: string | null;
+  planned_for: string[];
+  exercises: WorkoutExerciseCreateItem[];
 }
 
 export interface WorkoutExerciseItem {
@@ -360,6 +373,13 @@ export const authApi = {
     });
   },
 
+  async getWeeklyMuscleFocus(accessToken: string): Promise<WeeklyMuscleFocusItem[]> {
+    return request<WeeklyMuscleFocusItem[]>("/users/me/weekly-muscle-focus", {
+      method: "GET",
+      accessToken,
+    });
+  },
+
   async getSchedule(accessToken: string, dateFrom: string, dateTo: string): Promise<ScheduleWorkoutItem[]> {
     return request<ScheduleWorkoutItem[]>(`/workouts/schedule?date_from=${dateFrom}&date_to=${dateTo}`, {
       method: "GET",
@@ -415,6 +435,14 @@ export const authApi = {
 
   async createWorkout(accessToken: string, payload: WorkoutCreatePayload): Promise<WorkoutCreateResponse> {
     return request<WorkoutCreateResponse>("/workouts", {
+      method: "POST",
+      accessToken,
+      body: payload,
+    });
+  },
+
+  async createWorkoutsBatch(accessToken: string, payload: WorkoutBatchCreatePayload): Promise<WorkoutCreateResponse[]> {
+    return request<WorkoutCreateResponse[]>("/workouts/batch", {
       method: "POST",
       accessToken,
       body: payload,

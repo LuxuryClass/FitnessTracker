@@ -100,9 +100,14 @@ class UserUpdateRequest(BaseModel):
 class RecentProgressResponse(BaseModel):
     exercise_id: UUID
     exercise_name: str
-    muscle_group: str
+    muscle_group: str | None
     difference_kg: Decimal
     recent_max_weight_kg: Decimal
     previous_max_weight_kg: Decimal | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class WeeklyMuscleFocusItem(BaseModel):
+    muscle: str
+    intensity: int

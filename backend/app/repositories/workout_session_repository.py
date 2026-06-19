@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.workout import Workout
 from app.models.workout_session import WorkoutSession
 
 
@@ -80,19 +81,24 @@ class WorkoutSessionRepository:
         result = await db.execute(statement)
         return set(result.scalars().all())
 
-    async def count_completed_in_range(
+    async def count_completed_workouts_in_range(
         self,
         db: AsyncSession,
         user_id: UUID,
         range_start: datetime,
         range_end: datetime,
     ) -> int:
-        statement = select(func.count(WorkoutSession.id)).where(
-            WorkoutSession.user_id == user_id,
-            WorkoutSession.status == "completed",
-            WorkoutSession.completed_at.is_not(None),
-            WorkoutSession.completed_at >= range_start,
-            WorkoutSession.completed_at < range_end,
+        effective_date = func.coalesce(Workout.planned_for, Workout.created_at)
+        statement = (
+            select(func.count(func.distinct(WorkoutSession.workout_id)))
+            .join(Workout, Workout.id == WorkoutSession.workout_id)
+            .where(
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.status == "completed",
+                WorkoutSession.completed_at.is_not(None),
+                effective_date >= range_start,
+                effective_date < range_end,
+            )
         )
         result = await db.execute(statement)
         return int(result.scalar_one())

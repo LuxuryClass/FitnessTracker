@@ -129,6 +129,14 @@
       #9FDA16
     );
   }
+
+  &_marked {
+    border: 1.5px dashed var(--Primary-color, #9FDA16);
+  }
+
+  &_active {
+    border: 2px solid var(--Primary-color, #9FDA16);
+  }
 }
 
 .dayNumber {

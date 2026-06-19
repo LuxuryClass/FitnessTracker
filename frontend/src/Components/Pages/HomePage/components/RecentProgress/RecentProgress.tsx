@@ -6,7 +6,7 @@ import classNames from 'classnames';
 export interface RecentCardData {
     id: string | number;
     title: string;
-    muscleGroup: string;
+    muscleGroup?: string;
     difference: string;
 }
 

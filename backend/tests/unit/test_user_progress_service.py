@@ -50,11 +50,10 @@ async def test_get_recent_progress_with_old_data(mock_db_session, mock_user):
 
 
 @pytest.mark.asyncio
-async def test_get_recent_progress_fallback_first_weight(mock_db_session, mock_user):
+async def test_get_recent_progress_fallback_history_before_recent(mock_db_session, mock_user):
     """
-    Сценарий: Нет данных за 30-37 дней назад.
-    Сравниваем текущий максимум (80 кг) с первым зафиксированным весом (70 кг).
-    Упражнение выполнялось больше одного раза.
+    Сценарий: Нет данных за 30-37 дней назад, но есть история ДО последних 7 дней.
+    Сравниваем текущий максимум (80 кг) с лучшим результатом до недавнего окна (70 кг).
 
     Ожидается: Прогресс = 10 кг, previous_max = 70 кг.
     """
@@ -76,8 +75,7 @@ async def test_get_recent_progress_fallback_first_weight(mock_db_session, mock_u
         # recent_max = 80, old_max = None
         set_repo.get_max_weight_in_period = AsyncMock()
         set_repo.get_max_weight_in_period.side_effect = [Decimal("80.0"), None]
-        set_repo.get_first_weight_for_exercise = AsyncMock(return_value=Decimal("70.0"))
-        set_repo.count_exercise_executions = AsyncMock(return_value=3)
+        set_repo.get_max_weight_before = AsyncMock(return_value=Decimal("70.0"))
 
         result = await user_progress_service.get_recent_progress(
             db=mock_db_session, current_user=mock_user
@@ -88,12 +86,12 @@ async def test_get_recent_progress_fallback_first_weight(mock_db_session, mock_u
 
 
 @pytest.mark.asyncio
-async def test_get_recent_progress_single_execution_skipped(mock_db_session, mock_user):
+async def test_get_recent_progress_new_exercise_full_weight(mock_db_session, mock_user):
     """
-    Сценарий: Упражнение выполнено всего один раз.
-    Сервис не должен включать его в прогресс, даже если оба периода показывают одинаковый вес.
+    Сценарий: Новое упражнение — впервые выполнено в последние 7 дней.
+    Нет данных за 30-37 дней и нет истории до недавнего окна (база = 0).
 
-    Ожидается: Пустой список.
+    Ожидается: Прогресс = весь поднятый максимум (12 кг), previous_max = 0.
     """
     exercise_id = uuid4()
     exercise = create_mock_exercise({
@@ -110,15 +108,14 @@ async def test_get_recent_progress_single_execution_skipped(mock_db_session, moc
         )
         ex_repo.get_by_ids = AsyncMock(return_value=[exercise])
 
-        # recent_max = 50, old_max = None – переходим к первому весу
+        # recent_max = 12, old_max = None, истории до недавнего окна нет - база 0
         set_repo.get_max_weight_in_period = AsyncMock()
-        set_repo.get_max_weight_in_period.side_effect = [Decimal("50.0"), None]
-        set_repo.get_first_weight_for_exercise = AsyncMock(return_value=Decimal("50.0"))
-        # Всего одно выполнение – должно быть пропущено
-        set_repo.count_exercise_executions = AsyncMock(return_value=1)
+        set_repo.get_max_weight_in_period.side_effect = [Decimal("12.0"), None]
+        set_repo.get_max_weight_before = AsyncMock(return_value=None)
 
         result = await user_progress_service.get_recent_progress(
             db=mock_db_session, current_user=mock_user
         )
 
-    assert len(result) == 0
+    assert result[0].difference_kg == Decimal("12.0")
+    assert result[0].previous_max_weight_kg == Decimal("0")

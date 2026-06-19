@@ -1,0 +1,176 @@
+.page {
+  padding-top: var(--padding-top);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100vh;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  @include text_h1();
+  text-align: start;
+}
+
+// Hero
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--Dark-grey-color);
+  border: 1px solid var(--Primary-color);
+  border-radius: 16px;
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out 0.1s forwards;
+  box-shadow: inset -60px 60px 80px -40px rgba(159, 218, 22, 0.25);
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.heroContent {
+  flex: 1;
+}
+
+.heroTitle {
+  @include button_text_h1();
+  line-height: 30px;
+  color: #fff;
+  margin: 0 0 4px;
+}
+
+.heroDesc {
+  @include text-subtitle();
+  text-align: start;
+  margin: 0 0 10px;
+}
+
+.heroStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusDot {
+  width: 7px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: var(--Primary-color);
+}
+
+.statusText {
+  font-size: 12px;
+  color: var(--Primary-color);
+}
+
+.heroIcon {
+  color: var(--Primary-color);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+// Content
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+  @include scrollable();
+  padding-bottom: 100px;
+  border-radius: 16px;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--Accent-grey-color);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.categoriesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.categoryCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--Dark-grey-color);
+  border: none;
+  border-left: 3px solid var(--Primary-color);
+  border-radius: 14px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out forwards;
+  box-shadow: inset 50px 0 50px -25px rgba(159, 218, 22, 0.2);
+  @include staggerAnimation(0.05s, 8);
+
+  &:hover {
+    background: var(--Accent-2-color);
+  }
+
+  &_highlighted {
+    margin-top: 15px;
+  }
+}
+
+.categoryIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.categoryInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+}
+
+.categoryCount {
+  font-size: 12px;
+  color: var(--Primary-color);
+  margin-top: 2px;
+}
+
+.categoryTitle {
+  @include text-h2();
+  color: #fff;
+}
+
+.categorySubtitle {
+  @include text-subtitle();
+  text-align: start;
+}
+
+.categoryChevron {
+  color: var(--Accent-grey-color);
+  flex-shrink: 0;
+
+  &:hover {
+    color: var(--Primary-color);
+  }
+}

@@ -27,19 +27,36 @@
   margin: 0 6px;
 }
 
-// Тип chips — новый дизайн (отдельные бейджи)
 .chips {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
-  padding: 2px 0;
+  overflow-y: hidden;
   max-width: 100%;
   
-  &::-webkit-scrollbar { display: none; }
+  // Затемнение слева
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 20px,
+    black calc(100% - 20px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 20px,
+    black calc(100% - 20px),
+    transparent 100%
+  );
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
 .chip {
   @include text-h3();
   color: var(--Accent-grey-color);
@@ -53,4 +70,38 @@
 .chipPrimary {
   color: var(--Primary-color);
   border-color: var(--Primary-color);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.filterChip {
+  padding: 8px 16px;
+  background: var(--Dark-grey-color);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--Accent-grey-color);
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+
+  &Active {
+    background: var(--Primary-color);
+    color: #000;
+  }
 }

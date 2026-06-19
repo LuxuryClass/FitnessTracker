@@ -2,6 +2,12 @@
 
 from app.schemas.auth import AccessTokenResponse, AuthResponse, LoginRequest, LogoutResponse, RegisterRequest
 from app.schemas.exercise import ExerciseCreateRequest, ExerciseResponse, ExerciseUpdateRequest
+from app.schemas.guide import (
+    GuideArticleListItem,
+    GuideArticleResponse,
+    GuideCategoryLandingResponse,
+    GuideCategoryListItem,
+)
 from app.schemas.notifications import (
     NotificationSettings,
     NotificationSettingsUpdateRequest,
@@ -37,6 +43,10 @@ __all__ = [
     "ExerciseCreateRequest",
     "ExerciseUpdateRequest",
     "ExerciseResponse",
+    "GuideArticleListItem",
+    "GuideArticleResponse",
+    "GuideCategoryListItem",
+    "GuideCategoryLandingResponse",
     "NotificationSettings",
     "NotificationSettingsUpdateRequest",
     "PushSubscriptionRequest",
