@@ -430,10 +430,13 @@ const ExerciseModal = ({
             </div>
           )}
 
-          {type === 'default' && (
+          {type === 'default' && editable && (
             <div className={styles.buttons}>
               <Button size="l" className={styles.confirmBtn} onClick={handleConfirm}>
-                {initialSets && initialSets.length > 0 ? 'Сохранить' : 'Добавить'}
+                {showSaveButton 
+                  ? 'Сохранить' 
+                  : (initialSets && initialSets.length > 0 ? 'Сохранить' : 'Добавить')
+                }
               </Button>
             </div>
           )}
