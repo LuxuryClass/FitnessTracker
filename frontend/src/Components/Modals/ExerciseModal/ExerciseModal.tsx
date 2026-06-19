@@ -431,89 +431,9 @@ const ExerciseModal = ({
           )}
 
           {type === 'default' && (
-            <div className={styles.section}>
-              <div className={styles.setsHeader}>
-                <span className={cn(styles.sectionLabel, styles.sectionLabel_settings)}>Настройки упражнения</span>
-                {hasSets && (
-                  <button className={styles.modeToggle} onClick={mode === 'expanded' ? handleCollapse : handleExpand}>
-                    {mode === 'expanded' ? 'Свернуть' : 'Развернуть'}
-                  </button>
-                )}
-              </div>
-
-              {mode === 'expanded' && (
-                <>
-                  {allSets.length > 0 && (
-                    <div className={styles.setGrid}>
-                      <span className={styles.columnLabel}>№</span>
-                      <span className={styles.columnLabel}>Повторения</span>
-                      <span className={styles.columnLabel}>Вес</span>
-                      {allSets.map((set, i) => (
-                        <React.Fragment key={i}>
-                          <span className={styles.setIndex}>{i + 1}</span>
-                          <div className={styles.setField}>
-                            <button className={cn(styles.setBtn, !editable && styles.setBtn_disabled)} onClick={() => changeSet(i, 'reps', -1)}>−</button>
-                            <input type="number" className={styles.setInput} value={set.reps} onChange={e => inputSet(i, 'reps', e.target.value)} readOnly={!editable} />
-                            <button className={cn(styles.setBtn, !editable && styles.setBtn_disabled)} onClick={() => changeSet(i, 'reps', 1)}>+</button>
-                          </div>
-                          <div className={styles.setField}>
-                            <button className={cn(styles.setBtn, !editable && styles.setBtn_disabled)} onClick={() => changeSet(i, 'weight', -1)}>−</button>
-                            <input type="number" className={styles.setInput} value={set.weight} onChange={e => inputSet(i, 'weight', e.target.value)} readOnly={!editable} />
-                            <button className={cn(styles.setBtn, !editable && styles.setBtn_disabled)} onClick={() => changeSet(i, 'weight', 1)}>+</button>
-                          </div>
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  )}
-                  {editable && (
-                    <button className={styles.addSetBtn} onClick={addSet}>+ Добавить подход</button>
-                  )}
-                </>
-              )}
-
-              {mode === 'collapsed' && (
-                <>
-                  {groups.length > 0 && (
-                    <div className={styles.groupGrid}>
-                      <span className={styles.columnLabel}>Подходы</span>
-                      <span className={styles.columnLabel}>Повторения</span>
-                      <span className={styles.columnLabel}>Вес</span>
-                      {groups.map(group => (
-                        <React.Fragment key={group.id}>
-                          <div className={cn(styles.groupField, styles.groupFieldPrimary)}>
-                            <button className={cn(styles.groupBtn, styles.groupBtnPrimary, !editable && styles.groupBtn_disabled)} onClick={() => deltaGroup(group.id, 'count', -1)}>−</button>
-                            <input type="number" className={styles.compactInput} value={group.count} onChange={e => changeGroup(group.id, 'count', e.target.value)} readOnly={!editable} />
-                            <button className={cn(styles.groupBtn, styles.groupBtnPrimary, !editable && styles.groupBtn_disabled)} onClick={() => deltaGroup(group.id, 'count', 1)}>+</button>
-                          </div>
-                          <div className={styles.groupField}>
-                            <button className={cn(styles.groupBtn, !editable && styles.groupBtn_disabled)} onClick={() => deltaGroup(group.id, 'reps', -1)}>−</button>
-                            <input type="number" className={styles.compactInput} value={group.reps} onChange={e => changeGroup(group.id, 'reps', e.target.value)} readOnly={!editable} />
-                            <button className={cn(styles.groupBtn, !editable && styles.groupBtn_disabled)} onClick={() => deltaGroup(group.id, 'reps', 1)}>+</button>
-                          </div>
-                          <div className={styles.groupField}>
-                            <button className={cn(styles.groupBtn, !editable && styles.groupBtn_disabled)} onClick={() => deltaGroup(group.id, 'weight', -1)}>−</button>
-                            <input type="number" className={styles.compactInput} value={group.weight} onChange={e => changeGroup(group.id, 'weight', e.target.value)} readOnly={!editable} />
-                            <button className={cn(styles.groupBtn, !editable && styles.groupBtn_disabled)} onClick={() => deltaGroup(group.id, 'weight', 1)}>+</button>
-                          </div>
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  )}
-                  {editable && (
-                    <button className={styles.addGroupBtn} onClick={addGroup}>+ Добавить подходы</button>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {type === 'default' && editable && (
             <div className={styles.buttons}>
               <Button size="l" className={styles.confirmBtn} onClick={handleConfirm}>
-                {showSaveButton 
-                  ? 'Сохранить' 
-                  : (initialSets && initialSets.length > 0 ? 'Сохранить' : 'Добавить')
-                }
+                {initialSets && initialSets.length > 0 ? 'Сохранить' : 'Добавить'}
               </Button>
             </div>
           )}
