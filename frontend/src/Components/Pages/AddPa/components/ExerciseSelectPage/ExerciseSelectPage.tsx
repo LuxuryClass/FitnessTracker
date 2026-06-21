@@ -12,6 +12,8 @@ import type { ExerciseSet } from '@/Auth/authApi';
 import type { WorkoutFormSettings } from '../../CreateWorkoutPage';
 import { SearchBar } from '@/Components/UI/Search/Search';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
+import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
+import { authApi, ApiError } from '@/Auth/authApi';
 
 interface Filter {
   id: string;
@@ -72,6 +74,8 @@ const ExerciseSelectPage = () => {
   const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
 
   const groupName = groupId ? groupNames[groupId] || 'Упражнения' : 'Упражнения';
+
+  const callWithAuth = useAuthenticatedCall();
 
   const filters: Filter[] = useMemo(() => {
     const keys = PRIMARY_TO_SECONDARY[groupId ?? ''] ?? [];
@@ -154,16 +158,49 @@ const ExerciseSelectPage = () => {
     setModalExercise(exercise);
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
     const state = location.state as any;
     const isSessionMode = state?.isSessionMode || false;
 
     if (isSessionMode) {
-      navigate(`/session/${state.sessionWorkoutId}`, {
-        state: {
-          selectedExercises: allSelectedExercises,
-        },
-      });
+      const workoutId = state.sessionWorkoutId;
+      if (!workoutId) {
+        navigate('/');
+        return;
+      }
+
+      const allIds = Object.values(allSelectedExercises).flat();
+      if (allIds.length === 0) {
+        navigate(`/session/${workoutId}`);
+        return;
+      }
+
+      try {
+        const currentWorkout = await callWithAuth(token => authApi.getWorkout(token, workoutId));
+        const existingIds = new Set(currentWorkout.exercises.map(e => e.exercise_id));
+        const newIds = allIds.filter(id => !existingIds.has(id));
+
+        if (newIds.length === 0) {
+          navigate(`/session/${workoutId}`);
+          return;
+        }
+
+        const existingExercises = currentWorkout.exercises.map(item => ({
+          exercise_id: item.exercise_id,
+          target_sets: item.target_sets.length > 0 ? item.target_sets : null,
+        }));
+        const newExercises = newIds.map(id => ({
+          exercise_id: id,
+          target_sets: null,
+        }));
+        const payloadExercises = [...existingExercises, ...newExercises];
+
+        await callWithAuth(token => authApi.updateWorkout(token, workoutId, { exercises: payloadExercises }));
+
+        navigate(`/session/${workoutId}`);
+      } catch (error) {
+        alert(error instanceof ApiError ? error.message : 'Не удалось добавить упражнения.');
+      }
     } else {
       navigate('/add', {
         state: {

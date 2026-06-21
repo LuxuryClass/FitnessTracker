@@ -90,6 +90,9 @@ const SessionMainPage = () => {
   useEffect(() => {
     if (!workout || !workoutId || !session) return;
     const state = location.state as any;
+    if (state?.sessionWorkoutId) {
+      return;
+    }
     if (state?.selectedExercises) {
       const newSelected = state.selectedExercises as Record<string, string[]>;
       const allIds = new Set<string>();
