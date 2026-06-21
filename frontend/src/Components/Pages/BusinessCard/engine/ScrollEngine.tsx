@@ -36,7 +36,7 @@ interface ScrollEngineApi {
 
 const ScrollEngineContext = createContext<ScrollEngineApi | null>(null);
 
-const LERP = 0.08;
+const SMOOTH_TAU = 200;
 
 export function ScrollEngineProvider({
   children,
@@ -82,6 +82,7 @@ export function ScrollEngineProvider({
     ro.observe(el);
 
     let prevSmooth = 0;
+    let lastT = performance.now();
     const tick = () => {
       const st = stateRef.current;
       st.raw = el.scrollTop;
@@ -89,7 +90,12 @@ export function ScrollEngineProvider({
       if (reducedMotion) {
         st.scroll = st.raw; // no smoothing; snap to real position
       } else {
-        st.scroll += (st.raw - st.scroll) * LERP;
+        const now = performance.now();
+        const dt = now - lastT;
+        lastT = now;
+
+        const k = 1 - Math.exp(-dt / SMOOTH_TAU);
+        st.scroll += (st.raw - st.scroll) * k;
         if (Math.abs(st.raw - st.scroll) < 0.05) st.scroll = st.raw;
       }
 

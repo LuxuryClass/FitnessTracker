@@ -38,6 +38,7 @@ export function LightRibbon({ reducedMotion }: { reducedMotion: boolean }) {
   const { scrollerRef, subscribe } = useScrollEngine();
   const [dims, setDims] = useState({ w: 0, h: 0, vh: 0 });
   const pathRef = useRef<SVGPathElement | null>(null);
+  const groupRef = useRef<SVGGElement | null>(null);
   const shimmerRef = useRef<SVGCircleElement | null>(null);
   const lenRef = useRef(0);
 
@@ -63,16 +64,14 @@ export function LightRibbon({ reducedMotion }: { reducedMotion: boolean }) {
 
   // Drive the draw + shimmer each frame.
   useEffect(() => {
-    const p = pathRef.current;
-    if (!p) return;
+    const g = groupRef.current;
+    if (!g) return;
     return subscribe((s) => {
       const len = lenRef.current;
       if (!len) return;
-
-      // Visible end follows scroll, ending ~55% vh below viewport center.
       const visibleY = s.scroll + s.vh * 0.55;
       const drawn = reducedMotion ? len : clamp(visibleY / dims.h) * len;
-      p.style.strokeDashoffset = `${len - drawn}`;
+      g.style.strokeDashoffset = `${len - drawn}`;
 
       // Shimmer pulse travels down the drawn region (time-based).
       const sh = shimmerRef.current;
@@ -91,6 +90,14 @@ export function LightRibbon({ reducedMotion }: { reducedMotion: boolean }) {
   }, [subscribe, dims, reducedMotion]);
 
   const d = buildPath(dims.w, dims.h, dims.vh);
+
+  useEffect(() => {
+    const p = pathRef.current;
+    const g = groupRef.current;
+    if (!p || !g) return;
+    lenRef.current = p.getTotalLength();
+    g.style.strokeDasharray = `${lenRef.current}`;
+  }, [dims]);
 
   return (
     <svg
@@ -118,14 +125,11 @@ export function LightRibbon({ reducedMotion }: { reducedMotion: boolean }) {
         </filter>
       </defs>
 
-      {/* soft wide under-glow */}
-      <path
-        d={d}
-        className={styles.ribbonGlowPath}
-        ref={pathRef}
-        stroke="url(#ribbonFill)"
-        filter="url(#ribbonGlow)"
-      />
+      <g ref={groupRef} className={styles.ribbonGlowGroup}>
+          <path d={d} ref={pathRef} className={styles.ribbonHalo} stroke="url(#ribbonFill)" />
+          <path d={d} className={styles.ribbonGlowPath} stroke="url(#ribbonFill)" />
+          <path d={d} className={styles.ribbonDrawPath} stroke="url(#ribbonFill)" />
+      </g>
 
       {/* shimmer pulse */}
       {!reducedMotion && (
