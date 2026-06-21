@@ -265,9 +265,9 @@ const SessionMainPage = () => {
   const handleAddExercise = () => {
     if (!workout) return;
     const ids = workout.exercises.map(e => e.exercise_id);
-    navigate('/exercises/myself', {
+    navigate('/exercises', {
       state: {
-        currentSelectedExercises: { myself: ids },
+        currentSelectedExercises: { all: ids },
         currentExerciseSets: {},
         currentFormSettings: {},
         exerciseSearchQuery: '',

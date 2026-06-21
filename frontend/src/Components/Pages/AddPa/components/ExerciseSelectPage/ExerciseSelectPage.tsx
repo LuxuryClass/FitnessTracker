@@ -85,7 +85,14 @@ const ExerciseSelectPage = () => {
     setSelectedFilters([]);
   }, [groupId]);
 
-  const groupExercises = filterExercisesByCategory(allExercises, groupId || '', user?.id ?? null);
+  const isSessionMode = (location.state as any)?.isSessionMode || false;
+
+  const groupExercises = useMemo(() => {
+    if (isSessionMode) {
+      return allExercises;
+    }
+    return filterExercisesByCategory(allExercises, groupId || '', user?.id ?? null);
+  }, [allExercises, groupId, user, isSessionMode]);
 
   const filteredExercises = groupExercises.filter(ex => {
     if (searchQuery.trim()) {
@@ -147,19 +154,30 @@ const ExerciseSelectPage = () => {
     setModalExercise(exercise);
   };
 
-const handleBack = () => {
-  navigate('/add', {
-    state: {
-      returnedGroupId: groupId,
-      selectedExercises: allSelectedExercises,
-      exerciseSets,
-      formSettings,
-      activeTab: 'exercises',
-      exerciseSearchQuery: searchQuery,
-      exercisesSnapshot: (location.state as any)?.exercisesSnapshot, // ← добавить
-    },
-  });
-};
+  const handleBack = () => {
+    const state = location.state as any;
+    const isSessionMode = state?.isSessionMode || false;
+
+    if (isSessionMode) {
+      navigate(`/session/${state.sessionWorkoutId}`, {
+        state: {
+          selectedExercises: allSelectedExercises,
+        },
+      });
+    } else {
+      navigate('/add', {
+        state: {
+          returnedGroupId: groupId,
+          selectedExercises: allSelectedExercises,
+          exerciseSets,
+          formSettings,
+          activeTab: 'exercises',
+          exerciseSearchQuery: searchQuery,
+          exercisesSnapshot: state?.exercisesSnapshot,
+        },
+      });
+    }
+  };
 
   const handleCreateExercise = () => {
     navigate("/createExercise");
