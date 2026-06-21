@@ -14,6 +14,7 @@ import { SearchBar } from '@/Components/UI/Search/Search';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 import { authApi, ApiError } from '@/Auth/authApi';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Filter {
   id: string;
@@ -76,6 +77,7 @@ const ExerciseSelectPage = () => {
   const groupName = groupId ? groupNames[groupId] || 'Упражнения' : 'Упражнения';
 
   const callWithAuth = useAuthenticatedCall();
+  const queryClient = useQueryClient();
 
   const filters: Filter[] = useMemo(() => {
     const keys = PRIMARY_TO_SECONDARY[groupId ?? ''] ?? [];
@@ -91,8 +93,8 @@ const ExerciseSelectPage = () => {
 
   const isSessionMode = (location.state as any)?.isSessionMode || false;
 
-  const groupExercises = useMemo(() => {
-    if (isSessionMode) {
+   const groupExercises = useMemo(() => {
+    if (isSessionMode || groupId === 'all') {
       return allExercises;
     }
     return filterExercisesByCategory(allExercises, groupId || '', user?.id ?? null);
@@ -194,9 +196,9 @@ const ExerciseSelectPage = () => {
           target_sets: null,
         }));
         const payloadExercises = [...existingExercises, ...newExercises];
-
         await callWithAuth(token => authApi.updateWorkout(token, workoutId, { exercises: payloadExercises }));
 
+        await queryClient.invalidateQueries({ queryKey: ['workout', user?.id, workoutId] });
         navigate(`/session/${workoutId}`);
       } catch (error) {
         alert(error instanceof ApiError ? error.message : 'Не удалось добавить упражнения.');
