@@ -25,6 +25,13 @@
   text-align: start;
 }
 
+.emptyState {
+  @include text_subtitle();
+  color: var(--Accent-grey-color);
+  text-align: center;
+  padding: 40px 0;
+}
+
 // Sort
 .sortWrapper {
   position: relative;

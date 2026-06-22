@@ -7,6 +7,7 @@ from app.services.notification_service import notification_service
 from app.services.user_service import user_service
 from app.services.workout_service import workout_service
 from app.services.workout_session_service import workout_session_service
+from app.services.workout_template_service import workout_template_service
 
 __all__ = [
     "auth_service",
@@ -15,5 +16,6 @@ __all__ = [
     "guide_service",
     "user_service",
     "workout_session_service",
+    "workout_template_service",
     "notification_service",
 ]

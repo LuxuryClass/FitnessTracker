@@ -269,6 +269,34 @@ export interface WorkoutUpdatePayload {
   exercises?: WorkoutExerciseCreateItem[];
 }
 
+export interface WorkoutTemplateExerciseItem {
+  exercise_id: string;
+  order_index: number;
+}
+
+export interface WorkoutTemplate {
+  id: string;
+  created_by_user_id: string | null;
+  title: string;
+  description: string | null;
+  is_favorite: boolean;
+  exercises: WorkoutTemplateExerciseItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkoutTemplateCreatePayload {
+  title: string;
+  description: string | null;
+  exercises: { exercise_id: string }[];
+}
+
+export interface WorkoutTemplateUpdatePayload {
+  title?: string;
+  description?: string | null;
+  exercises?: { exercise_id: string }[];
+}
+
 export interface WorkoutSessionSetItem {
   id: string;
   exercise_id: string;
@@ -461,6 +489,61 @@ export const authApi = {
       method: "PATCH",
       accessToken,
       body: payload,
+    });
+  },
+
+  async getWorkoutTemplates(accessToken: string): Promise<WorkoutTemplate[]> {
+    return request<WorkoutTemplate[]>("/workout-templates", {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async getWorkoutTemplate(accessToken: string, templateId: string): Promise<WorkoutTemplate> {
+    return request<WorkoutTemplate>(`/workout-templates/${templateId}`, {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async createWorkoutTemplate(accessToken: string, payload: WorkoutTemplateCreatePayload): Promise<WorkoutTemplate> {
+    return request<WorkoutTemplate>("/workout-templates", {
+      method: "POST",
+      accessToken,
+      body: payload,
+    });
+  },
+
+  async updateWorkoutTemplate(
+    accessToken: string,
+    templateId: string,
+    payload: WorkoutTemplateUpdatePayload,
+  ): Promise<WorkoutTemplate> {
+    return request<WorkoutTemplate>(`/workout-templates/${templateId}`, {
+      method: "PATCH",
+      accessToken,
+      body: payload,
+    });
+  },
+
+  async deleteWorkoutTemplate(accessToken: string, templateId: string): Promise<void> {
+    return request<void>(`/workout-templates/${templateId}`, {
+      method: "DELETE",
+      accessToken,
+    });
+  },
+
+  async addWorkoutTemplateFavorite(accessToken: string, templateId: string): Promise<void> {
+    return request<void>(`/workout-templates/${templateId}/favorite`, {
+      method: "POST",
+      accessToken,
+    });
+  },
+
+  async removeWorkoutTemplateFavorite(accessToken: string, templateId: string): Promise<void> {
+    return request<void>(`/workout-templates/${templateId}/favorite`, {
+      method: "DELETE",
+      accessToken,
     });
   },
 

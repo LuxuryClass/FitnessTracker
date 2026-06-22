@@ -13,7 +13,6 @@ import { ConfirmTemplateModal } from '@/Components/Modals/ConfirmTemplateModal/C
 
 interface TemplateExercise {
   exerciseId: string;
-  sets: { reps: number; weight: number }[];
 }
 
 interface Template {
@@ -61,7 +60,6 @@ const TemplateInfoPage = () => {
           equipment: info.equipment,
           imageUrl: info.media?.[0]?.url,
           media: info.media,
-          sets: te.sets,
         };
       })
       .filter((ex): ex is NonNullable<typeof ex> => ex !== null);
@@ -115,7 +113,6 @@ const TemplateInfoPage = () => {
           template,
           exercises: template.exercises.map(ex => ({
             exerciseId: ex.exerciseId,
-            sets: ex.sets,
           })),
         },
       },
@@ -181,11 +178,6 @@ const TemplateInfoPage = () => {
                 name={exercise.name}
                 muscleGroups={exercise.muscleGroups}
                 targetMuscles={exercise.targetMuscles}
-                sets={exercise.sets.map((s, i) => ({
-                  set_index: i + 1,
-                  reps: s.reps,
-                  weight: s.weight,
-                }))}
                 index={index}
                 showDrag={false}
                 showMuscleGroups={false}
@@ -214,15 +206,17 @@ const TemplateInfoPage = () => {
 
       </div>
 
-      <Button
-        size="l"
-        color="primary"
-        fullWidth
-        onClick={handleSelect}
-        className={styles.selectBtn}
-      >
-        Выбрать
-      </Button>
+      {!modalExercise && (
+        <Button
+          size="l"
+          color="primary"
+          fullWidth
+          onClick={handleSelect}
+          className={styles.selectBtn}
+        >
+          Выбрать
+        </Button>
+      )}
 
       {showConfirm && (
         <ConfirmTemplateModal
@@ -242,13 +236,9 @@ const TemplateInfoPage = () => {
           equipment={modalExercise.equipment}
           media={modalExercise.media}
           description=""
-          sets={modalExercise.sets.map((s: any, i: number) => ({
-            set_index: i + 1,
-            reps: s.reps,
-            weight: s.weight,
-          }))}
-  type="default"
+          type="default"
           editable={false}
+          showSettings={false}
         />
       )}
     </div>

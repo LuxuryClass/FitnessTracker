@@ -30,6 +30,13 @@ from app.schemas.workout_session import (
     WorkoutSessionSetUpsertRequest,
     WorkoutSessionStartRequest,
 )
+from app.schemas.workout_template import (
+    WorkoutTemplateCreateRequest,
+    WorkoutTemplateExerciseCreateItem,
+    WorkoutTemplateExerciseResponse,
+    WorkoutTemplateResponse,
+    WorkoutTemplateUpdateRequest,
+)
 
 __all__ = [
     "LoginRequest",
@@ -62,4 +69,9 @@ __all__ = [
     "WorkoutSessionSetUpsertRequest",
     "WorkoutSessionSetResponse",
     "WorkoutSessionResponse",
+    "WorkoutTemplateCreateRequest",
+    "WorkoutTemplateUpdateRequest",
+    "WorkoutTemplateExerciseCreateItem",
+    "WorkoutTemplateExerciseResponse",
+    "WorkoutTemplateResponse",
 ]
