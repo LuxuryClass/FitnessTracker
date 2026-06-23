@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Styles.module.scss';
 import logo from '/masscot-main.png';
-import arrowBack from '/icons/ArrowBack.svg';
 import { Button } from '@/Components/UI/Button/Button';
 import { AuthForm } from '@/Components/AuthForm/AuthForm';
 import { ApiError, useAuth } from '@/Auth';
@@ -38,10 +37,8 @@ const LoginPage = () => {
 
   return (
     <div className={styles.page}>
-      <Link to="/enter">
-        <Button className={styles.back__button} size="back" color="accent-2" type="button">
-          <img src={arrowBack} alt="Назад" />
-        </Button>
+      <Link to="/enter" className={styles.back__button}>
+        <Button size="back" />
       </Link>
       
       <img className={styles.logo} src={logo} alt="logo" />
