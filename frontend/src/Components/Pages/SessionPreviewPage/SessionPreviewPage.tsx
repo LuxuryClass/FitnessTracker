@@ -24,6 +24,8 @@ import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { useCompletedSessionQuery } from '@/hooks/useCompletedSessionQuery';
 import { useDeleteWorkoutMutation } from '@/hooks/useDeleteWorkoutMutation';
 import { labelForPrimary, labelForSecondary } from '@/Utils/muscleGroups';
+import { PRIMARY_TO_SECONDARY } from '@/Utils/muscleGroups';
+import MuscleAccentComponent from '@/Components/Common/MuscleAccentComponent/MuscleAccentComponent';
 
 // Зеркало MINUTES_PER_SET бэкенда
 const MINUTES_PER_SET = 5;
@@ -115,6 +117,33 @@ const WorkoutSessionPage = () => {
     return result;
   }, [exercises]);
 
+  const muscleFocusData = useMemo(() => {
+  if (!exercises.length) return [];
+  const counts = new Map<string, number>();
+  for (const ex of exercises) {
+    // ex.muscleGroups — это уже русские названия (labelForPrimary)
+    // нам нужны слаги для PRIMARY_TO_SECONDARY, которых нет в PreviewExercise
+    // используем catalogById для получения слагов
+    const info = catalogById.get(ex.exerciseId);
+    if (!info) continue;
+    
+    const secondary = new Set(info.secondary_muscles);
+    const slugs = new Set<string>();
+    const claimed = new Set<string>();
+    for (const g of info.primary_muscle_groups) {
+      const groupSlugs = PRIMARY_TO_SECONDARY[g] ?? [];
+      const groupSecondary = groupSlugs.filter((s) => secondary.has(s));
+      if (groupSecondary.length > 0) {
+        for (const s of groupSecondary) { slugs.add(s); claimed.add(s); }
+      } else {
+        for (const s of groupSlugs) slugs.add(s);
+      }
+    }
+    for (const s of secondary) if (!claimed.has(s)) slugs.add(s);
+    for (const slug of slugs) counts.set(slug, (counts.get(slug) ?? 0) + 1);
+  }
+  return Array.from(counts, ([muscle, intensity]) => ({ muscle, intensity }));
+}, [exercises, catalogById]);
 
   const formatHeaderTitle = (): string => {
   if (!workout) return 'Тренировка сегодня';
@@ -307,6 +336,16 @@ const WorkoutSessionPage = () => {
               ),
             )}
           </div>
+
+          {muscleFocusData.length > 0 && (
+  <div className={styles.accentSection}>
+    <h3 className={styles.accentSection_title}>Акцент на мышцы</h3>
+    <MuscleAccentComponent
+      gender={user?.gender ?? "male"}
+      data={muscleFocusData}
+    />
+  </div>
+)}
         </div>
       </div>
 
