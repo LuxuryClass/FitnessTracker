@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useEffect } from 'react';
+import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 
@@ -22,6 +22,7 @@ interface SessionExerciseRowProps {
   completed?: boolean;
   initialDoneSets?: DoneSet[];
   imageUrl?: string;
+  isCardio?: boolean;
   onComplete?: () => void;
   onImageClick?: () => void;
   onToggleComplete?: () => void;
@@ -37,6 +38,7 @@ const SessionExerciseRowComponent = ({
   completed,
   initialDoneSets = [],
   imageUrl,
+  isCardio = false,
   onComplete,
   onImageClick,
   onToggleComplete,
@@ -65,58 +67,28 @@ const SessionExerciseRowComponent = ({
     () => buildInitialRows().values
   );
   const [completedSets, setCompletedSets] = useState<boolean[]>(() => buildInitialRows().doneFlags);
-  
-  const [restTimer, setRestTimer] = useState(0);
-  const [isResting, setIsResting] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const restIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-const [showReset, setShowReset] = useState(false);
 
-const handleStart = () => {
-  startRest();
-  setShowReset(true);
-};
+  // Таймер (отдых или кардио-подход)
+  const [timerValue, setTimerValue] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isTimerPaused, setIsTimerPaused] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-const handleReset = () => {
-  setIsResting(false);
-  setIsPaused(false);
-  setRestTimer(0);
-  setShowReset(false);
-  if (restIntervalRef.current) clearInterval(restIntervalRef.current);
-};
-
-  useEffect(() => {
-  if (isResting && !isPaused) {
-    restIntervalRef.current = setInterval(() => setRestTimer(prev => prev + 1), 1000);
-  }
-  return () => { if (restIntervalRef.current) clearInterval(restIntervalRef.current); };
-}, [isResting, isPaused]);
-
-const startRest = () => {
-  setIsResting(true);
-  setIsPaused(false);
-  setRestTimer(0);
-};
-
-const pauseRest = () => {
-  setIsPaused(true);
-  if (restIntervalRef.current) clearInterval(restIntervalRef.current);
-};
-
-const resumeRest = () => {
-  setIsPaused(false);
-};
-
-
+  // Режим таймера: 'rest' | 'cardio'
+  const [timerMode, setTimerMode] = useState<'rest' | 'cardio'>('rest');
+  // Индекс подхода, для которого запущен кардио-таймер
+  const [cardioSetIndex, setCardioSetIndex] = useState<number | null>(null);
+  // Целевое время для обратного отсчёта (сек)
+  const [cardioTarget, setCardioTarget] = useState(0);
 
   const allSetsCompleted = completedSets.length > 0 && completedSets.every(Boolean);
   const [localCompleted, setLocalCompleted] = useState(completed);
 
   // Поиск первого невыполненного подхода
-  const findFirstIncomplete = () => {
+  const findFirstIncomplete = useCallback(() => {
     const idx = completedSets.findIndex(done => !done);
     return idx >= 0 ? idx : 0;
-  };
+  }, [completedSets]);
 
   useEffect(() => {
     setLocalCompleted(completed);
@@ -138,9 +110,83 @@ const resumeRest = () => {
     }
   }, [isFocused]);
 
-  const formatRest = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  // Интервал таймера
+  useEffect(() => {
+    if (isTimerRunning) {
+      timerRef.current = setInterval(() => {
+        setTimerValue(prev => {
+          const next = prev + 1;
+          // Кардио: обратный отсчёт
+          if (timerMode === 'cardio' && next >= cardioTarget) {
+            // Время истекло — автозавершение подхода
+            setIsTimerRunning(false);
+            setTimerMode('rest');
+            setCardioSetIndex(null);
+            if (cardioSetIndex !== null) {
+              autoCompleteCardioSet(cardioSetIndex);
+            }
+            return cardioTarget;
+          }
+          return next;
+        });
+      }, 1000);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [isTimerRunning, timerMode, cardioTarget, cardioSetIndex]);
+
+  // Автозавершение кардио-подхода по истечении таймера
+  const autoCompleteCardioSet = (i: number) => {
+    const weight = Number(setValues[i]?.weight || getPlaceholder(i, 'weight')) || 0;
+    const reps = cardioTarget;
+
+    setSetValues(vals => vals.map((s, idx) => {
+      if (idx !== i) return s;
+      return {
+        weight: s.weight || getPlaceholder(i, 'weight'),
+        reps: String(reps),
+      };
+    }));
+    onSetComplete?.(i + 1, weight, reps);
+
+    // Сброс таймера
+    setTimerValue(0);
+    setTimerMode('rest');
+    setCardioSetIndex(null);
+
+    setCompletedSets(prev => {
+      const next = [...prev];
+      next[i] = true;
+      const firstIncomplete = next.findIndex(done => !done);
+      if (firstIncomplete >= 0) {
+        setCurrentSetIndex(firstIncomplete);
+      }
+      return next;
+    });
+  };
+
+  // Ручное завершение подхода (галочка)
+  const handleManualComplete = (i: number) => {
+    // Если это кардио и таймер активен — сбросить таймер
+    if (isCardio && cardioSetIndex === i && isTimerActive) {
+      setIsTimerRunning(false);
+      setIsTimerPaused(false);
+      setTimerValue(0);
+      setTimerMode('rest');
+      setCardioSetIndex(null);
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    toggleSetDone(i);
+  };
+
+  const formatTime = (s: number) => {
+    const display = timerMode === 'cardio' ? Math.max(0, cardioTarget - s) : s;
+    return `${String(Math.floor(display / 60)).padStart(2, '0')}:${String(display % 60).padStart(2, '0')}`;
+  };
 
   const getPlaceholder = (i: number, field: 'weight' | 'reps'): string => {
+    if (isCardio && field === 'reps') {
+      return String(sets[i]?.[field] ?? '60');
+    }
     return String(sets[i]?.[field] ?? '0');
   };
 
@@ -177,6 +223,50 @@ const resumeRest = () => {
     }
   };
 
+  // Запуск кардио-подхода
+  const startCardioSet = (i: number) => {
+    const target = Number(setValues[i]?.reps || getPlaceholder(i, 'reps')) || 60;
+    setCardioSetIndex(i);
+    setCardioTarget(target);
+    setTimerValue(0);
+    setIsTimerPaused(false);
+    setIsTimerRunning(true);
+    setTimerMode('cardio');
+  };
+
+  const pauseTimer = () => {
+    setIsTimerPaused(true);
+    setIsTimerRunning(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+  };
+
+  const resumeTimer = () => {
+    setIsTimerPaused(false);
+    setIsTimerRunning(true);
+  };
+
+  const resetTimer = () => {
+    setIsTimerRunning(false);
+    setIsTimerPaused(false);
+    setTimerValue(0);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (timerMode === 'cardio' && cardioSetIndex !== null) {
+      startCardioSet(cardioSetIndex);
+      return;
+    }
+    setTimerMode('rest');
+    setCardioSetIndex(null);
+  };
+
+  // Запуск отдыха
+  const startRest = () => {
+    setTimerMode('rest');
+    setCardioSetIndex(null);
+    setTimerValue(0);
+    setIsTimerPaused(false);
+    setIsTimerRunning(true);
+  };
+
   const addSet = () => {
     const lastIndex = setValues.length - 1;
     const newIndex = lastIndex + 1;
@@ -188,7 +278,7 @@ const resumeRest = () => {
     const planReps = sets[newIndex]?.reps !== undefined ? String(sets[newIndex].reps) : '';
 
     const newWeight = planWeight || lastUserWeight || '0';
-    const newReps = planReps || lastUserReps || '1';
+    const newReps = planReps || lastUserReps || '0';
 
     setSetValues(prev => [...prev, { weight: newWeight, reps: newReps }]);
     setCompletedSets(prev => [...prev, false]);
@@ -196,29 +286,41 @@ const resumeRest = () => {
 
   const [removingIndex, setRemovingIndex] = useState<number | null>(null);
 
-    const removeSet = (i: number) => {
+  const removeSet = (i: number) => {
+    // Если удаляем подход с активным кардио-таймером — сбросить в отдых
+    if (isCardio && cardioSetIndex === i && isTimerActive) {
+      setIsTimerRunning(false);
+      setIsTimerPaused(false);
+      setTimerValue(0);
+      setTimerMode('rest');
+      setCardioSetIndex(null);
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+
     setRemovingIndex(i);
     setTimeout(() => {
-        const previousRowCount = setValues.length;
-        const nextValues = setValues.filter((_, idx) => idx !== i);
-        const nextDone = completedSets.filter((_, idx) => idx !== i);
-        const doneSets = nextValues
-          .map((value, idx) => ({
-            setIndex: idx + 1,
-            weight: Number(value.weight) || 0,
-            reps: Number(value.reps) || 0,
-          }))
-          .filter((_, idx) => nextDone[idx]);
+      const previousRowCount = setValues.length;
+      const nextValues = setValues.filter((_, idx) => idx !== i);
+      const nextDone = completedSets.filter((_, idx) => idx !== i);
+      const doneSets = nextValues
+        .map((value, idx) => ({
+          setIndex: idx + 1,
+          weight: Number(value.weight) || 0,
+          reps: Number(value.reps) || 0,
+        }))
+        .filter((_, idx) => nextDone[idx]);
 
-        setSetValues(nextValues);
-        setCompletedSets(nextDone);
-        setRemovingIndex(null);
-        if (currentSetIndex >= i && currentSetIndex > 0) {
+      setSetValues(nextValues);
+      setCompletedSets(nextDone);
+      setRemovingIndex(null);
+      if (currentSetIndex >= i && currentSetIndex > 0) {
         setCurrentSetIndex(prev => prev - 1);
-        }
-        onSetsReindexed?.(doneSets, previousRowCount);
+      }
+      onSetsReindexed?.(doneSets, previousRowCount);
     }, 300);
-    };
+  };
+
+  const isTimerActive = isTimerRunning || isTimerPaused;
 
   return (
     <div className={cn(
@@ -244,12 +346,12 @@ const resumeRest = () => {
       {expanded && (
         <div className={styles.body}>
           {setValues.map((set, i) => (
-<div key={i} className={cn(
-  styles.setRow,
-  completedSets[i] && styles.setRow_done,
-  i === currentSetIndex && !completedSets[i] && !isResting && styles.setRow_current,
-  removingIndex === i && styles.setRow_removing
-)} onClick={() => handleSetClick(i)}>
+            <div key={i} className={cn(
+              styles.setRow,
+              completedSets[i] && styles.setRow_done,
+              i === currentSetIndex && !completedSets[i] && !isTimerActive && styles.setRow_current,
+              removingIndex === i && styles.setRow_removing
+            )} onClick={() => handleSetClick(i)}>
               <span className={styles.setIndex}>{i + 1}</span>
 
               <div className={styles.inputsGroup}>
@@ -261,64 +363,122 @@ const resumeRest = () => {
                     onClick={e => e.stopPropagation()}
                     style={{ width: `${Math.max(set.weight.length, getPlaceholder(i, 'weight').length, 1)}ch` }}
                   />
-                  <span className={styles.unit}>кг</span>
+                  <span className={styles.unit}> кг</span>
                 </div>
 
                 <span className={styles.multiply}>×</span>
 
-                <input type="number" className={styles.setInput}
-                  placeholder={getPlaceholder(i, 'reps')}
-                  value={set.reps}
-                  onChange={e => updateSetValue(i, 'reps', e.target.value)}
-                  onClick={e => e.stopPropagation()}
-                  style={{ width: `${Math.max(set.reps.length, getPlaceholder(i, 'reps').length, 1)}ch` }}
-                />
+                {isCardio ? (
+                  <>
+                    <input type="number" className={styles.setInput}
+                      placeholder={getPlaceholder(i, 'reps')}
+                      value={set.reps}
+                      onChange={e => updateSetValue(i, 'reps', e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      style={{ width: `${Math.max(set.reps.length, getPlaceholder(i, 'reps').length, 1)}ch` }}
+                    />
+                    <span className={styles.unit}> сек</span>
+                  </>
+                ) : (
+                  <>
+                    <input type="number" className={styles.setInput}
+                      placeholder={getPlaceholder(i, 'reps')}
+                      value={set.reps}
+                      onChange={e => updateSetValue(i, 'reps', e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      style={{ width: `${Math.max(set.reps.length, getPlaceholder(i, 'reps').length, 1)}ch` }}
+                    />
+                    <span className={styles.unit}> пвт</span>
+                  </>
+                )}
               </div>
+
+              {isCardio && (
+                <div className={styles.cardioActions}>
+                  {cardioSetIndex !== i && (
+                    <button className={styles.startCardioBtn} onClick={e => { e.stopPropagation(); startCardioSet(i); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </button>
+                  )}
+                  {cardioSetIndex === i && isTimerRunning && (
+                    <button className={styles.startCardioBtn} onClick={e => { e.stopPropagation(); pauseTimer(); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="4" width="4" height="16" rx="1"/>
+                        <rect x="14" y="4" width="4" height="16" rx="1"/>
+                      </svg>
+                    </button>
+                  )}
+                  {cardioSetIndex === i && isTimerPaused && (
+                    <button className={styles.startCardioBtn} onClick={e => { e.stopPropagation(); resumeTimer(); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className={styles.buttons}>
                 <button className={styles.removeBtn} onClick={e => { e.stopPropagation(); removeSet(i); }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
                 </button>
 
-                <button className={cn(styles.checkBtn, completedSets[i] && styles.checkBtn_done)} onClick={e => { e.stopPropagation(); toggleSetDone(i); }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                </button>              
+                <button className={cn(styles.checkBtn, completedSets[i] && styles.checkBtn_done)} onClick={e => { e.stopPropagation(); handleManualComplete(i); }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
               </div>
             </div>
           ))}
 
           <button className={styles.addSetBtn} onClick={addSet}>+ Добавить подход</button>
 
-<div className={cn(styles.restTimer, isResting && styles.restTimer_active)}>
-  <span className={styles.restLabel}>Отдых</span>
-  <span className={styles.restValue}>{formatRest(restTimer)}</span>
-  
-  <div className={styles.restControls}>
-    {!isResting && (
-      <button className={styles.restBtn} onClick={handleStart}>Старт</button>
-    )}
-    {isResting && (
-      <>
-        <button 
-          className={cn(styles.restBtn, styles.restBtn_reset, showReset && styles.restBtn_show)} 
-          onClick={handleReset}
-        >
-          Очистить
-        </button>
-        <button 
-          className={cn(styles.restBtn, isPaused ? styles.restBtn_primary : styles.restBtn_stop)} 
-          onClick={isPaused ? resumeRest : pauseRest}
-        >
-          {isPaused ? 'Продолжить' : 'Стоп'}
-        </button>
-      </>
-    )}
-  </div>
-</div>
+          {/* Блок таймера (отдых / кардио-подход) */}
+          <div className={cn(styles.restTimer, isTimerActive && styles.restTimer_active)}>
+            <span className={styles.restLabel}>
+              {timerMode === 'cardio' && cardioSetIndex !== null
+                ? `Подход ${cardioSetIndex + 1}`
+                : 'Отдых'}
+            </span>
+            <span className={styles.restValue}>{formatTime(timerValue)}</span>
+
+            <div className={styles.restControls}>
+              {!isTimerActive && (
+                <button className={styles.restBtn} onClick={startRest}>Старт</button>
+              )}
+              {isTimerActive && timerMode === 'rest' && (
+                <>
+                  <button className={cn(styles.restBtn, styles.restBtn_reset)} onClick={resetTimer}>
+                    Очистить
+                  </button>
+                  <button
+                    className={cn(styles.restBtn, isTimerPaused ? styles.restBtn_primary : styles.restBtn_stop)}
+                    onClick={isTimerPaused ? resumeTimer : pauseTimer}
+                  >
+                    {isTimerPaused ? 'Продолжить' : 'Стоп'}
+                  </button>
+                </>
+              )}
+              {isTimerActive && timerMode === 'cardio' && (
+                <>
+                  <button className={cn(styles.restBtn, styles.restBtn_reset)} onClick={resetTimer}>
+                    Заново
+                  </button>
+                  <button
+                    className={cn(styles.restBtn, isTimerPaused ? styles.restBtn_primary : styles.restBtn_stop)}
+                    onClick={isTimerPaused ? resumeTimer : pauseTimer}
+                  >
+                    {isTimerPaused ? 'Продолжить' : 'Стоп'}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

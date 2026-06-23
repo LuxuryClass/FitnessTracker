@@ -98,6 +98,7 @@
   transition: all 0.3s ease;
   cursor: pointer;
   animation: fadeInRow 0.3s ease;
+  gap: 8px;
 
   &_done {
     border-color: rgba(159, 218, 22, 0.4);
@@ -139,12 +140,37 @@
   animation: fadeOutRow 0.3s ease forwards;
 }
 
+.startCardioBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--Primary-color);
+  background: transparent;
+  color: var(--Primary-color);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(159, 218, 22, 0.1);
+  }
+}
+
 .inputsGroup {
   display: flex;
   align-items: center;
   gap: 0;
   flex: 1;
   justify-content: center;
+}
+
+.multiply {
+  margin: 0 10px;
+  color: #fff;
+  align-self: center;
 }
 
 .setIndex {
@@ -163,12 +189,6 @@
   @include button_text_h1();
   font-weight: 400;
   color: #fff;
-}
-
-.multiply {
-  margin: 0 10px;
-  color: #fff;
-  align-self: end;
 }
 
 .setInput {
@@ -322,3 +342,29 @@
   to { opacity: 1; transform: scale(1); }
 }
 
+// Добавить к существующим стилям:
+
+.startCardioBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--Primary-color);
+  background: transparent;
+  color: var(--Primary-color);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(159, 218, 22, 0.1);
+  }
+}
+
+.cardioActions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}

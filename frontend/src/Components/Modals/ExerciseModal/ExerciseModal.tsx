@@ -102,6 +102,7 @@ const ExerciseModal = ({
   const touchStartX = useRef(0);
 
   const currentSlide = slides[slideIndex] ?? null;
+  const isCardio = targetMuscles?.includes('Кардио') || muscleGroups?.includes('Кардио');
 
   // ─── Open / Close ─────────────────────────────────────
   useEffect(() => {
@@ -360,7 +361,7 @@ const ExerciseModal = ({
                   {allSets.length > 0 && (
                     <div className={styles.setGrid}>
                       <span className={styles.columnLabel}>№</span>
-                      <span className={styles.columnLabel}>Повторения</span>
+                      <span className={styles.columnLabel}>{isCardio ? 'Время (сек)' : 'Повторения'}</span>
                       <span className={styles.columnLabel}>Вес</span>
                       {allSets.map((set, i) => (
                         <React.Fragment key={i}>
@@ -388,7 +389,7 @@ const ExerciseModal = ({
                   {groups.length > 0 && (
                     <div className={styles.groupGrid}>
                       <span className={styles.columnLabel}>Подходы</span>
-                      <span className={styles.columnLabel}>Повторения</span>
+                      <span className={styles.columnLabel}>{isCardio ? 'Время (сек)' : 'Повторения'}</span>
                       <span className={styles.columnLabel}>Вес</span>
                       {groups.map(group => (
                         <React.Fragment key={group.id}>

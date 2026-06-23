@@ -342,6 +342,7 @@ const formatTime = (totalSeconds: number) => {
               onSetComplete={(setIndex, weight, reps) => handleSetComplete(exercise.exerciseId, setIndex, weight, reps)}
               onSetsReindexed={(doneSets, previousRowCount) => handleSetsReindexed(exercise.exerciseId, doneSets, previousRowCount)}
               onImageClick={() => setModalExercise(catalogById.get(exercise.exerciseId) ?? null)}
+              isCardio={catalogById.get(exercise.exerciseId)?.primary_muscle_groups?.includes('cardio')}
             />
           ))}
         </div>
