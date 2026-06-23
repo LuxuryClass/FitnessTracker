@@ -345,6 +345,7 @@ const SessionMainPage = () => {
               index={index}
               completed={completedExercises[exercise.exerciseId]}
               initialDoneSets={exercise.initialDoneSets}
+              imageUrl={catalogById.get(exercise.exerciseId)?.media?.find(m => m.type === 'image')?.url}
               onComplete={() => setExerciseCompleted(exercise.exerciseId, true)}
               onToggleComplete={() => setExerciseCompleted(exercise.exerciseId, false)}
               onSetComplete={(setIndex, weight, reps) => handleSetComplete(exercise.exerciseId, setIndex, weight, reps)}

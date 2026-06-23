@@ -1,6 +1,5 @@
 import { JSX, memo, useEffect, useRef, useState } from 'react';
 import styles from './Styles.module.scss';
-import { Icon } from '../Icon';
 import cn from 'classnames';
 
 type InputProps = (
@@ -99,6 +98,22 @@ function InputComponent({
     }
   }, [type]);
 
+
+const openEye = (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M12 6C7.5 6 3.5 8.5 2 12C3.5 15.5 7.5 18 12 18C16.5 18 20.5 15.5 22 12C20.5 8.5 16.5 6 12 6Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="12" cy="12" r="2.5" stroke="white" strokeWidth="1.5"/>
+  </svg>
+);
+
+const closeEye = (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M12 6C7.5 6 3.5 8.5 2 12C3.5 15.5 7.5 18 12 18C16.5 18 20.5 15.5 22 12C20.5 8.5 16.5 6 12 6Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="12" cy="12" r="2.5" stroke="white" strokeWidth="1.5"/>
+    <line x1="3" y1="3" x2="21" y2="21" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
   return (
     <div>
       {label && (
@@ -120,9 +135,7 @@ function InputComponent({
       >
         {/* Иконка слева (картинка) */}
         {icon && <img src={icon} className={styles.input__icon} alt="" />}
-        
-        {type === 'search' && <Icon className={styles.input__search} glyph="eye" size={20} glyphColor="blue" />}
-        
+                
         <input
           disabled={disabled}
           ref={inputRef}
@@ -142,16 +155,15 @@ function InputComponent({
           onChange={e => changeValue(e.target.value)}
         />
         
-        {type === 'password' && (
-          <Icon
-            pointer
-            onClick={() => setDisplayPassword(!displayPassword)}
-            className={styles.input__eye}
-            glyph={displayPassword ? 'eye' : 'eye'}
-            size={24}
-            glyphColor="white"
-          />
-        )}
+{type === 'password' && (
+  <span
+    onClick={() => setDisplayPassword(!displayPassword)}
+    className={cn(styles.input__eye, styles.icon)}
+    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+  >
+    {displayPassword ? openEye : closeEye}
+  </span>
+)}
       </div>
       {error && <p className={styles.input__error}>{error}</p>}
     </div>

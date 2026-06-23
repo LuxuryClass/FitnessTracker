@@ -21,6 +21,7 @@ interface SessionExerciseRowProps {
   index: number;
   completed?: boolean;
   initialDoneSets?: DoneSet[];
+  imageUrl?: string;
   onComplete?: () => void;
   onImageClick?: () => void;
   onToggleComplete?: () => void;
@@ -35,6 +36,7 @@ const SessionExerciseRowComponent = ({
   sets = [],
   completed,
   initialDoneSets = [],
+  imageUrl,
   onComplete,
   onImageClick,
   onToggleComplete,
@@ -211,7 +213,9 @@ const SessionExerciseRowComponent = ({
     )}>
       <div className={styles.header} onClick={() => setExpanded(!expanded)}>
         <div className={styles.image} onClick={e => { e.stopPropagation(); onImageClick?.(); }}>
-
+          {imageUrl ? (
+            <img src={imageUrl} alt={name} />
+          ) : null}
         </div>
         <div className={styles.headerInfo}>
           <span className={styles.name}>{name}</span>

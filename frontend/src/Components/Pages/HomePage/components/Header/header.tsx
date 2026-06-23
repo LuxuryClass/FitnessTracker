@@ -1,8 +1,8 @@
 import { memo } from "react";
 import styles from "./Styles.module.scss";
 import { Button } from "@/Components/UI/Button/Button";
-import activBell from "/icons/Bell_Active.svg";
-import basicBell from "/icons/Bell.svg";
+// import activBell from "/icons/Bell_Active.svg";
+// import basicBell from "/icons/Bell.svg";
 import cn from "classnames";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -13,7 +13,7 @@ interface HeaderProps {
   className?: string;
 }
 
-const HeaderComponent = ({ userName, userAvatar, isActivBell, className }: HeaderProps) => {
+const HeaderComponent = ({ userName, userAvatar, /* isActivBell, */ className }: HeaderProps) => {
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Доброе утро";
@@ -32,9 +32,9 @@ const HeaderComponent = ({ userName, userAvatar, isActivBell, className }: Heade
         <Button color="accent-2" className={styles.avatar_button}>
           <img className={styles.userAvatar} src={userAvatar} alt="avatar" loading="eager" decoding="async" onClick={() => navigate('/settings')}/>
         </Button>
-        <Button color="accent-2" className={styles.bell_button}>
+        {/* <Button color="accent-2" className={styles.bell_button}>
           <img className={styles.bell} src={isActivBell ? activBell : basicBell}/>
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

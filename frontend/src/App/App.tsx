@@ -24,6 +24,7 @@ import AlmanahPage from '@/Components/Pages/KnowledgeBasePage/KnowledgeBasePage'
 import GuideExercisesPage from '@/Components/Pages/GuideExercisesPage/GuideExercisesPage';
 import GuideCategoryPage from '@/Components/Pages/GuideCategoryPage/GuideCategoryPage';
 import GuideArticlePage from '@/Components/Pages/GuideArticlePage/GuideArticlePage';
+import ProgressPage from '@/Components/Pages/ProgressPage/ProgressPage';
 
 export function App() {
   return (
@@ -43,7 +44,7 @@ export function App() {
               <Route path="/home" element={<HomePage />} />
               <Route path="/almanah" element={<AlmanahPage />} />
               <Route path="/add" element={<CreateWorkoutPage />} />
-              <Route path="/progress" />
+              <Route path="/progress" element={<ProgressPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             

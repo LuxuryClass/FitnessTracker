@@ -7,13 +7,13 @@ import { formatSetsSummary } from "@/Utils/setsFormat";
 export interface TodayWorkoutExercise {
   name: string;
   muscleGroup: string;
+  primaryMuscleGroups?: string[];
   setsCount: number | null;
   targetRepsMin: number | null;
   targetRepsMax: number | null;
   targetWeightKgMin: number | null;
   targetWeightKgMax: number | null;
 }
-
 interface TodayWorkoutProps {
   title?: string;
   plannedFor?: Date | string;
@@ -145,19 +145,22 @@ export const TodayWorkout = ({
         {safeExercises.length === 0 && (
           <p className={styles.moreExercises}>Упражнения не добавлены</p>
         )}
-        {visibleExercises.map((exercise, index) => {
-          const setsLabel = formatSetsLabel(exercise);
-          return (
-            <div key={index} className={styles.exercise}>
-              <div className={styles.exerciseInfo}>
-                <span className={styles.exerciseName}>{exercise.name}</span>
-                <span className={styles.exerciseDetails}>
-                  {setsLabel ? `${setsLabel} [${exercise.muscleGroup}]` : `[${exercise.muscleGroup}]`}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+{visibleExercises.map((exercise, index) => {
+  const setsLabel = formatSetsLabel(exercise);
+  const muscleLabel = exercise.primaryMuscleGroups?.length
+    ? exercise.primaryMuscleGroups.join(' • ')
+    : exercise.muscleGroup;
+  return (
+    <div key={index} className={styles.exercise}>
+      <div className={styles.exerciseInfo}>
+        <span className={styles.exerciseName}>{exercise.name}</span>
+        <span className={styles.exerciseDetails}>
+          {setsLabel ? `${setsLabel} · ${muscleLabel}` : muscleLabel}
+        </span>
+      </div>
+    </div>
+  );
+})}
 
         {remainingCount > 0 && (
           <p className={styles.moreExercises}>

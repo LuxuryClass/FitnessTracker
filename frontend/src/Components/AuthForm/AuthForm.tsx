@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import { Input } from '@/Components/UI/Input/Input';
 import messageIcon from '/AuthIcons/Message_light.svg';
@@ -118,9 +118,9 @@ export const AuthForm = ({ type, onSubmit, isSubmitting = false, serverError = '
         />
       </div>
 
-      {config.showForgotLink && (
+      {/* {config.showForgotLink && (
         <Link className={styles.form__forgot} to="/forgot-password">Забыли пароль?</Link>
-      )}
+      )} */}
 
       <Button
         type="submit"

@@ -182,20 +182,22 @@ const WorkoutSessionPage = () => {
           <span className={styles.sectionLabel}>Упражнения в тренировке</span>
           <div className={styles.exerciseList}>
             {exercises.map((exercise, index) => (
-            <DefaultExerciseRow
-            key={exercise.exerciseId}
-            name={exercise.name}
-            muscleGroups={exercise.muscleGroups}
-            targetMuscles={exercise.targetMuscles}
-            sets={exercise.sets}
-            index={index}
-            isDragging={false}
-            isOver={false}
-            onDragStart={() => {}}
-            onDragOver={() => {}}
-            onDragEnd={() => {}}
-            onClick={() => handleExerciseClick(exercise)}
-            />
+<DefaultExerciseRow
+  key={exercise.exerciseId}
+  name={exercise.name}
+  muscleGroups={exercise.muscleGroups}
+  targetMuscles={exercise.targetMuscles}
+  sets={exercise.sets}
+  index={index}
+  isDragging={false}
+  isOver={false}
+  onDragStart={() => {}}
+  onDragOver={() => {}}
+  onDragEnd={() => {}}
+  onClick={() => handleExerciseClick(exercise)}
+  showImage={true}
+  imageUrl={exercise.media.find(m => m.type === 'image')?.url}
+/>
             ))}
           </div>
         </div>

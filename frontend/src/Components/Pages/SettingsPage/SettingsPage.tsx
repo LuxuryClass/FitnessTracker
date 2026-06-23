@@ -10,7 +10,7 @@ import { FeedbackModal } from '@/Components/Modals/FeedbackModal/FeedbackModal';
 import avatarIcon from '/SettingsIcons/AvatarEdit.svg';
 import editIcon from '/SettingsIcons/Edit.svg';
 import notificationsIcon from '/SettingsIcons/Notification.svg';
-import privacyIcon from '/SettingsIcons/Privacy.svg';
+// import privacyIcon from '/SettingsIcons/Privacy.svg';
 import logoutIcon from '/SettingsIcons/Logout.svg';
 import feedbackIcon from '/SettingsIcons/Feedback.svg';
 import defaultAvatar from '/masscot-main.png';
@@ -170,12 +170,12 @@ const SettingsPage = () => {
       icon: notificationsIcon,
       onClick: () => navigate('/notifications'),
     },
-    {
-      id: 'privacy',
-      label: 'Конфиденциальность',
-      icon: privacyIcon,
-      onClick: () => navigate('/privacy'),
-    },
+    // {
+    //   id: 'privacy',
+    //   label: 'Конфиденциальность',
+    //   icon: privacyIcon,
+    //   onClick: () => navigate('/privacy'),
+    // },
     {
       id: 'feedback',
       label: 'Обратная связь',

@@ -482,7 +482,7 @@ useEffect(() => {
     : formData.startType === 'now'
       ? 'Начать'
       : scheduleSummary && scheduleSummary.count > 1
-        ? `Запланировать · ${scheduleSummary.count}`
+        ? `Запланировать`
         : 'Запланировать';
 
   return (
