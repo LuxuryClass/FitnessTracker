@@ -346,12 +346,15 @@ const SessionExerciseRowComponent = ({
       {expanded && (
         <div className={styles.body}>
           {setValues.map((set, i) => (
-            <div key={i} className={cn(
-              styles.setRow,
-              completedSets[i] && styles.setRow_done,
-              i === currentSetIndex && !completedSets[i] && !isTimerActive && styles.setRow_current,
-              removingIndex === i && styles.setRow_removing
-            )} onClick={() => handleSetClick(i)}>
+            <div 
+              key={i} 
+              className={cn(
+                styles.setRow,
+                completedSets[i] && styles.setRow_done,
+                i === currentSetIndex && !completedSets[i] && (!isTimerActive || timerMode === 'cardio') && styles.setRow_current,
+                removingIndex === i && styles.setRow_removing
+              )} 
+              onClick={() => handleSetClick(i)}>
               <span className={styles.setIndex}>{i + 1}</span>
 
               <div className={styles.inputsGroup}>
@@ -363,7 +366,7 @@ const SessionExerciseRowComponent = ({
                     onClick={e => e.stopPropagation()}
                     style={{ width: `${Math.max(set.weight.length, getPlaceholder(i, 'weight').length, 1)}ch` }}
                   />
-                  <span className={styles.unit}> кг</span>
+                  <span className={styles.unit}>кг</span>
                 </div>
 
                 <span className={styles.multiply}>×</span>
@@ -377,7 +380,7 @@ const SessionExerciseRowComponent = ({
                       onClick={e => e.stopPropagation()}
                       style={{ width: `${Math.max(set.reps.length, getPlaceholder(i, 'reps').length, 1)}ch` }}
                     />
-                    <span className={styles.unit}> сек</span>
+                    <span className={styles.unit}>сек</span>
                   </>
                 ) : (
                   <>
@@ -388,7 +391,7 @@ const SessionExerciseRowComponent = ({
                       onClick={e => e.stopPropagation()}
                       style={{ width: `${Math.max(set.reps.length, getPlaceholder(i, 'reps').length, 1)}ch` }}
                     />
-                    <span className={styles.unit}> пвт</span>
+                    <span className={styles.unit}>пвт</span>
                   </>
                 )}
               </div>
@@ -439,7 +442,7 @@ const SessionExerciseRowComponent = ({
           <button className={styles.addSetBtn} onClick={addSet}>+ Добавить подход</button>
 
           {/* Блок таймера (отдых / кардио-подход) */}
-          <div className={cn(styles.restTimer, isTimerActive && styles.restTimer_active)}>
+          <div className={cn(styles.restTimer, isTimerActive && styles.restTimer_active)}>            
             <span className={styles.restLabel}>
               {timerMode === 'cardio' && cardioSetIndex !== null
                 ? `Подход ${cardioSetIndex + 1}`
