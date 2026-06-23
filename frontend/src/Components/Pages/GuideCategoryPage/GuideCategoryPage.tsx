@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import cn from 'classnames';
 import { Button } from '@/Components/UI/Button/Button';
 import { useGuideCategoryArticlesQuery } from '@/hooks/useGuideCategoryArticlesQuery';
 import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 import { useAuth } from '@/Auth';
 import { authApi, type GuideArticleListItem, type GuideArticleResponse } from '@/Auth/authApi';
 import styles from './Styles.module.scss';
+import { ArticleCard } from '@/Components/Common/ActicleCard/ArticleCard';
 
 const GuideCategoryPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +17,6 @@ const GuideCategoryPage = () => {
   const queryClient = useQueryClient();
   const callWithAuth = useAuthenticatedCall();
 
-  // Имя категории прокидывается из Справочника, чтобы не делать лишний запрос.
   const categoryName = (location.state as any)?.categoryName as string | undefined;
 
   const { data: articles = [], isPending } = useGuideCategoryArticlesQuery(id);
@@ -46,8 +45,7 @@ const GuideCategoryPage = () => {
     );
   };
 
-  const handleFavorite = async (e: React.MouseEvent, article: GuideArticleListItem) => {
-    e.stopPropagation();
+  const handleFavorite = async (article: GuideArticleListItem) => {
     if (pendingFav.has(article.id)) return;
 
     const next = !article.is_favorite;
@@ -86,50 +84,15 @@ const GuideCategoryPage = () => {
         ) : (
           <div className={styles.articleList}>
             {sortedArticles.map(article => (
-              <div
+              <ArticleCard
                 key={article.id}
-                className={styles.articleCard}
+                title={article.title}
+                description={article.description}
+                readingTimeMinutes={article.reading_time_minutes}
+                isFavorite={article.is_favorite}
+                onFavorite={() => handleFavorite(article)}
                 onClick={() => handleArticleClick(article.id)}
-              >
-                <div className={styles.articleInfo}>
-                  <span className={styles.articleTitle}>{article.title}</span>
-                  {article.description && (
-                    <span className={styles.articleDesc}>{article.description}</span>
-                  )}
-                  <span className={styles.articleMeta}>
-                    <img src="/icons/Clock.svg" />
-                    {article.reading_time_minutes} мин чтения
-                  </span>
-                </div>
-
-                <div className={styles.rightCol}>
-                  <button
-                    className={cn(styles.likeBtn, article.is_favorite && styles.likeBtn_active)}
-                    onClick={(e) => handleFavorite(e, article)}
-                    aria-label="В избранное"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill={article.is_favorite ? 'currentColor' : 'none'}>
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-
-                  <svg
-                    className={styles.chevron}
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <path
-                      d="M9 18L15 12L9 6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-              </div>
+              />
             ))}
           </div>
         )}
