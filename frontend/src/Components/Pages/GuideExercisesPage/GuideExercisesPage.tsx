@@ -12,7 +12,7 @@ const GuideExercisesPage = () => {
         <Button size="back" onClick={() => navigate('/almanah')} />
         <h1 className={styles.title}>Упражнения</h1>
       </div>
-
+      
       <ExercisesTabs browseMode />
     </div>
   );

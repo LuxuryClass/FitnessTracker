@@ -1,4 +1,6 @@
 .page {
+  height: 100vh;
+  @include scrollable();
   padding-top: var(--padding-top);
   display: flex;
   flex-direction: column;
