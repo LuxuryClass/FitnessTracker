@@ -21,7 +21,7 @@ const RecentCardComponent = ({
   return (
     <div className={styles.card}>
       <h3 className={styles.title}>{title}</h3>
-      <MuscleGroupBadge groups={groups} />
+      <MuscleGroupBadge groups={groups} type='block'/>
       <span className={styles.difference}>{difference}</span>
       <span className={styles.days_count}>{daysCount} дней</span>
     </div>

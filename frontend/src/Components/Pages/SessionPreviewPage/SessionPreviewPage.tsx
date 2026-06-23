@@ -115,6 +115,42 @@ const WorkoutSessionPage = () => {
     return result;
   }, [exercises]);
 
+
+  const formatHeaderTitle = (): string => {
+  if (!workout) return 'Тренировка сегодня';
+
+  if (isCompleted && completedSession?.completed_at) {
+    const completedDate = new Date(completedSession.completed_at);
+    const today = new Date();
+    const diffDays = Math.round((today.getTime() - completedDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    const dd = String(completedDate.getDate()).padStart(2, '0');
+    const mm = String(completedDate.getMonth() + 1).padStart(2, '0');
+    const dateStr = `${dd}.${mm}`;
+    
+    if (diffDays === 0) return `Тренировка ${dateStr} · сегодня`;
+    if (diffDays === 1) return `Тренировка ${dateStr} · вчера`;
+    return `Тренировка ${dateStr}`;
+  }
+
+  if (workout.planned_for) {
+    const planned = new Date(workout.planned_for);
+    const today = new Date();
+    const diffDays = Math.round((planned.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    const dd = String(planned.getDate()).padStart(2, '0');
+    const mm = String(planned.getMonth() + 1).padStart(2, '0');
+    const dateStr = `${dd}.${mm}`;
+    
+    if (diffDays === 0) return 'Тренировка сегодня';
+    if (diffDays === 1) return 'Тренировка завтра';
+    if (diffDays === -1) return 'Тренировка вчера';
+    return `Тренировка ${dateStr}`;
+  }
+
+  return 'Тренировка сегодня';
+};
+
   const totalTargetSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
   const duration = totalTargetSets > 0 ? String(totalTargetSets * MINUTES_PER_SET) : undefined;
 
@@ -215,8 +251,7 @@ const WorkoutSessionPage = () => {
       {/* Header */}
       <div className={styles.header}>
         <Button size="back" onClick={() => navigate(-1)} />
-        <h1 className={styles.title}>{isCompleted ? 'Итоги тренировки' : 'Тренировка сегодня'}</h1>
-        {!isCompleted && (
+<h1 className={styles.title}>{isCompleted ? 'Итоги тренировки' : formatHeaderTitle()}</h1>        {!isCompleted && (
           <button className={styles.deleteBtn} onClick={() => setIsDeleteOpen(true)} aria-label="Удалить тренировку">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <path d="M3 6H21M8 6V4A2 2 0 0 1 10 2H14A2 2 0 0 1 16 4V6M19 6V20A2 2 0 0 1 17 22H7A2 2 0 0 1 5 20V6M10 11V17M14 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
