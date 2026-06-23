@@ -17,7 +17,6 @@
 
 .header {
   display: flex;
-  align-items: center;
   gap: 12px;
   cursor: pointer;
 }
@@ -53,6 +52,8 @@
 .name {
   @include button_text_h1();
   display: block;
+  align-self: start;
+  justify-self: start;
 }
 
 .muscle {
