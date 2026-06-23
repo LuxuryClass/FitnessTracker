@@ -60,8 +60,7 @@ export type WorkoutFormSettings = Pick<WorkoutFormData,
 const CreateWorkoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // const passedDate = (location.state as any)?.scheduleDate as Date | undefined;
-  const passedStartType = (location.state as any)?.startType as string | undefined;
+  const passedDate = (location.state as any)?.scheduleDate as Date | undefined;  const passedStartType = (location.state as any)?.startType as string | undefined;
   const passedActiveTab = (location.state as any)?.activeTab as TabType | undefined;
   const passedTemplateData = (location.state as any)?.templateData as {
     template: Template;
@@ -179,6 +178,22 @@ const CreateWorkoutPage = () => {
       };
     });
   }, [passedTemplateData, allExercises]);
+
+
+  useEffect(() => {
+    if (returnedFormSettings) return;
+    if (!passedDate) return;
+    const year = passedDate.getFullYear();
+    const month = String(passedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(passedDate.getDate()).padStart(2, '0');
+    const key = `${year}-${month}-${day}`;
+    setFormData(prev => ({
+      ...prev,
+      scheduleDate: key,
+      scheduleDates: [{ date: key, time: prev.scheduleTime }],
+      activeDateKey: key,
+    }));
+  }, [passedDate, returnedFormSettings]);
 
   useEffect(() => {
     if (passedActiveTab === 'exercises') {
