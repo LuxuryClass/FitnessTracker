@@ -80,11 +80,13 @@ const TemplateCardComponent = ({
         <p className={cn(styles.description, isSelected && styles.descriptionSelected)}>
           {template.description}
         </p>
-        <MuscleGroupBadge
-          groups={template.muscleGroups}
-          primaryGroups={template.primaryGroups}
-          type="block"
-        />
+        <div className={styles.MuscleGroupWrapper}>
+          <MuscleGroupBadge
+            groups={template.muscleGroups}
+            primaryGroups={template.primaryGroups}
+            type="block"
+          />
+        </div>
       </div>
 
       <div className={styles.rightCol}>

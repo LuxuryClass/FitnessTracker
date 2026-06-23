@@ -8,6 +8,7 @@
   cursor: pointer;
   transition: border-color 0.2s ease, background-color 0.2s ease;
   user-select: none;
+  min-height: 120px;
 }
 
 .cardSelected {
@@ -138,4 +139,8 @@
   position: absolute;
   bottom: 0;
   right: 0;
+}
+
+.MuscleGroupWrapper {
+  margin-right: 30px;
 }
