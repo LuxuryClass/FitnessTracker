@@ -7,6 +7,7 @@ import { DefaultExerciseRow } from '@/Components/Common/DefaultExerciseRow/Defau
 import { SessionResultRow } from '@/Components/Common/SessionResultRow/SessionResultRow';
 import styles from './Styles.module.scss';
 import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
+import { DeleteWorkoutModal } from '@/Components/Modals/DeleteWorkoutModal/DeleteWorkoutModal';
 import { useAuth } from '@/Auth';
 import {
   ApiError,
@@ -21,6 +22,7 @@ import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 import { useWorkoutQuery } from '@/hooks/useWorkoutQuery';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { useCompletedSessionQuery } from '@/hooks/useCompletedSessionQuery';
+import { useDeleteWorkoutMutation } from '@/hooks/useDeleteWorkoutMutation';
 import { labelForPrimary, labelForSecondary } from '@/Utils/muscleGroups';
 
 // Зеркало MINUTES_PER_SET бэкенда
@@ -54,6 +56,8 @@ const WorkoutSessionPage = () => {
 
   const [modalExercise, setModalExercise] = useState<PreviewExercise | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const deleteMutation = useDeleteWorkoutMutation();
 
   const catalogById = useMemo(() => {
     const map = new Map<string, CatalogExercise>();
@@ -148,6 +152,20 @@ const WorkoutSessionPage = () => {
     setModalExercise(exercise);
   };
 
+  const handleDelete = (scope: 'this' | 'following') => {
+    if (!workoutId || deleteMutation.isPending) return;
+
+    void (async () => {
+      try {
+        await deleteMutation.mutateAsync({ workoutId, scope });
+        setIsDeleteOpen(false);
+        navigate('/');
+      } catch (error) {
+        alert(error instanceof ApiError ? error.message : 'Не удалось удалить тренировку. Попробуйте позже.');
+      }
+    })();
+  };
+
   const handleModalConfirm = (sets: ExerciseSet[], _description: string) => {
     const edited = modalExercise;
     setModalExercise(null);
@@ -198,6 +216,13 @@ const WorkoutSessionPage = () => {
       <div className={styles.header}>
         <Button size="back" onClick={() => navigate(-1)} />
         <h1 className={styles.title}>{isCompleted ? 'Итоги тренировки' : 'Тренировка сегодня'}</h1>
+        {!isCompleted && (
+          <button className={styles.deleteBtn} onClick={() => setIsDeleteOpen(true)} aria-label="Удалить тренировку">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M3 6H21M8 6V4A2 2 0 0 1 10 2H14A2 2 0 0 1 16 4V6M19 6V20A2 2 0 0 1 17 22H7A2 2 0 0 1 5 20V6M10 11V17M14 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className={styles.content}>
@@ -279,6 +304,14 @@ const WorkoutSessionPage = () => {
     showSaveButton={true}
   />
 )}
+
+    <DeleteWorkoutModal
+      isOpen={isDeleteOpen}
+      isRepeating={!!workout.series_id}
+      isDeleting={deleteMutation.isPending}
+      onClose={() => setIsDeleteOpen(false)}
+      onConfirm={handleDelete}
+    />
 
     </div>
   );

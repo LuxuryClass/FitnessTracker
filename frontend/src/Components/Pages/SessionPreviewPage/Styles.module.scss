@@ -24,6 +24,25 @@
   text-align: start;
 }
 
+.deleteBtn {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--error-color);
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
 .content {
     @include scrollable();
     height: 100vh;

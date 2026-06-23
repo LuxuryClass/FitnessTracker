@@ -46,6 +46,7 @@ SYSTEM_GUIDE: tuple[GuideCategorySeed, ...] = (
         name="Правильное питание",
         description="Основы здорового рациона для тренировок",
         position=1,
+        icon_filename="category_nutrition.png",
         articles=[
             GuideArticleSeed(
                 title="Основы здорового рациона",
@@ -95,6 +96,7 @@ SYSTEM_GUIDE: tuple[GuideCategorySeed, ...] = (
         name="КБЖУ",
         description="Калории, белки, жиры, углеводы",
         position=2,
+        icon_filename="category_kcal.png",
         articles=[
             GuideArticleSeed(
                 title="Как считать калории",
@@ -142,6 +144,7 @@ SYSTEM_GUIDE: tuple[GuideCategorySeed, ...] = (
         name="Техника безопасности",
         description="Как тренироваться без травм",
         position=3,
+        icon_filename="category_safety.png",
         articles=[
             GuideArticleSeed(
                 title="Разминка перед тренировкой",
@@ -181,6 +184,7 @@ SYSTEM_GUIDE: tuple[GuideCategorySeed, ...] = (
         name="FAQ",
         description="Часто задаваемые вопросы",
         position=4,
+        icon_filename="category_faq.png",
         articles=[
             GuideArticleSeed(
                 title="Сколько раз в неделю тренироваться",
@@ -225,6 +229,10 @@ def _guess_content_type(filename: str) -> str:
 async def _upload_asset(prefix: str, filename: str | None) -> str | None:
     # Возвращает object_key загруженного файла либо None, если файла нет в ASSETS_DIR.
     if not filename:
+        return None
+
+    if not storage_service._is_configured():
+        print(f"[warn] storage not configured, skip upload: {filename}")
         return None
 
     file_path = ASSETS_DIR / filename
@@ -291,6 +299,13 @@ async def seed_system_guide() -> tuple[int, int]:
                 if category.position != category_seed.position:
                     category.position = category_seed.position
                     changed = True
+                if category.icon_object_key is None and category_seed.icon_filename:
+                    icon_object_key = await _upload_asset(
+                        "guide-icons/categories", category_seed.icon_filename
+                    )
+                    if icon_object_key is not None:
+                        category.icon_object_key = icon_object_key
+                        changed = True
                 if changed:
                     updated += 1
 

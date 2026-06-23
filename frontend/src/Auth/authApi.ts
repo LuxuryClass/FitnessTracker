@@ -270,6 +270,7 @@ export interface Workout {
   is_planned: boolean;
   is_completed: boolean;
   planned_for: string | null;
+  series_id: string | null;
   description: string | null;
   exercises: WorkoutExerciseItem[];
 }
@@ -548,6 +549,17 @@ export const authApi = {
       method: "PATCH",
       accessToken,
       body: payload,
+    });
+  },
+
+  async deleteWorkout(
+    accessToken: string,
+    workoutId: string,
+    scope: "this" | "following" | "all" = "this",
+  ): Promise<void> {
+    return request<void>(`/workouts/${workoutId}?scope=${scope}`, {
+      method: "DELETE",
+      accessToken,
     });
   },
 

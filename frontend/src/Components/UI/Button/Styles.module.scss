@@ -69,6 +69,11 @@
     background-color: var(--Accent-2-color);
   }
 
+  &_danger {
+    background-color: var(--error-color);
+    color: #fff;
+  }
+
   &_fullWidth {
     width: 100%;
   }

@@ -100,6 +100,7 @@ class WorkoutService:
             is_planned=workout.is_planned,
             is_completed=is_completed,
             planned_for=workout.planned_for,
+            series_id=workout.series_id,
             description=workout.description,
             exercises=[
                 WorkoutExerciseResponse(

@@ -6,7 +6,7 @@ import cn from 'classnames';
 interface ButtonProps {
   size?: 'm' | 'l' | 's' | 'back' | 'default';
   fullWidth?: boolean;
-  color?: 'primary' | 'accent' | 'accent-2';
+  color?: 'primary' | 'accent' | 'accent-2' | 'danger';
   children?: React.ReactNode;
   onClick?: () => void;
   type?: 'button' | 'submit' | 'reset';

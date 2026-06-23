@@ -210,6 +210,7 @@ class WorkoutResponse(BaseModel):
     is_planned: bool
     is_completed: bool
     planned_for: datetime | None
+    series_id: UUID | None
     description: str | None
     exercises: list[WorkoutExerciseResponse]
     created_at: datetime

@@ -88,7 +88,7 @@ const CreateWorkoutPage = () => {
 
   const [formData, setFormData] = useState<WorkoutFormData>(() => ({
     workoutName: returnedFormSettings?.workoutName ?? '',
-    startType: returnedFormSettings?.startType ?? 'schedule',
+    startType: returnedFormSettings?.startType ?? 'now',
     notes: returnedFormSettings?.notes ?? '',
     scheduleDate: returnedFormSettings?.scheduleDate ?? '',
     scheduleTime: returnedFormSettings?.scheduleTime ?? '18:00',
