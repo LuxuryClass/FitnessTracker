@@ -31,6 +31,7 @@ const TemplateInfoPage = () => {
   const { user } = useAuth();
 
   const hasExistingData = (location.state as any)?.hasData as boolean;
+  const readOnly = (location.state as any)?.readOnly as boolean;
   const [showConfirm, setShowConfirm] = useState(false);
 
   const template = (location.state as any)?.template as Template | undefined;
@@ -206,7 +207,7 @@ const TemplateInfoPage = () => {
 
       </div>
 
-      {!modalExercise && (
+      {!readOnly && !modalExercise && (
         <Button
           size="l"
           color="primary"
@@ -218,7 +219,7 @@ const TemplateInfoPage = () => {
         </Button>
       )}
 
-      {showConfirm && (
+      {!readOnly && showConfirm && (
         <ConfirmTemplateModal
           isOpen={showConfirm}
           onConfirm={handleConfirmReplace}

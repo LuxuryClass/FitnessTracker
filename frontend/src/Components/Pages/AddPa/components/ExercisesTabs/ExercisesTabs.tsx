@@ -17,21 +17,23 @@ interface MuscleGroup {
 }
 
 interface ExercisesTabsProps {
-  selectedExercises: Record<string, string[]>;
-  exerciseSets: Record<string, ExerciseSet[]>;
-  formSettings: WorkoutFormSettings;
-  onExercisesChange: (updater: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
+  selectedExercises?: Record<string, string[]>;
+  exerciseSets?: Record<string, ExerciseSet[]>;
+  formSettings?: WorkoutFormSettings;
+  onExercisesChange?: (updater: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
   initialSearchQuery?: string;
   onSearchQueryChange?: (value: string) => void;
+  browseMode?: boolean;
 }
 
 const ExercisesTabs = ({
-  selectedExercises,
-  exerciseSets,
+  selectedExercises = {},
+  exerciseSets = {},
   formSettings,
   /*onExercisesChange*/
   initialSearchQuery = '',
   onSearchQueryChange,
+  browseMode = false,
 }: ExercisesTabsProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
@@ -79,6 +81,16 @@ const ExercisesTabs = ({
   };
 
 const handleCardClick = (group: MuscleGroup) => {
+  if (browseMode) {
+    navigate(`/exercises/${group.id}`, {
+      state: {
+        muscleGroup: group,
+        browseMode: true,
+        exerciseSearchQuery: searchQuery,
+      }
+    });
+    return;
+  }
   // Сохраняем снимок выбранных упражнений перед переходом
   navigate(`/exercises/${group.id}`, {
     state: {
@@ -92,7 +104,6 @@ const handleCardClick = (group: MuscleGroup) => {
   });
 };
   const handleCreateExercise = () => {
-    // TODO: реализовать создание упражнения через POST /exercises (отдельная итерация).
     navigate("/createExercise");
   };
 
@@ -125,7 +136,7 @@ const handleCardClick = (group: MuscleGroup) => {
             name={group.name}
             icon={group.icon}
             exercisesCount={getExercisesCount(group.id)}
-            selectedCount={getSelectedCount(group.id)}
+            selectedCount={browseMode ? 0 : getSelectedCount(group.id)}
             onClick={() => handleCardClick(group)}
           />
         ))}

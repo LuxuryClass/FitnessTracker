@@ -28,7 +28,11 @@ export interface Template {
 
 const SORT_OPTIONS = ['дате', 'названию', 'упражнениям'];
 
-const TemplatesPage = () => {
+interface TemplatesPageProps {
+  readOnly?: boolean;
+}
+
+const TemplatesPage = ({ readOnly = false }: TemplatesPageProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const passedHasData = (location.state as any)?.hasData as boolean;
@@ -91,17 +95,23 @@ const TemplatesPage = () => {
   }, [apiTemplates, catalogById]);
 
   const sortedTemplates = useMemo(() => {
-    const list = [...templates];
-    switch (sortBy) {
-      case 'дате':
-        return list.sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
-      case 'названию':
-        return list.sort((a, b) => a.title.localeCompare(b.title, 'ru'));
-      case 'упражнениям':
-        return list.sort((a, b) => b.exercises.length - a.exercises.length);
-      default:
-        return list;
-    }
+    const compare = (a: Template, b: Template) => {
+      switch (sortBy) {
+        case 'дате':
+          return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
+        case 'названию':
+          return a.title.localeCompare(b.title, 'ru');
+        case 'упражнениям':
+          return b.exercises.length - a.exercises.length;
+        default:
+          return 0;
+      }
+    };
+
+    return [...templates].sort((a, b) => {
+      if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1;
+      return compare(a, b);
+    });
   }, [sortBy, templates]);
 
   const handleSortSelect = (option: string) => {
@@ -110,6 +120,12 @@ const TemplatesPage = () => {
   };
 
   const handleTemplateSelect = (id: string) => {
+    // В режиме просмотра тап по карточке сразу открывает инфо-страницу шаблона
+    if (readOnly) {
+      const template = templates.find(t => t.id === id);
+      if (template) navigate(`/template/${template.id}`, { state: { template, readOnly: true } });
+      return;
+    }
     setSelectedTemplateId(prev => prev === id ? null : id);
   };
 
@@ -118,6 +134,7 @@ const TemplatesPage = () => {
       state: {
         template,
         hasData: passedHasData,
+        readOnly,
       },
     });
   };
@@ -226,13 +243,13 @@ const TemplatesPage = () => {
       </div>
 
       {/* Add Button */}
-      {selectedTemplateId && (
+      {!readOnly && selectedTemplateId && (
         <Button size="l" color="primary" fullWidth onClick={handleAdd} className={styles.addBtn}>
           Выбрать
         </Button>
       )}
 
-      {showConfirm && (
+      {!readOnly && showConfirm && (
         <ConfirmTemplateModal
           isOpen={showConfirm}
           onConfirm={handleConfirmReplace}

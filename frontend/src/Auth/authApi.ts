@@ -1,6 +1,17 @@
 const DEFAULT_API_BASE_URL = "http://localhost:8000/api";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, "");
 
+// В статьях справочника inline-медиа хранится абсолютным путём вида "/api/guide/media/...", 
+// поэтому для корректного отображения нужно подставлять origin бэкенда из API_BASE_URL
+export const resolveApiUrl = (path: string): string => {
+  if (!path.startsWith("/api/")) return path;
+  try {
+    return `${new URL(API_BASE_URL).origin}${path}`;
+  } catch {
+    return path;
+  }
+};
+
 type RequestMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -297,6 +308,39 @@ export interface WorkoutTemplateUpdatePayload {
   exercises?: { exercise_id: string }[];
 }
 
+export interface GuideCategoryListItem {
+  id: string;
+  name: string;
+  description: string | null;
+  icon_url: string | null;
+  articles_count: number;
+  updated_at: string;
+}
+
+export interface GuideArticleListItem {
+  id: string;
+  title: string;
+  description: string | null;
+  icon_url: string | null;
+  reading_time_minutes: number;
+  views_count: number;
+  is_favorite: boolean;
+}
+
+export interface GuideArticleResponse {
+  id: string;
+  guide_category_id: string;
+  title: string;
+  description: string | null;
+  icon_url: string | null;
+  reading_time_minutes: number;
+  views_count: number;
+  is_favorite: boolean;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface WorkoutSessionSetItem {
   id: string;
   exercise_id: string;
@@ -577,6 +621,41 @@ export const authApi = {
   async completeWorkoutSession(accessToken: string, sessionId: string): Promise<WorkoutSession> {
     return request<WorkoutSession>(`/workout-sessions/${sessionId}/complete`, {
       method: "POST",
+      accessToken,
+    });
+  },
+
+  async getGuideCategories(accessToken: string): Promise<GuideCategoryListItem[]> {
+    return request<GuideCategoryListItem[]>("/guide/categories", {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async getGuideCategoryArticles(accessToken: string, categoryId: string): Promise<GuideArticleListItem[]> {
+    return request<GuideArticleListItem[]>(`/guide/categories/${categoryId}/articles`, {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async getGuideArticle(accessToken: string, articleId: string): Promise<GuideArticleResponse> {
+    return request<GuideArticleResponse>(`/guide/articles/${articleId}`, {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async addGuideArticleFavorite(accessToken: string, articleId: string): Promise<void> {
+    return request<void>(`/guide/articles/${articleId}/favorite`, {
+      method: "POST",
+      accessToken,
+    });
+  },
+
+  async removeGuideArticleFavorite(accessToken: string, articleId: string): Promise<void> {
+    return request<void>(`/guide/articles/${articleId}/favorite`, {
+      method: "DELETE",
       accessToken,
     });
   },

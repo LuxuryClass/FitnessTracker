@@ -21,6 +21,9 @@ import { DesktopGate } from '@/Components/Common/DesktopGate/DesktopGate';
 import TemplatesPage from '@/Components/Pages/TemplatesPage/TemplatesPage';
 import TemplateInfoPage from '@/Components/Pages/TemplateInfoPage/TemplateInfoPage';
 import AlmanahPage from '@/Components/Pages/KnowledgeBasePage/KnowledgeBasePage';
+import GuideExercisesPage from '@/Components/Pages/GuideExercisesPage/GuideExercisesPage';
+import GuideCategoryPage from '@/Components/Pages/GuideCategoryPage/GuideCategoryPage';
+import GuideArticlePage from '@/Components/Pages/GuideArticlePage/GuideArticlePage';
 
 export function App() {
   return (
@@ -52,6 +55,11 @@ export function App() {
 
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/template/:id" element={<TemplateInfoPage />} />
+
+            <Route path="/almanah/exercises" element={<GuideExercisesPage />} />
+            <Route path="/almanah/templates" element={<TemplatesPage readOnly />} />
+            <Route path="/almanah/category/:id" element={<GuideCategoryPage />} />
+            <Route path="/almanah/article/:id" element={<GuideArticlePage />} />
 
             <Route path="/exercises/:groupId" element={<ExerciseSelectPage />} />
             <Route path="/createExercise" element={<CreateExercisePage />} />
