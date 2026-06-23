@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/Components/UI/Button/Button';
@@ -61,6 +61,10 @@ const WorkoutSessionPage = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const deleteMutation = useDeleteWorkoutMutation();
 
+  const [items, setItems] = useState<PreviewExercise[]>([]);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+
   const catalogById = useMemo(() => {
     const map = new Map<string, CatalogExercise>();
     for (const ex of catalog ?? []) map.set(ex.id, ex);
@@ -102,6 +106,10 @@ const WorkoutSessionPage = () => {
         }];
       });
   }, [workout, isCatalogPending, catalogById, actualSetsByExercise]);
+
+  useEffect(() => {
+    setItems(exercises);
+  }, [exercises]);
 
   const muscleGroups = useMemo(() => {
     const seen = new Set<string>();
@@ -198,6 +206,42 @@ const WorkoutSessionPage = () => {
     return formatDuration(durationMin);
   }, [isCompleted, completedSession]);
 
+  const handleDragStart = (index: number) => {
+  setDragIndex(index);
+};
+
+const handleDragOver = (e: React.DragEvent, index: number) => {
+  e.preventDefault();
+  setOverIndex(index);
+};
+
+const handleDragEnd = () => {
+  if (dragIndex !== null && overIndex !== null && dragIndex !== overIndex) {
+    const newItems = [...items];
+    const [removed] = newItems.splice(dragIndex, 1);
+    newItems.splice(overIndex, 0, removed);
+    setItems(newItems);
+    
+    const payloadExercises = newItems.map((ex, _) => {
+      const original = workout?.exercises.find(we => we.exercise_id === ex.exerciseId);
+      return {
+        exercise_id: ex.exerciseId,
+        target_sets: original?.target_sets ?? [],
+      };
+    });
+
+    callWithAuth(token => authApi.updateWorkout(token, workoutId!, { exercises: payloadExercises }))
+      .then(updated => {
+        queryClient.setQueryData(['workout', user?.id, workoutId], updated);
+      })
+      .catch(err => {
+        alert(err instanceof ApiError ? err.message : 'Не удалось изменить порядок');
+      });
+  }
+  setDragIndex(null);
+  setOverIndex(null);
+};
+
   const handleStart = () => {
     if (!workoutId || isStarting || workout?.is_completed) return;
     setIsStarting(true);
@@ -284,7 +328,7 @@ const WorkoutSessionPage = () => {
     <div className={styles.page}>
       {/* Header */}
       <div className={styles.header}>
-        <Button size="back" onClick={() => navigate(-1)} />
+        <Button size="back" onClick={() => navigate("/home")} />
 <h1 className={styles.title}>{isCompleted ? 'Итоги тренировки' : formatHeaderTitle()}</h1>        {!isCompleted && (
           <button className={styles.deleteBtn} onClick={() => setIsDeleteOpen(true)} aria-label="Удалить тренировку">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -310,13 +354,8 @@ const WorkoutSessionPage = () => {
           <span className={styles.sectionLabel}>
             {isCompleted ? 'Что выполнено' : 'Упражнения в тренировке'}
           </span>
-          {!isCompleted && (
-            <button className={styles.addExerciseBtn} onClick={handleAddExercise}>
-              + Добавить упражнения
-            </button>
-          )}
           <div className={styles.exerciseList}>
-            {exercises.map((exercise, index) =>
+            {items.map((exercise, index) =>
               isCompleted ? (
                 <SessionResultRow
                   key={exercise.exerciseId}
@@ -327,23 +366,29 @@ const WorkoutSessionPage = () => {
                   onImageClick={() => handleExerciseClick(exercise)}
                 />
               ) : (
-                <DefaultExerciseRow
-                  key={exercise.exerciseId}
-                  name={exercise.name}
-                  muscleGroups={exercise.muscleGroups}
-                  targetMuscles={exercise.targetMuscles}
-                  sets={exercise.sets}
-                  index={index}
-                  showImage={true}
-                  imageUrl={exercise.media.find(m => m.type === 'image')?.url}
-                  isDragging={false}
-                  isOver={false}
-                  onDragStart={() => {}}
-                  onDragOver={() => {}}
-                  onDragEnd={() => {}}
-                  onClick={() => handleExerciseClick(exercise)}
-                />
+    <DefaultExerciseRow
+      key={exercise.exerciseId}
+      showDrag={true}
+      isDragging={dragIndex === index}
+      isOver={overIndex === index}
+      onDragStart={() => handleDragStart(index)}
+      onDragOver={(e) => handleDragOver(e, index)}
+      onDragEnd={handleDragEnd}
+      name={exercise.name}
+      muscleGroups={exercise.muscleGroups}
+      targetMuscles={exercise.targetMuscles}
+      sets={exercise.sets}
+      index={index}
+      showImage={true}
+      imageUrl={exercise.media.find(m => m.type === 'image')?.url}
+      onClick={() => handleExerciseClick(exercise)}
+    />
               ),
+            )}
+            {!isCompleted && (
+              <button className={styles.addExerciseBtn} onClick={handleAddExercise}>
+                + Добавить упражнения
+              </button>
             )}
           </div>
 
