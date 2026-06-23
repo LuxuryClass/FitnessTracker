@@ -56,7 +56,7 @@ export function DesktopGate() {
           Всё равно продолжить с компьютера
         </button>
       </div>
-      <div className={styles.legal}>© FlameTeam · made with sweat</div>
+      <div className={styles.legal}>© FlameTeam · Сделано с любовью</div>
     </div>
   );
 }

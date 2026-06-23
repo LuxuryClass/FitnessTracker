@@ -50,4 +50,21 @@
 
 .save_button {
   box-shadow: 0 0 30px 0 #000;
+
+  &:disabled {
+    opacity: 1;
+    background-color: var(--Accent-2-color);
+    color: var(--Accent-grey-color);
+    border-color: var(--grey-color);
+  }
+}
+
+.save_check {
+  color: var(--Primary-color);
+  animation: saveCheckPop 0.25s ease-out;
+}
+
+@keyframes saveCheckPop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1);   opacity: 1; }
 }

@@ -68,7 +68,7 @@ export function Scene6Return({ reducedMotion }: { reducedMotion: boolean }) {
               Установить приложение
             </button>
           )}
-          <div className={styles.legal}>© FlameTeam · made with sweat</div>
+          <div className={styles.legal}>© FlameTeam · Сделано с любовью</div>
         </div>
       </div>
       <InstallModal

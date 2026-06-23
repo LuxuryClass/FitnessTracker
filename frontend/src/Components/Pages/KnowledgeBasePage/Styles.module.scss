@@ -6,6 +6,12 @@
   height: 100vh;
 }
 
+.emptyState {
+  text-align: center;
+  color: var(--Accent-grey-color);
+  padding: 16px 0;
+}
+
 .header {
   display: flex;
   flex-direction: column;

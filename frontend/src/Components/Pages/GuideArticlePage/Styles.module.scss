@@ -1,0 +1,60 @@
+.page {
+  @include scrollable();
+  padding-top: var(--padding-top);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  flex: 1;
+  min-width: 0;
+}
+
+.favBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--Accent-grey-color);
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.1s ease;
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  &_active {
+    color: var(--Primary-color);
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 40px;
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--Accent-grey-color);
+}
+
+.emptyState {
+  text-align: center;
+  color: var(--Accent-grey-color);
+  padding: 40px 0;
+}

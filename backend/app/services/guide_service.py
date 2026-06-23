@@ -63,6 +63,7 @@ class GuideService:
             description=category.description,
             icon_url=await storage_service.build_guide_asset_access_url(category.icon_object_key),
             articles_count=articles_count,
+            updated_at=category.updated_at,
         )
 
     async def list_categories(self, db: AsyncSession) -> list[GuideCategoryListItem]:

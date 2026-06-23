@@ -9,6 +9,7 @@ import { PreviewTab } from './components/PreviewTab/PreviewTab';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { useCreateWorkoutMutation } from '@/hooks/useCreateWorkoutMutation';
 import { useCreateWorkoutsBatchMutation } from '@/hooks/useCreateWorkoutsBatchMutation';
+import { useCreateWorkoutTemplateMutation } from '@/hooks/useCreateWorkoutTemplateMutation';
 import type { Exercise, ExerciseSet, WorkoutCreatePayload, WorkoutBatchCreatePayload } from '@/Auth/authApi';
 import {
   toPlannedForIso,
@@ -44,12 +45,14 @@ export interface WorkoutFormData {
   selectedExercises: Record<string, string[]>;
   exerciseOrder: string[];
   exerciseSets: Record<string, ExerciseSet[]>;
+  // Сигнатура формы (название + описание + упражнения) на момент сохранения шаблона
+  savedTemplateSignature: string | null;
 }
 
 // Подмножество настроек тренировки, которое надо прокидывать через navigate-state
 export type WorkoutFormSettings = Pick<WorkoutFormData,
   'workoutName' | 'startType' | 'notes' | 'scheduleDate' | 'scheduleTime' | 'selectedTemplate' | 'selectedTemplateData'
-  | 'scheduleDates' | 'activeDateKey' | 'repeatEnabled' | 'repeatWeekdays' | 'repeatEnd'
+  | 'scheduleDates' | 'activeDateKey' | 'repeatEnabled' | 'repeatWeekdays' | 'repeatEnd' | 'savedTemplateSignature'
 >;
 
 const CreateWorkoutPage = () => {
@@ -60,7 +63,7 @@ const CreateWorkoutPage = () => {
   const passedActiveTab = (location.state as any)?.activeTab as TabType | undefined;
   const passedTemplateData = (location.state as any)?.templateData as {
     template: Template;
-    exercises: { exerciseId: string; sets: { reps: number; weight: number }[] }[];
+    exercises: { exerciseId: string; sets?: { reps: number; weight: number }[] }[];
   } | undefined;
   const returnedSelectedExercises = (location.state as any)?.selectedExercises as Record<string, string[]> | undefined;
   const returnedExerciseSets = (location.state as any)?.exerciseSets as Record<string, ExerciseSet[]> | undefined;
@@ -75,6 +78,7 @@ const CreateWorkoutPage = () => {
   const { data: allExercises = [] } = useExercisesQuery();
   const createWorkoutMutation = useCreateWorkoutMutation();
   const createWorkoutsBatchMutation = useCreateWorkoutsBatchMutation();
+  const createWorkoutTemplateMutation = useCreateWorkoutTemplateMutation();
 
   const exercisesSnapshotRef = useRef<Record<string, string[]> | null>(null);
   const exercisesSnapshot = (location.state as any)?.exercisesSnapshot as Record<string, string[]> | undefined;
@@ -95,6 +99,7 @@ const CreateWorkoutPage = () => {
     exerciseSets: {},
     selectedTemplate: returnedFormSettings?.selectedTemplate ?? null,
     selectedTemplateData: returnedFormSettings?.selectedTemplateData ?? null,
+    savedTemplateSignature: returnedFormSettings?.savedTemplateSignature ?? null,
   }));
 
   useLayoutEffect(() => {
@@ -148,11 +153,13 @@ const CreateWorkoutPage = () => {
         if (!selectedExercises[groupKey]) selectedExercises[groupKey] = [];
         selectedExercises[groupKey].push(ex.exerciseId);
 
-        exerciseSets[ex.exerciseId] = ex.sets.map((s, i) => ({
-          set_index: i + 1,
-          reps: s.reps,
-          weight: s.weight,
-        }));
+        if (ex.sets && ex.sets.length > 0) {
+          exerciseSets[ex.exerciseId] = ex.sets.map((s, i) => ({
+            set_index: i + 1,
+            reps: s.reps,
+            weight: s.weight,
+          }));
+        }
 
         exerciseOrder.push(ex.exerciseId);
       }
@@ -304,7 +311,32 @@ useEffect(() => {
     formData.scheduleTime,
   ]);
 
-  const isSaveDisabled = createWorkoutMutation.isPending || createWorkoutsBatchMutation.isPending;
+  const isSaveDisabled =
+    createWorkoutMutation.isPending ||
+    createWorkoutsBatchMutation.isPending ||
+    createWorkoutTemplateMutation.isPending;
+
+  const templateSignature = useMemo(() => {
+    const seen = new Set<string>();
+    const ids = orderedSelectedExercises
+      .map(ex => ex.id)
+      .filter(id => {
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+    return JSON.stringify([effectiveTitle, formData.notes.trim(), ids]);
+  }, [effectiveTitle, formData.notes, orderedSelectedExercises]);
+
+  const templateSaved =
+    formData.savedTemplateSignature !== null &&
+    formData.savedTemplateSignature === templateSignature;
+
+  const isSaveTemplateDisabled =
+    isSaveDisabled ||
+    templateSaved ||
+    formData.workoutName.trim().length === 0 ||
+    orderedSelectedExercises.length === 0;
 
   // Упражнения тренировки в формате payload (общие для одиночного и batch создания).
   // Дедупим по id — бэкенд отклоняет дубли exercise_id (422).
@@ -375,6 +407,32 @@ useEffect(() => {
     }
   };
 
+  // Шаблон хранит только упорядоченный список упражнений (без подходов/веса).
+  const handleSaveAsTemplate = async () => {
+    if (isSaveTemplateDisabled) return;
+
+    const seen = new Set<string>();
+    const exercises = orderedSelectedExercises
+      .filter(ex => {
+        if (seen.has(ex.id)) return false;
+        seen.add(ex.id);
+        return true;
+      })
+      .map(ex => ({ exercise_id: ex.id }));
+
+    try {
+      await createWorkoutTemplateMutation.mutateAsync({
+        title: effectiveTitle,
+        description: formData.notes.trim() || null,
+        exercises,
+      });
+      updateFormData('savedTemplateSignature', templateSignature);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Не удалось сохранить шаблон';
+      alert(message);
+    }
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'settings':
@@ -397,6 +455,7 @@ useEffect(() => {
               repeatEnabled: formData.repeatEnabled,
               repeatWeekdays: formData.repeatWeekdays,
               repeatEnd: formData.repeatEnd,
+              savedTemplateSignature: formData.savedTemplateSignature,
             }}
             onExercisesChange={(updater) => updateFormData('selectedExercises', updater)}
             initialSearchQuery={exerciseSearchQuery}
@@ -451,10 +510,28 @@ useEffect(() => {
           className={styles.save_button}
           size="l"
           color="accent"
-          onClick={handleSave}
-          disabled={true}
+          onClick={handleSaveAsTemplate}
+          disabled={isSaveTemplateDisabled}
         >
-          Сохранить
+          {templateSaved ? (
+            <svg
+              className={styles.save_check}
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M5 13l4 4L19 7"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : (
+            'Сохранить'
+          )}
         </Button>
       </div>
     </div>

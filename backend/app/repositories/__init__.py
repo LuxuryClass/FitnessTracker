@@ -11,6 +11,9 @@ from app.repositories.workout_notification_log_repository import workout_notific
 from app.repositories.workout_repository import workout_repository
 from app.repositories.workout_session_repository import workout_session_repository
 from app.repositories.workout_session_set_repository import workout_session_set_repository
+from app.repositories.workout_template_exercise_repository import workout_template_exercise_repository
+from app.repositories.workout_template_favorite_repository import workout_template_favorite_repository
+from app.repositories.workout_template_repository import workout_template_repository
 
 __all__ = [
     "user_repository",
@@ -24,4 +27,7 @@ __all__ = [
     "workout_exercise_target_set_repository",
     "workout_session_repository",
     "workout_session_set_repository",
+    "workout_template_repository",
+    "workout_template_exercise_repository",
+    "workout_template_favorite_repository",
 ]

@@ -38,6 +38,7 @@ class GuideCategoryListItem(BaseModel):
     description: str | None
     icon_url: str | None
     articles_count: int
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 

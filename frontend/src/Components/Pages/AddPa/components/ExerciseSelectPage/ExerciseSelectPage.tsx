@@ -92,6 +92,7 @@ const ExerciseSelectPage = () => {
   }, [groupId]);
 
   const isSessionMode = (location.state as any)?.isSessionMode || false;
+  const browseMode = (location.state as any)?.browseMode || false;
 
    const groupExercises = useMemo(() => {
     if (isSessionMode || groupId === 'all') {
@@ -163,6 +164,11 @@ const ExerciseSelectPage = () => {
   const handleBack = async () => {
     const state = location.state as any;
     const isSessionMode = state?.isSessionMode || false;
+
+    if (browseMode) {
+      navigate('/almanah/exercises');
+      return;
+    }
 
     if (isSessionMode) {
       const workoutId = state.sessionWorkoutId;
@@ -288,12 +294,20 @@ const ExerciseSelectPage = () => {
   targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
   equipment={exercise.equipment}
   imageUrl={exercise.media.find(m => m.type === 'image')?.url}
-  onToggle={handleToggleExercise}
+  onToggle={(id) => {
+    // В режиме просмотра тап по карточке открывает модалку, а не выбирает упражнение
+    if (browseMode) {
+      const ex = filteredExercises.find(e => e.id === id);
+      if (ex) handleExerciseClick(ex);
+      return;
+    }
+    handleToggleExercise(id);
+  }}
   onArrowClick={(id) => {
     const ex = filteredExercises.find(e => e.id === id);
     if (ex) handleExerciseClick(ex);
   }}
-  isSelected={isExerciseSelected(exercise.id)}
+  isSelected={browseMode ? false : isExerciseSelected(exercise.id)}
 />
             ))
           ) : (
@@ -315,9 +329,11 @@ const ExerciseSelectPage = () => {
           targetMuscles={modalExercise.secondary_muscles.map(labelForSecondary)}
           equipment={modalExercise.equipment}
           description=""
-          sets={exerciseSets[modalExercise.id]}
+          sets={browseMode ? undefined : exerciseSets[modalExercise.id]}
           media={modalExercise.media}
-          onConfirm={handleModalConfirm}
+          editable={!browseMode}
+          showSettings={!browseMode}
+          onConfirm={browseMode ? undefined : handleModalConfirm}
         />
       )}
     </div>

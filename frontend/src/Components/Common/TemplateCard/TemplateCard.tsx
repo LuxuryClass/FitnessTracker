@@ -2,6 +2,10 @@ import { memo, useState } from 'react';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/Auth';
+import { authApi, type WorkoutTemplate } from '@/Auth/authApi';
+import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 
 interface TemplateCardProps {
   template: any;
@@ -20,16 +24,44 @@ const TemplateCardComponent = ({
   showArrow = true,
   className,
 }: TemplateCardProps) => {
-  const [isLiked, setIsLiked] = useState(false);
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const callWithAuth = useAuthenticatedCall();
+  const [isLiked, setIsLiked] = useState<boolean>(!!template.isFavorite);
+  const [isPending, setIsPending] = useState(false);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
   };
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLiked(prev => !prev);
+    if (isPending) return;
+
+    const next = !isLiked;
+    setIsLiked(next);
+    setIsPending(true);
+
+    const queryKey = ['workoutTemplates', user?.id];
+    queryClient.setQueryData<WorkoutTemplate[]>(queryKey, (prev) =>
+      prev?.map((t) => (t.id === template.id ? { ...t, is_favorite: next } : t)),
+    );
+
+    try {
+      await callWithAuth((token) =>
+        next
+          ? authApi.addWorkoutTemplateFavorite(token, template.id)
+          : authApi.removeWorkoutTemplateFavorite(token, template.id),
+      );
+    } catch {
+      setIsLiked(!next);
+      queryClient.setQueryData<WorkoutTemplate[]>(queryKey, (prev) =>
+        prev?.map((t) => (t.id === template.id ? { ...t, is_favorite: !next } : t)),
+      );
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (

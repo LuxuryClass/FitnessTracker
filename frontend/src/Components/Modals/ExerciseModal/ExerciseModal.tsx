@@ -33,6 +33,7 @@ interface ExerciseModalProps {
   type?: 'default' | 'session';
   forceSaveLabel?: boolean;
   editable?: boolean;
+  showSettings?: boolean;
   showSaveButton?: boolean;
   onDescriptionChange?: (value: string) => void;
   onConfirm?: (sets: ExerciseSet[], description: string) => void;
@@ -74,6 +75,7 @@ const ExerciseModal = ({
   sets: initialSets,
   type = 'default',
   editable = true,
+  showSettings = true,
   showSaveButton = false,
   onDescriptionChange,
   onConfirm,
@@ -357,7 +359,7 @@ const ExerciseModal = ({
             </div>
           )}
 
-          {type === 'default' && (
+          {type === 'default' && showSettings && (
             <div className={styles.section}>
               <div className={styles.setsHeader}>
                 <span className={cn(styles.sectionLabel, styles.sectionLabel_settings)}>Настройки упражнения</span>
