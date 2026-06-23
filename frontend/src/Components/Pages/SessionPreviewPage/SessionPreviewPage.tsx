@@ -275,6 +275,11 @@ const WorkoutSessionPage = () => {
     );
   }
 
+  const handleAddExercise = () => {
+    if (!workoutId) return;
+    navigate(`/workout/${workoutId}/add`, { state: { returnTo: 'preview' } });
+  };
+
   return (
     <div className={styles.page}>
       {/* Header */}
@@ -305,6 +310,11 @@ const WorkoutSessionPage = () => {
           <span className={styles.sectionLabel}>
             {isCompleted ? 'Что выполнено' : 'Упражнения в тренировке'}
           </span>
+          {!isCompleted && (
+            <button className={styles.addExerciseBtn} onClick={handleAddExercise}>
+              + Добавить упражнения
+            </button>
+          )}
           <div className={styles.exerciseList}>
             {exercises.map((exercise, index) =>
               isCompleted ? (

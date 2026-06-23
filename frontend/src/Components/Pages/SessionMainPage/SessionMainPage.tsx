@@ -34,6 +34,7 @@ interface SessionExercise {
 const SessionMainPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isReturningFromAdd = (location.state as any)?.returnTo === 'session';
   const { workoutId } = useParams<{ workoutId: string }>();
   const { user, updateUser } = useAuth();
   const callWithAuth = useAuthenticatedCall();
@@ -54,7 +55,7 @@ const SessionMainPage = () => {
   const serverSetIdsRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
-    if (!workoutId) return;
+    if (!workoutId || isReturningFromAdd) return;
     let cancelled = false;
 
     void (async () => {
@@ -74,7 +75,7 @@ const SessionMainPage = () => {
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workoutId]);
+  }, [workoutId, isReturningFromAdd]);
 
   // Таймер от started_at сессии — переживает перезагрузку страницы
   useEffect(() => {
@@ -266,10 +267,9 @@ const formatTime = (totalSeconds: number) => {
   };
 
   // --- добавление упражнения ---
-  // Открываем сетку групп мышц
   const handleAddExercise = () => {
     if (!workout || !workoutId) return;
-    navigate(`/session/${workoutId}/add`);
+    navigate(`/session/${workoutId}/add`, { state: { returnTo: 'session' } });
   };
 
   // --- выход ---

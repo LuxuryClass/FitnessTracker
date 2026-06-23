@@ -214,7 +214,8 @@ const ExerciseSelectPage = () => {
 
         await callWithAuth(token => authApi.updateWorkout(token, workoutId, { exercises: payloadExercises }));
         await queryClient.invalidateQueries({ queryKey: ['workout', user?.id, workoutId] });
-        navigate(`/session/${workoutId}/add`);
+        const returnTo = (location.state as any)?.returnTo;
+        navigate(returnTo === 'preview' ? `/workout/${workoutId}` : `/session/${workoutId}`);
       } catch (error) {
         alert(error instanceof ApiError ? error.message : 'Не удалось обновить упражнения.');
       }

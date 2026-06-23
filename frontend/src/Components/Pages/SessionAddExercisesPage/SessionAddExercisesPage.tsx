@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/Components/UI/Button/Button';
 import ExercisesTabs from '@/Components/Pages/AddPa/components/ExercisesTabs/ExercisesTabs';
 import { filterExercisesByCategory } from '@/Components/Pages/AddPa/exerciseFiltering';
@@ -12,6 +12,8 @@ import styles from './Styles.module.scss';
 
 const SessionAddExercisesPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = (location.state as any)?.returnTo as string | undefined;
   const { workoutId } = useParams<{ workoutId: string }>();
   const { user } = useAuth();
   const { data: workout } = useWorkoutQuery(workoutId);
@@ -45,13 +47,17 @@ const SessionAddExercisesPage = () => {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <Button size="back" onClick={() => navigate(`/session/${workoutId}`)} />
+        <Button 
+          size="back" 
+          onClick={() => navigate(returnTo === 'preview' ? `/workout/${workoutId}` : `/session/${workoutId}`)} 
+        />
         <h1 className={styles.title}>Добавить упражнение</h1>
       </div>
 
       <ExercisesTabs
         sessionMode
         sessionWorkoutId={workoutId}
+        returnTo={returnTo}
         selectedExercises={selectedExercises}
         exerciseSets={exerciseSets}
       />

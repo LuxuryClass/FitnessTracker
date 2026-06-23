@@ -26,6 +26,7 @@ interface ExercisesTabsProps {
   browseMode?: boolean;
   sessionMode?: boolean;
   sessionWorkoutId?: string;
+  returnTo?: string;
 }
 
 const ExercisesTabs = ({
@@ -38,6 +39,7 @@ const ExercisesTabs = ({
   browseMode = false,
   sessionMode = false,
   sessionWorkoutId,
+  returnTo,
 }: ExercisesTabsProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
@@ -104,6 +106,7 @@ const handleCardClick = (group: MuscleGroup) => {
         exerciseSearchQuery: searchQuery,
         isSessionMode: true,
         sessionWorkoutId,
+        returnTo,
       }
     });
     return;

@@ -67,6 +67,7 @@ export function App() {
             <Route path="/createExercise" element={<CreateExercisePage />} />
 
             <Route path="/workout/:workoutId" element={<SessionPreviewPage />} />
+            <Route path="/workout/:workoutId/add" element={<SessionAddExercisesPage />} />
             <Route path="/session/:workoutId" element={<SessionMainPage />} />
             <Route path="/session/:workoutId/add" element={<SessionAddExercisesPage />} />
 
