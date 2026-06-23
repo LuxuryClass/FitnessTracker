@@ -299,7 +299,7 @@ async def seed_system_guide() -> tuple[int, int]:
                 if category.position != category_seed.position:
                     category.position = category_seed.position
                     changed = True
-                if category.icon_object_key is None and category_seed.icon_filename:
+                if not category.icon_object_key and category_seed.icon_filename:
                     icon_object_key = await _upload_asset(
                         "guide-icons/categories", category_seed.icon_filename
                     )
