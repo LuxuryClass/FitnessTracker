@@ -149,9 +149,12 @@ const SessionExerciseRowComponent = ({
     onSetComplete?.(i + 1, weight, reps);
 
     // Сброс таймера
+    setIsTimerRunning(false);
+    setIsTimerPaused(false);
     setTimerValue(0);
     setTimerMode('rest');
     setCardioSetIndex(null);
+    if (timerRef.current) clearInterval(timerRef.current);
 
     setCompletedSets(prev => {
       const next = [...prev];
@@ -208,6 +211,8 @@ const SessionExerciseRowComponent = ({
         };
       }));
       onSetComplete?.(i + 1, weight, reps);
+    } else {
+      onToggleComplete?.();
     }
     setCompletedSets(prev => {
       const next = [...prev];
