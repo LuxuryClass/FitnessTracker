@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, useRef, useCallback } from 'react';
+import { memo, useMemo, useState, useRef, useCallback, useEffect } from "react";
 import {
   startOfMonth,
   endOfMonth,
@@ -11,10 +11,10 @@ import {
   addMonths,
   subMonths,
   format,
-} from 'date-fns';
-import { ru } from 'date-fns/locale';
-import styles from './Styles.module.scss';
-import cn from 'classnames';
+} from "date-fns";
+import { ru } from "date-fns/locale";
+import styles from "./Styles.module.scss";
+import cn from "classnames";
 
 interface MonthCalendarProps {
   plannedDates?: Date[];
@@ -27,28 +27,31 @@ interface MonthCalendarProps {
   className?: string;
 }
 
-const DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const DAY_NAMES = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 const getMonthDays = (
   month: Date,
   plannedSet: Set<string>,
-  completedSet: Set<string>
+  completedSet: Set<string>,
 ) => {
   const monthStart = startOfMonth(month);
   const monthEnd = endOfMonth(monthStart);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const allDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd }).map(date => {
-    const dateKey = format(date, 'yyyy-MM-dd');
-    let status = 'none';
-    if (completedSet.has(dateKey)) status = 'completed';
-    else if (plannedSet.has(dateKey)) status = 'planned';
+  const allDays = eachDayOfInterval({
+    start: calendarStart,
+    end: calendarEnd,
+  }).map((date) => {
+    const dateKey = format(date, "yyyy-MM-dd");
+    let status = "none";
+    if (completedSet.has(dateKey)) status = "completed";
+    else if (plannedSet.has(dateKey)) status = "planned";
 
     return {
       date,
       dayNumber: date.getDate(),
-      status: status as 'none' | 'planned' | 'completed',
+      status: status as "none" | "planned" | "completed",
       isCurrentMonth: isSameMonth(date, month),
       isToday: isToday(date),
     };
@@ -75,123 +78,115 @@ const MonthCalendarComponent = ({
   const isControlled = markedDates !== undefined;
 
   const [currentMonth, setCurrentMonth] = useState(
-    startOfMonth(initialDate || today)
+    startOfMonth(initialDate || today),
   );
 
-  const [selectedDate, setSelectedDate] = useState<Date>(
-    initialDate || today
+  const [selectedDate, setSelectedDate] = useState<Date>(initialDate || today);
+
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const [position, setPosition] = useState<"center" | "left" | "right">(
+    "center",
   );
 
-  const [isAnimating, setIsAnimating] =
-    useState(false);
-
-  const [position, setPosition] = useState<
-    'center' | 'left' | 'right'
-  >('center');
-
-  const [withTransition, setWithTransition] =
-    useState(true);
+  const [withTransition, setWithTransition] = useState(true);
 
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
   const plannedSet = useMemo(
-    () =>
-      new Set(
-        plannedDates.map(d =>
-          format(d, 'yyyy-MM-dd')
-        )
-      ),
-    [plannedDates]
+    () => new Set(plannedDates.map((d) => format(d, "yyyy-MM-dd"))),
+    [plannedDates],
   );
 
   const completedSet = useMemo(
-    () =>
-      new Set(
-        completedDates.map(d =>
-          format(d, 'yyyy-MM-dd')
-        )
-      ),
-    [completedDates]
+    () => new Set(completedDates.map((d) => format(d, "yyyy-MM-dd"))),
+    [completedDates],
   );
 
   const markedSet = useMemo(
-    () => new Set((markedDates ?? []).map(d => format(d, 'yyyy-MM-dd'))),
-    [markedDates]
+    () => new Set((markedDates ?? []).map((d) => format(d, "yyyy-MM-dd"))),
+    [markedDates],
   );
 
-  const activeKey = activeDate ? format(activeDate, 'yyyy-MM-dd') : null;
+  const activeKey = activeDate ? format(activeDate, "yyyy-MM-dd") : null;
 
   const prevMonth = subMonths(currentMonth, 1);
   const nextMonth = addMonths(currentMonth, 1);
 
   const prevDays = useMemo(
-    () =>
-      getMonthDays(
-        prevMonth,
-        plannedSet,
-        completedSet
-      ),
-    [prevMonth, plannedSet, completedSet]
+    () => getMonthDays(prevMonth, plannedSet, completedSet),
+    [prevMonth, plannedSet, completedSet],
   );
 
   const currentDays = useMemo(
-    () =>
-      getMonthDays(
-        currentMonth,
-        plannedSet,
-        completedSet
-      ),
-    [currentMonth, plannedSet, completedSet]
+    () => getMonthDays(currentMonth, plannedSet, completedSet),
+    [currentMonth, plannedSet, completedSet],
   );
 
   const nextDays = useMemo(
-    () =>
-      getMonthDays(
-        nextMonth,
-        plannedSet,
-        completedSet
-      ),
-    [nextMonth, plannedSet, completedSet]
+    () => getMonthDays(nextMonth, plannedSet, completedSet),
+    [nextMonth, plannedSet, completedSet],
   );
 
-  const monthTitle = format(
-    currentMonth,
-    'LLLL yyyy',
-    {
-      locale: ru,
+  const monthTitle = format(currentMonth, "LLLL yyyy", {
+    locale: ru,
+  });
+
+  const displayTitle = monthTitle.charAt(0).toUpperCase() + monthTitle.slice(1);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (isAnimating) return;
+
+    const diffX = touchStartX.current - e.changedTouches[0].clientX;
+
+    const diffY = touchStartY.current - e.changedTouches[0].clientY;
+
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+      if (diffX > 0) {
+        goToMonth("next");
+      } else {
+        goToMonth("prev");
+      }
     }
-  );
+  };
+  const pendingCallbackRef = useRef<(() => void) | null>(null);
 
-  const displayTitle =
-    monthTitle.charAt(0).toUpperCase() +
-    monthTitle.slice(1);
+  useEffect(() => {
+    if (!isAnimating && pendingCallbackRef.current) {
+      pendingCallbackRef.current();
+      pendingCallbackRef.current = null;
+    }
+  }, [isAnimating]);
 
   const goToMonth = useCallback(
-    (direction: 'prev' | 'next') => {
+    (direction: "prev" | "next", onComplete?: () => void) => {
       if (isAnimating) return;
 
       setIsAnimating(true);
-
       setWithTransition(true);
+      setPosition(direction === "next" ? "left" : "right");
 
-      setPosition(
-        direction === 'next'
-          ? 'left'
-          : 'right'
-      );
+      if (onComplete) {
+        pendingCallbackRef.current = onComplete;
+      }
 
       setTimeout(() => {
-        setCurrentMonth(prev => {
-          const next = direction === 'next' ? addMonths(prev, 1) : subMonths(prev, 1);
+        setCurrentMonth((prev) => {
+          const next =
+            direction === "next" ? addMonths(prev, 1) : subMonths(prev, 1);
           onMonthChange?.(next);
           return next;
         });
 
-        // моментально вернуть в центр
         setWithTransition(false);
-
-        setPosition('center');
+        setPosition("center");
 
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -201,125 +196,88 @@ const MonthCalendarComponent = ({
         });
       }, 300);
     },
-    [isAnimating, onMonthChange]
+    [isAnimating, onMonthChange],
   );
 
-  const handleTouchStart = (
-    e: React.TouchEvent
-  ) => {
-    touchStartX.current =
-      e.touches[0].clientX;
-
-    touchStartY.current =
-      e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (
-    e: React.TouchEvent
-  ) => {
-    if (isAnimating) return;
-
-    const diffX =
-      touchStartX.current -
-      e.changedTouches[0].clientX;
-
-    const diffY =
-      touchStartY.current -
-      e.changedTouches[0].clientY;
-
-    if (
-      Math.abs(diffX) > Math.abs(diffY) &&
-      Math.abs(diffX) > 50
-    ) {
-      if (diffX > 0) {
-        goToMonth('next');
-      } else {
-        goToMonth('prev');
-      }
-    }
-  };
-
   const handleDayClick = (date: Date) => {
-    // В контролируемом режиме подсветкой управляет родитель — внутренний
-    // selectedDate не трогаем (иначе появится лишняя сплошная заливка).
+    if (!isSameMonth(date, currentMonth)) {
+      if (!isControlled) {
+        setSelectedDate(new Date(0));
+      }
+
+      const direction = date > currentMonth ? "next" : "prev";
+      goToMonth(direction, () => {
+        if (!isControlled) setSelectedDate(date);
+        onDayClick?.(date);
+      });
+      return;
+    }
+
     if (!isControlled) {
       setSelectedDate(date);
     }
     onDayClick?.(date);
   };
 
-    const renderMonth = (monthDays: ReturnType<typeof getMonthDays>) => {
+  const renderMonth = (monthDays: ReturnType<typeof getMonthDays>) => {
     return (
-        <div className={styles.daysGrid}>
-        {monthDays.map(day => {
-            const dayKey = format(day.date, 'yyyy-MM-dd');
-            // сплошная заливка — только в неконтролируемом режиме.
-            const isSelectedDay =
+      <div className={styles.daysGrid}>
+        {monthDays.map((day) => {
+          const dayKey = format(day.date, "yyyy-MM-dd");
+          // сплошная заливка — только в неконтролируемом режиме.
+          const isSelectedDay =
             !isControlled &&
             day.isCurrentMonth &&
             isSameDay(day.date, selectedDate);
-            // Контролируемый режим: пунктирная обводка (marked) + сплошная обводка (active).
-            const isMarked = day.isCurrentMonth && markedSet.has(dayKey);
-            const isActive = day.isCurrentMonth && activeKey === dayKey;
+          // Контролируемый режим: пунктирная обводка (marked) + сплошная обводка (active).
+          const isMarked = day.isCurrentMonth && markedSet.has(dayKey);
+          const isActive = day.isCurrentMonth && activeKey === dayKey;
 
-            return (
+          return (
             <div key={dayKey} className={styles.dayCell}>
-                <div
+              <div
                 className={cn(
-                    styles.day,
-                    !day.isCurrentMonth && styles.day_otherMonth,
-                    day.isToday && styles.day_today,
-                    isSelectedDay && styles.day_selected,
-                    isMarked && styles.day_marked,
-                    isActive && styles.day_active
+                  styles.day,
+                  !day.isCurrentMonth && styles.day_otherMonth,
+                  day.isToday && styles.day_today,
+                  isSelectedDay && styles.day_selected,
+                  isMarked && styles.day_marked,
+                  isActive && styles.day_active,
                 )}
                 onClick={() => handleDayClick(day.date)}
-                >
-                <span className={cn(
+              >
+                <span
+                  className={cn(
                     styles.dayNumber,
                     !day.isCurrentMonth && styles.dayNumber_otherMonth,
                     day.isToday && styles.dayNumber_today,
-                    isSelectedDay && styles.dayNumber_selected
-                )}>
-                    {day.dayNumber}
+                    isSelectedDay && styles.dayNumber_selected,
+                  )}
+                >
+                  {day.dayNumber}
                 </span>
-                {day.status !== 'none' && (
-                    <div
-                        className={cn(
-                        styles.dot,
-                        isSelectedDay && styles.dot_selected
-                        )}
-                    />
+                {day.status !== "none" && (
+                  <div
+                    className={cn(
+                      styles.dot,
+                      isSelectedDay && styles.dot_selected,
+                    )}
+                  />
                 )}
-                </div>
+              </div>
             </div>
-            );
+          );
         })}
-        </div>
+      </div>
     );
-    };
+  };
 
   return (
-    <div
-      className={cn(
-        styles.calendar,
-        className
-      )}
-    >
+    <div className={cn(styles.calendar, className)}>
       {/* Header */}
       <div className={styles.monthHeader}>
-        <button
-          className={styles.arrow}
-          onClick={() =>
-            goToMonth('prev')
-          }
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
+        <button className={styles.arrow} onClick={() => goToMonth("prev")}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M15 18L9 12L15 6"
               stroke="currentColor"
@@ -330,22 +288,10 @@ const MonthCalendarComponent = ({
           </svg>
         </button>
 
-        <h2 className={styles.monthTitle}>
-          {displayTitle}
-        </h2>
+        <h2 className={styles.monthTitle}>{displayTitle}</h2>
 
-        <button
-          className={styles.arrow}
-          onClick={() =>
-            goToMonth('next')
-          }
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
+        <button className={styles.arrow} onClick={() => goToMonth("next")}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M9 18L15 12L9 6"
               stroke="currentColor"
@@ -360,51 +306,37 @@ const MonthCalendarComponent = ({
       <div className={styles.calendar__calendar}>
         {/* Days */}
         <div className={styles.dayNames}>
-            {DAY_NAMES.map(name => (
-            <span
-                key={name}
-                className={styles.dayName}
-            >
-                {name}
+          {DAY_NAMES.map((name) => (
+            <span key={name} className={styles.dayName}>
+              {name}
             </span>
-            ))}
+          ))}
         </div>
 
         {/* Calendar slider */}
         <div
-            className={styles.daysWrapper}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
+          className={styles.daysWrapper}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
-            <div
+          <div
             className={cn(
-                styles.sliderTrack,
-                position === 'left' &&
-                styles.sliderTrack_left,
-                position === 'right' &&
-                styles.sliderTrack_right,
-                !withTransition &&
-                styles.sliderTrack_noTransition
+              styles.sliderTrack,
+              position === "left" && styles.sliderTrack_left,
+              position === "right" && styles.sliderTrack_right,
+              !withTransition && styles.sliderTrack_noTransition,
             )}
-            >
-            <div className={styles.monthSlide}>
-                {renderMonth(prevDays)}
-            </div>
+          >
+            <div className={styles.monthSlide}>{renderMonth(prevDays)}</div>
 
-            <div className={styles.monthSlide}>
-                {renderMonth(currentDays)}
-            </div>
+            <div className={styles.monthSlide}>{renderMonth(currentDays)}</div>
 
-            <div className={styles.monthSlide}>
-                {renderMonth(nextDays)}
-            </div>
-            </div>
+            <div className={styles.monthSlide}>{renderMonth(nextDays)}</div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export const MonthCalendar = memo(
-  MonthCalendarComponent
-);
+export const MonthCalendar = memo(MonthCalendarComponent);
