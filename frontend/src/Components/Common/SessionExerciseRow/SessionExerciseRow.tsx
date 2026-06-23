@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useEffect, useCallback } from 'react';
+import { memo, useState, useRef, useEffect} from 'react';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 
@@ -85,10 +85,10 @@ const SessionExerciseRowComponent = ({
   const [localCompleted, setLocalCompleted] = useState(completed);
 
   // Поиск первого невыполненного подхода
-  const findFirstIncomplete = useCallback(() => {
-    const idx = completedSets.findIndex(done => !done);
-    return idx >= 0 ? idx : 0;
-  }, [completedSets]);
+  // const findFirstIncomplete = useCallback(() => {
+  //   const idx = completedSets.findIndex(done => !done);
+  //   return idx >= 0 ? idx : 0;
+  // }, [completedSets]);
 
   useEffect(() => {
     setLocalCompleted(completed);
@@ -134,28 +134,69 @@ const SessionExerciseRowComponent = ({
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [isTimerRunning, timerMode, cardioTarget, cardioSetIndex]);
 
+  useEffect(() => {
+    if (!isTimerRunning && !isTimerPaused) {
+      setTimerValue(0);
+    }
+  }, [isTimerRunning, isTimerPaused]);
+
   // Автозавершение кардио-подхода по истечении таймера
-  const autoCompleteCardioSet = (i: number) => {
-    const weight = Number(setValues[i]?.weight || getPlaceholder(i, 'weight')) || 0;
-    const reps = cardioTarget;
+const autoCompleteCardioSet = (i: number) => {
+  const weight = Number(setValues[i]?.weight || getPlaceholder(i, 'weight')) || 0;
+  const reps = cardioTarget;
 
-    setSetValues(vals => vals.map((s, idx) => {
-      if (idx !== i) return s;
-      return {
-        weight: s.weight || getPlaceholder(i, 'weight'),
-        reps: String(reps),
-      };
-    }));
-    onSetComplete?.(i + 1, weight, reps);
+  setSetValues(vals => vals.map((s, idx) => {
+    if (idx !== i) return s;
+    return {
+      weight: s.weight || getPlaceholder(i, 'weight'),
+      reps: String(reps),
+    };
+  }));
+  onSetComplete?.(i + 1, weight, reps);
 
-    // Сброс таймера
+  // Сброс таймера
+  setIsTimerRunning(false);
+  setIsTimerPaused(false);
+  setTimerValue(0);
+  setTimerMode('rest');
+  setCardioSetIndex(null);
+
+  setCompletedSets(prev => {
+    const next = [...prev];
+    next[i] = true;
+    // Ищем первый невыполненный в уже обновлённом next
+    const firstIncomplete = next.findIndex(done => !done);
+    if (firstIncomplete >= 0) {
+      setCurrentSetIndex(firstIncomplete);
+    }
+    return next;
+  });
+};
+
+const handleManualComplete = (i: number) => {
+  if (isCardio && cardioSetIndex === i && isTimerActive) {
     setIsTimerRunning(false);
     setIsTimerPaused(false);
     setTimerValue(0);
     setTimerMode('rest');
     setCardioSetIndex(null);
     if (timerRef.current) clearInterval(timerRef.current);
+  }
+  
+  if (!completedSets[i]) {
+    const weight = Number(setValues[i]?.weight || getPlaceholder(i, 'weight')) || 0;
+    const reps = Number(setValues[i]?.reps || getPlaceholder(i, 'reps')) || 0;
+    if (reps < 1) return;
 
+    setSetValues(vals => vals.map((s, idx) => {
+      if (idx !== i) return s;
+      return {
+        weight: s.weight || getPlaceholder(i, 'weight'),
+        reps: s.reps || getPlaceholder(i, 'reps'),
+      };
+    }));
+    onSetComplete?.(i + 1, weight, reps);
+    
     setCompletedSets(prev => {
       const next = [...prev];
       next[i] = true;
@@ -165,21 +206,19 @@ const SessionExerciseRowComponent = ({
       }
       return next;
     });
-  };
-
-  // Ручное завершение подхода (галочка)
-  const handleManualComplete = (i: number) => {
-    // Если это кардио и таймер активен — сбросить таймер
-    if (isCardio && cardioSetIndex === i && isTimerActive) {
-      setIsTimerRunning(false);
-      setIsTimerPaused(false);
-      setTimerValue(0);
-      setTimerMode('rest');
-      setCardioSetIndex(null);
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-    toggleSetDone(i);
-  };
+  } else {
+    onToggleComplete?.();
+    setCompletedSets(prev => {
+      const next = [...prev];
+      next[i] = false;
+      const firstIncomplete = next.findIndex(done => !done);
+      if (firstIncomplete >= 0) {
+        setCurrentSetIndex(firstIncomplete);
+      }
+      return next;
+    });
+  }
+};
 
   const formatTime = (s: number) => {
     const display = timerMode === 'cardio' ? Math.max(0, cardioTarget - s) : s;
@@ -197,30 +236,30 @@ const SessionExerciseRowComponent = ({
     setSetValues(prev => prev.map((s, idx) => idx === i ? { ...s, [field]: value } : s));
   };
 
-  const toggleSetDone = (i: number) => {
-    if (!completedSets[i]) {
-      const weight = Number(setValues[i]?.weight || getPlaceholder(i, 'weight')) || 0;
-      const reps = Number(setValues[i]?.reps || getPlaceholder(i, 'reps')) || 0;
-      if (reps < 1) return;
+  // const toggleSetDone = (i: number) => {
+  //   if (!completedSets[i]) {
+  //     const weight = Number(setValues[i]?.weight || getPlaceholder(i, 'weight')) || 0;
+  //     const reps = Number(setValues[i]?.reps || getPlaceholder(i, 'reps')) || 0;
+  //     if (reps < 1) return;
 
-      setSetValues(vals => vals.map((s, idx) => {
-        if (idx !== i) return s;
-        return {
-          weight: s.weight || getPlaceholder(i, 'weight'),
-          reps: s.reps || getPlaceholder(i, 'reps'),
-        };
-      }));
-      onSetComplete?.(i + 1, weight, reps);
-    } else {
-      onToggleComplete?.();
-    }
-    setCompletedSets(prev => {
-      const next = [...prev];
-      next[i] = !next[i];
-      setCurrentSetIndex(findFirstIncomplete());
-      return next;
-    });
-  };
+  //     setSetValues(vals => vals.map((s, idx) => {
+  //       if (idx !== i) return s;
+  //       return {
+  //         weight: s.weight || getPlaceholder(i, 'weight'),
+  //         reps: s.reps || getPlaceholder(i, 'reps'),
+  //       };
+  //     }));
+  //     onSetComplete?.(i + 1, weight, reps);
+  //   } else {
+  //     onToggleComplete?.();
+  //   }
+  //   setCompletedSets(prev => {
+  //     const next = [...prev];
+  //     next[i] = !next[i];
+  //     setCurrentSetIndex(findFirstIncomplete());
+  //     return next;
+  //   });
+  // };
 
   const handleSetClick = (i: number) => {
     if (!completedSets[i]) {
@@ -272,22 +311,22 @@ const SessionExerciseRowComponent = ({
     setIsTimerRunning(true);
   };
 
-  const addSet = () => {
-    const lastIndex = setValues.length - 1;
-    const newIndex = lastIndex + 1;
+const addSet = () => {
+  const lastIndex = setValues.length - 1;
+  const newIndex = lastIndex + 1;
 
-    const lastUserWeight = setValues[lastIndex]?.weight || '';
-    const lastUserReps = setValues[lastIndex]?.reps || '';
+  const lastUserWeight = setValues[lastIndex]?.weight || '';
+  const lastUserReps = setValues[lastIndex]?.reps || '';
 
-    const planWeight = sets[newIndex]?.weight !== undefined ? String(sets[newIndex].weight) : '';
-    const planReps = sets[newIndex]?.reps !== undefined ? String(sets[newIndex].reps) : '';
+  const planWeight = sets[newIndex]?.weight !== undefined ? String(sets[newIndex].weight) : '';
+  const planReps = sets[newIndex]?.reps !== undefined ? String(sets[newIndex].reps) : '';
 
-    const newWeight = planWeight || lastUserWeight || '0';
-    const newReps = planReps || lastUserReps || '0';
+  const newWeight = planWeight || lastUserWeight || '0';
+  const newReps = planReps || lastUserReps || (isCardio ? '60' : '0');
 
-    setSetValues(prev => [...prev, { weight: newWeight, reps: newReps }]);
-    setCompletedSets(prev => [...prev, false]);
-  };
+  setSetValues(prev => [...prev, { weight: newWeight, reps: newReps }]);
+  setCompletedSets(prev => [...prev, false]);
+};
 
   const [removingIndex, setRemovingIndex] = useState<number | null>(null);
 
