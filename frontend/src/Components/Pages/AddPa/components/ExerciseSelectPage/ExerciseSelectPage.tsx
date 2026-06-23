@@ -30,10 +30,12 @@ interface ExerciseMediaItem {
 interface Exercise {
   id: string;
   name: string;
+  description: string | null;
   created_by_user_id: string | null;
   primary_muscle_groups: string[];
   secondary_muscles: string[];
   equipment: string[];
+  is_favorite: boolean;
   media: ExerciseMediaItem[];
 }
 
@@ -94,12 +96,9 @@ const ExerciseSelectPage = () => {
   const isSessionMode = (location.state as any)?.isSessionMode || false;
   const browseMode = (location.state as any)?.browseMode || false;
 
-   const groupExercises = useMemo(() => {
-    if (isSessionMode || groupId === 'all') {
-      return allExercises;
-    }
+  const groupExercises = useMemo(() => {
     return filterExercisesByCategory(allExercises, groupId || '', user?.id ?? null);
-  }, [allExercises, groupId, user, isSessionMode]);
+  }, [allExercises, groupId, user]);
 
   const filteredExercises = groupExercises.filter(ex => {
     if (searchQuery.trim()) {
@@ -118,6 +117,11 @@ const ExerciseSelectPage = () => {
     }
 
     return true;
+  });
+
+  const sortedExercises = [...filteredExercises].sort((a, b) => {
+    if (a.is_favorite !== b.is_favorite) return a.is_favorite ? -1 : 1;
+    return 0;
   });
 
   // Выбор упражнения единый: id отмечен, если он выбран в любой группе.
@@ -163,7 +167,6 @@ const ExerciseSelectPage = () => {
 
   const handleBack = async () => {
     const state = location.state as any;
-    const isSessionMode = state?.isSessionMode || false;
 
     if (browseMode) {
       navigate('/almanah/exercises');
@@ -177,37 +180,43 @@ const ExerciseSelectPage = () => {
         return;
       }
 
-      const allIds = Object.values(allSelectedExercises).flat();
-      if (allIds.length === 0) {
-        navigate(`/session/${workoutId}`);
-        return;
-      }
-
       try {
         const currentWorkout = await callWithAuth(token => authApi.getWorkout(token, workoutId));
-        const existingIds = new Set(currentWorkout.exercises.map(e => e.exercise_id));
-        const newIds = allIds.filter(id => !existingIds.has(id));
 
-        if (newIds.length === 0) {
-          navigate(`/session/${workoutId}`);
-          return;
-        }
+        const selectedIds = new Set(Object.values(allSelectedExercises).flat());
+        const existingTargetSets = new Map(
+          currentWorkout.exercises.map(e => [e.exercise_id, e.target_sets]),
+        );
 
-        const existingExercises = currentWorkout.exercises.map(item => ({
-          exercise_id: item.exercise_id,
-          target_sets: item.target_sets.length > 0 ? item.target_sets : null,
-        }));
-        const newExercises = newIds.map(id => ({
-          exercise_id: id,
-          target_sets: null,
-        }));
-        const payloadExercises = [...existingExercises, ...newExercises];
+        const orderedIds = [
+          ...currentWorkout.exercises.map(e => e.exercise_id).filter(id => selectedIds.has(id)),
+          ...[...selectedIds].filter(id => !existingTargetSets.has(id)),
+        ];
+
+        const payloadExercises = orderedIds.map(id => {
+          const sets = exerciseSets[id];
+          if (sets && sets.length > 0) {
+            return {
+              exercise_id: id,
+              target_sets: sets.map((s, i) => ({
+                set_index: i + 1,
+                target_reps: s.reps > 0 ? s.reps : null,
+                target_weight_kg: s.weight,
+              })),
+            };
+          }
+          const existing = existingTargetSets.get(id);
+          return {
+            exercise_id: id,
+            target_sets: existing && existing.length > 0 ? existing : null,
+          };
+        });
+
         await callWithAuth(token => authApi.updateWorkout(token, workoutId, { exercises: payloadExercises }));
-
         await queryClient.invalidateQueries({ queryKey: ['workout', user?.id, workoutId] });
-        navigate(`/session/${workoutId}`);
+        navigate(`/session/${workoutId}/add`);
       } catch (error) {
-        alert(error instanceof ApiError ? error.message : 'Не удалось добавить упражнения.');
+        alert(error instanceof ApiError ? error.message : 'Не удалось обновить упражнения.');
       }
     } else {
       navigate('/add', {
@@ -284,31 +293,32 @@ const ExerciseSelectPage = () => {
         </div>
 
         <div className={styles.exercisesList}>
-          {filteredExercises.length > 0 ? (
-            filteredExercises.map(exercise => (
-<ExerciseCard
-  key={exercise.id}
-  id={exercise.id}
-  name={exercise.name}
-  muscleGroups={exercise.primary_muscle_groups.map(labelForPrimary)}
-  targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
-  equipment={exercise.equipment}
-  imageUrl={exercise.media.find(m => m.type === 'image')?.url}
-  onToggle={(id) => {
-    // В режиме просмотра тап по карточке открывает модалку, а не выбирает упражнение
-    if (browseMode) {
-      const ex = filteredExercises.find(e => e.id === id);
-      if (ex) handleExerciseClick(ex);
-      return;
-    }
-    handleToggleExercise(id);
-  }}
-  onArrowClick={(id) => {
-    const ex = filteredExercises.find(e => e.id === id);
-    if (ex) handleExerciseClick(ex);
-  }}
-  isSelected={browseMode ? false : isExerciseSelected(exercise.id)}
-/>
+          {sortedExercises.length > 0 ? (
+            sortedExercises.map(exercise => (
+              <ExerciseCard
+                key={exercise.id}
+                id={exercise.id}
+                name={exercise.name}
+                muscleGroups={exercise.primary_muscle_groups.map(labelForPrimary)}
+                targetMuscles={exercise.secondary_muscles.map(labelForSecondary)}
+                equipment={exercise.equipment}
+                imageUrl={exercise.media.find(m => m.type === 'image')?.url}
+                isFavorite={exercise.is_favorite}
+                onToggle={(id) => {
+                  // В режиме просмотра тап по карточке открывает модалку, а не выбирает упражнение
+                  if (browseMode) {
+                    const ex = filteredExercises.find(e => e.id === id);
+                    if (ex) handleExerciseClick(ex);
+                    return;
+                  }
+                  handleToggleExercise(id);
+                }}
+                onArrowClick={(id) => {
+                  const ex = filteredExercises.find(e => e.id === id);
+                  if (ex) handleExerciseClick(ex);
+                }}
+                isSelected={browseMode ? false : isExerciseSelected(exercise.id)}
+              />
             ))
           ) : (
             <div className={styles.emptyState}>
@@ -328,7 +338,7 @@ const ExerciseSelectPage = () => {
           muscleGroups={modalExercise.primary_muscle_groups.map(labelForPrimary)}
           targetMuscles={modalExercise.secondary_muscles.map(labelForSecondary)}
           equipment={modalExercise.equipment}
-          description=""
+          description={modalExercise.description ?? ''}
           sets={browseMode ? undefined : exerciseSets[modalExercise.id]}
           media={modalExercise.media}
           editable={!browseMode}

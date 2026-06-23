@@ -266,20 +266,10 @@ const formatTime = (totalSeconds: number) => {
   };
 
   // --- добавление упражнения ---
+  // Открываем сетку групп мышц
   const handleAddExercise = () => {
-    if (!workout) return;
-    const ids = workout.exercises.map(e => e.exercise_id);
-    navigate('/exercises/all', {
-      state: {
-        currentSelectedExercises: { all: ids },
-        currentExerciseSets: {},
-        currentFormSettings: {},
-        exerciseSearchQuery: '',
-        // флаг, что мы в режиме сессии, чтобы при возврате обновить тренировку
-        isSessionMode: true,
-        sessionWorkoutId: workoutId,
-      }
-    });
+    if (!workout || !workoutId) return;
+    navigate(`/session/${workoutId}/add`);
   };
 
   // --- выход ---
@@ -371,6 +361,7 @@ const formatTime = (totalSeconds: number) => {
           muscleGroups={modalExercise.secondary_muscles}
           equipment={modalExercise.equipment}
           media={modalExercise.media}
+          description={modalExercise.description ?? ''}
         />
       )}
 

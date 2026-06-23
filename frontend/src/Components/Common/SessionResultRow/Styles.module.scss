@@ -1,0 +1,149 @@
+.card {
+  background: var(--Dark-grey-color);
+  border-radius: 18px;
+  border: 1px solid transparent;
+  padding: 15px 12px;
+  transition: all 0.3s ease;
+
+  &_expanded {
+    border-color: rgba(159, 218, 22, 0.25);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.image {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--Accent-grey-color);
+  flex-shrink: 0;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 0.2s ease;
+
+  &:hover { background: rgba(255, 255, 255, 0.08); }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.headerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  @include button_text_h1();
+  display: block;
+}
+
+.muscle {
+  @include text_subtitle();
+}
+
+.chevron {
+  color: var(--Accent-grey-color);
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+
+  &_open { transform: rotate(180deg); }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 25px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    margin-top: 25px;
+  }
+}
+
+.setRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--Accent-grey-color);
+  transition: all 0.3s ease;
+  animation: fadeInRow 0.3s ease;
+}
+
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.setIndex {
+  @include button_text_h1();
+  color: var(--Primary-color);
+}
+
+.valuesGroup {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  justify-content: center;
+}
+
+.weightGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.setValue {
+  @include button_text_h1();
+  color: #fff;
+  text-align: center;
+}
+
+.unit {
+  @include button_text_h1();
+  font-weight: 400;
+  color: #fff;
+}
+
+.multiply {
+  margin: 0 10px;
+  color: #fff;
+  align-self: end;
+}
+
+.empty {
+  font-size: 14px;
+  color: var(--Accent-grey-color);
+  text-align: start;
+}

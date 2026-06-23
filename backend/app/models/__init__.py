@@ -5,6 +5,7 @@ from app.models.exercise_media import ExerciseMedia
 from app.models.guide_article import GuideArticle
 from app.models.guide_category import GuideCategory
 from app.models.user import User
+from app.models.user_exercise_favorite import UserExerciseFavorite
 from app.models.user_guide_favorite import UserGuideFavorite
 from app.models.user_notification_settings import UserNotificationSettings
 from app.models.user_workout_template_favorite import UserWorkoutTemplateFavorite
@@ -23,6 +24,7 @@ __all__ = [
     "Workout",
     "Exercise",
     "ExerciseMedia",
+    "UserExerciseFavorite",
     "GuideCategory",
     "GuideArticle",
     "UserGuideFavorite",

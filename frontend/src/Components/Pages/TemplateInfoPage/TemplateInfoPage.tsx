@@ -54,6 +54,7 @@ const TemplateInfoPage = () => {
         return {
           exerciseId: te.exerciseId,
           name: info.name,
+          description: info.description,
           muscleGroups: info.primary_muscle_groups.map(labelForPrimary),
           targetMuscles: info.secondary_muscles.map(labelForSecondary),
           rawMuscleSlugs: info.primary_muscle_groups,
@@ -236,7 +237,7 @@ const TemplateInfoPage = () => {
           targetMuscles={modalExercise.targetMuscles}
           equipment={modalExercise.equipment}
           media={modalExercise.media}
-          description=""
+          description={modalExercise.description ?? ''}
           type="default"
           editable={false}
           showSettings={false}

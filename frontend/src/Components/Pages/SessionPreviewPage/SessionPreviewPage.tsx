@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/Components/UI/Button/Button';
 import { PreviewCard } from '@/Components/Common/PreviewCard/PreviewCard';
 import { DefaultExerciseRow } from '@/Components/Common/DefaultExerciseRow/DefaultExerciseRow';
+import { SessionResultRow } from '@/Components/Common/SessionResultRow/SessionResultRow';
 import styles from './Styles.module.scss';
 import ExerciseModal from '@/Components/Modals/ExerciseModal/ExerciseModal';
 import { useAuth } from '@/Auth';
@@ -19,6 +20,7 @@ import {
 import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 import { useWorkoutQuery } from '@/hooks/useWorkoutQuery';
 import { useExercisesQuery } from '@/hooks/useExercisesQuery';
+import { useCompletedSessionQuery } from '@/hooks/useCompletedSessionQuery';
 import { labelForPrimary, labelForSecondary } from '@/Utils/muscleGroups';
 
 // Зеркало MINUTES_PER_SET бэкенда
@@ -27,11 +29,14 @@ const MINUTES_PER_SET = 5;
 interface PreviewExercise {
   exerciseId: string;
   name: string;
+  description: string | null;
   muscleGroups: string[];
   targetMuscles: string[];
   equipment: string[];
   media: ExerciseMediaItem[];
   sets: ExerciseSet[];
+  // Фактически выполненные подходы (только для завершённой тренировки).
+  actualSets: ExerciseSet[];
 }
 
 const WorkoutSessionPage = () => {
@@ -44,6 +49,9 @@ const WorkoutSessionPage = () => {
   const { data: workout } = useWorkoutQuery(workoutId);
   const { data: catalog, isPending: isCatalogPending } = useExercisesQuery();
 
+  const isCompleted = workout?.is_completed ?? false;
+  const { data: completedSession } = useCompletedSessionQuery(workoutId, isCompleted);
+
   const [modalExercise, setModalExercise] = useState<PreviewExercise | null>(null);
   const [isStarting, setIsStarting] = useState(false);
 
@@ -52,6 +60,16 @@ const WorkoutSessionPage = () => {
     for (const ex of catalog ?? []) map.set(ex.id, ex);
     return map;
   }, [catalog]);
+
+  const actualSetsByExercise = useMemo(() => {
+    const map = new Map<string, ExerciseSet[]>();
+    for (const set of completedSession?.sets ?? []) {
+      const list = map.get(set.exercise_id) ?? [];
+      list.push({ weight: Number(set.weight_kg), reps: set.reps });
+      map.set(set.exercise_id, list);
+    }
+    return map;
+  }, [completedSession]);
 
   // Маппим, только когда загружены и тренировка, и каталог — каждое упражнение
   // тренировки гарантированно есть в каталоге.
@@ -65,6 +83,7 @@ const WorkoutSessionPage = () => {
         return [{
           exerciseId: item.exercise_id,
           name: info.name,
+          description: info.description,
           muscleGroups: info.primary_muscle_groups.map(labelForPrimary),
           targetMuscles: info.secondary_muscles.map(labelForSecondary),
           equipment: info.equipment,
@@ -73,9 +92,10 @@ const WorkoutSessionPage = () => {
             weight: Number(set.target_weight_kg ?? 0),
             reps: set.target_reps ?? 0,
           })),
+          actualSets: actualSetsByExercise.get(item.exercise_id) ?? [],
         }];
       });
-  }, [workout, isCatalogPending, catalogById]);
+  }, [workout, isCatalogPending, catalogById, actualSetsByExercise]);
 
   const muscleGroups = useMemo(() => {
     const seen = new Set<string>();
@@ -93,6 +113,21 @@ const WorkoutSessionPage = () => {
 
   const totalTargetSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
   const duration = totalTargetSets > 0 ? String(totalTargetSets * MINUTES_PER_SET) : undefined;
+
+  const formatDuration = (min: number | null): string => {
+    if (min === null) return '—';
+    if (min < 60) return `${min} мин`;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return m > 0 ? `${h} ч ${m} мин` : `${h} ч`;
+  };
+
+  const completedTime = useMemo(() => {
+    if (!isCompleted || !completedSession?.completed_at) return undefined;
+    const diffMs = new Date(completedSession.completed_at).getTime() - new Date(completedSession.started_at).getTime();
+    const durationMin = diffMs > 0 ? Math.round(diffMs / 60000) : 0;
+    return formatDuration(durationMin);
+  }, [isCompleted, completedSession]);
 
   const handleStart = () => {
     if (!workoutId || isStarting || workout?.is_completed) return;
@@ -162,7 +197,7 @@ const WorkoutSessionPage = () => {
       {/* Header */}
       <div className={styles.header}>
         <Button size="back" onClick={() => navigate(-1)} />
-        <h1 className={styles.title}>Тренировка сегодня</h1>
+        <h1 className={styles.title}>{isCompleted ? 'Итоги тренировки' : 'Тренировка сегодня'}</h1>
       </div>
 
       <div className={styles.content}>
@@ -171,56 +206,63 @@ const WorkoutSessionPage = () => {
         type="sessionPreview"
         title={workout.title}
         duration={duration}
+        completedTime={completedTime}
         exercisesCount={exercises.length}
         muscleGroups={muscleGroups}
         description={workout.description || undefined}
-        onEdit={() => console.log('Редактировать')}
         />
 
-        {/* Exercise List */}
         <div className={styles.section}>
-          <span className={styles.sectionLabel}>Упражнения в тренировке</span>
+          <span className={styles.sectionLabel}>
+            {isCompleted ? 'Что выполнено' : 'Упражнения в тренировке'}
+          </span>
           <div className={styles.exerciseList}>
-            {exercises.map((exercise, index) => (
-<DefaultExerciseRow
-  key={exercise.exerciseId}
-  name={exercise.name}
-  muscleGroups={exercise.muscleGroups}
-  targetMuscles={exercise.targetMuscles}
-  sets={exercise.sets}
-  index={index}
-  isDragging={false}
-  isOver={false}
-  onDragStart={() => {}}
-  onDragOver={() => {}}
-  onDragEnd={() => {}}
-  onClick={() => handleExerciseClick(exercise)}
-  showImage={true}
-  imageUrl={exercise.media.find(m => m.type === 'image')?.url}
-/>
-            ))}
+            {exercises.map((exercise, index) =>
+              isCompleted ? (
+                <SessionResultRow
+                  key={exercise.exerciseId}
+                  name={exercise.name}
+                  muscleGroup={exercise.muscleGroups[0]}
+                  sets={exercise.actualSets}
+                  imageUrl={exercise.media.find(m => m.type === 'image')?.url}
+                  onImageClick={() => handleExerciseClick(exercise)}
+                />
+              ) : (
+                <DefaultExerciseRow
+                  key={exercise.exerciseId}
+                  name={exercise.name}
+                  muscleGroups={exercise.muscleGroups}
+                  targetMuscles={exercise.targetMuscles}
+                  sets={exercise.sets}
+                  index={index}
+                  showImage={true}
+                  imageUrl={exercise.media.find(m => m.type === 'image')?.url}
+                  isDragging={false}
+                  isOver={false}
+                  onDragStart={() => {}}
+                  onDragOver={() => {}}
+                  onDragEnd={() => {}}
+                  onClick={() => handleExerciseClick(exercise)}
+                />
+              ),
+            )}
           </div>
         </div>
       </div>
 
-      {/* Start Button */}
-      <Button
-        size="l"
-        color="primary"
-        fullWidth
-        onClick={handleStart}
-        disabled={isStarting || workout.is_completed}
-        className={styles.startBtn}
-      >
-        {workout.is_completed ? (
-          'Тренировка завершена'
-        ) : (
-          <>
-            {isStarting ? 'Запускаем...' : 'Начать'}
-            <img src="/icons/StartButton.svg"/>
-          </>
-        )}
-      </Button>
+      {!isCompleted && (
+        <Button
+          size="l"
+          color="primary"
+          fullWidth
+          onClick={handleStart}
+          disabled={isStarting}
+          className={styles.startBtn}
+        >
+          {isStarting ? 'Запускаем...' : 'Начать'}
+          <img src="/icons/StartButton.svg"/>
+        </Button>
+      )}
 
 {modalExercise && (
   <ExerciseModal
@@ -231,7 +273,7 @@ const WorkoutSessionPage = () => {
     targetMuscles={modalExercise.targetMuscles}
     equipment={modalExercise.equipment}
     media={modalExercise.media}
-    description=""
+    description={modalExercise.description ?? ''}
     sets={modalExercise.sets}
     onConfirm={handleModalConfirm}
     showSaveButton={true}

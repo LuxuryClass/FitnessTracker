@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import AlreadyExistsException, BadRequestException, ForbiddenException, NotFoundException
 from app.models.exercise import Exercise
 from app.models.user import User
-from app.repositories import exercise_repository
+from app.repositories import exercise_favorite_repository, exercise_repository
 from app.schemas.exercise import ExerciseCreateRequest, ExerciseMediaItem, ExerciseResponse, ExerciseUpdateRequest
 from app.services.storage_service import storage_service
 
@@ -16,7 +16,7 @@ MAX_EXERCISE_MEDIA_COUNT = 10
 
 
 class ExerciseService:
-    async def _to_response(self, exercise: Exercise) -> ExerciseResponse:
+    async def _to_response(self, exercise: Exercise, is_favorite: bool = False) -> ExerciseResponse:
         # media собираем вручную: ORM-поля object_key/media_type не совпадают
         # с url/type схемы, поэтому ORM-объект целиком не валидируем
         media = [
@@ -35,6 +35,7 @@ class ExerciseService:
             primary_muscle_groups=list(exercise.primary_muscle_groups),
             secondary_muscles=list(exercise.secondary_muscles),
             equipment=list(exercise.equipment),
+            is_favorite=is_favorite,
             media=media,
             created_at=exercise.created_at,
             updated_at=exercise.updated_at,
@@ -54,11 +55,27 @@ class ExerciseService:
         current_user: User,
     ) -> list[ExerciseResponse]:
         exercises = await exercise_repository.list_by_owner(db, current_user.id)
-        return [await self._to_response(exercise) for exercise in exercises]
+        favorite_ids = await exercise_favorite_repository.get_favorite_exercise_ids(
+            db, current_user.id, {exercise.id for exercise in exercises}
+        )
+        return [
+            await self._to_response(exercise, is_favorite=exercise.id in favorite_ids)
+            for exercise in exercises
+        ]
 
-    async def list_system_exercises(self, db: AsyncSession) -> list[ExerciseResponse]:
+    async def list_system_exercises(
+        self,
+        db: AsyncSession,
+        current_user: User,
+    ) -> list[ExerciseResponse]:
         exercises = await exercise_repository.list_system(db)
-        return [await self._to_response(exercise) for exercise in exercises]
+        favorite_ids = await exercise_favorite_repository.get_favorite_exercise_ids(
+            db, current_user.id, {exercise.id for exercise in exercises}
+        )
+        return [
+            await self._to_response(exercise, is_favorite=exercise.id in favorite_ids)
+            for exercise in exercises
+        ]
 
     async def get_exercise(
         self,
@@ -67,7 +84,10 @@ class ExerciseService:
         exercise_id: UUID,
     ) -> ExerciseResponse:
         exercise = await self._get_owned_exercise(db, current_user, exercise_id)
-        return await self._to_response(exercise)
+        favorite_ids = await exercise_favorite_repository.get_favorite_exercise_ids(
+            db, current_user.id, {exercise.id}
+        )
+        return await self._to_response(exercise, is_favorite=exercise.id in favorite_ids)
 
     async def create_exercise(
         self,
@@ -173,6 +193,36 @@ class ExerciseService:
         await db.refresh(exercise)
         response = await self._to_response(exercise)
         return response, old_media_key
+
+    async def add_favorite(
+        self,
+        db: AsyncSession,
+        current_user: User,
+        exercise_id: UUID,
+    ) -> None:
+        exercise = await exercise_repository.get_for_user(db, exercise_id, current_user.id)
+        if exercise is None:
+            raise NotFoundException("Упражнение не найдено.")
+
+        existing = await exercise_favorite_repository.get_favorite(db, current_user.id, exercise_id)
+        if existing is not None:
+            return
+
+        await exercise_favorite_repository.add_favorite(db, current_user.id, exercise_id)
+        await db.commit()
+
+    async def remove_favorite(
+        self,
+        db: AsyncSession,
+        current_user: User,
+        exercise_id: UUID,
+    ) -> None:
+        exercise = await exercise_repository.get_for_user(db, exercise_id, current_user.id)
+        if exercise is None:
+            raise NotFoundException("Упражнение не найдено.")
+
+        await exercise_favorite_repository.remove_favorite(db, current_user.id, exercise_id)
+        await db.commit()
 
 
 exercise_service = ExerciseService()

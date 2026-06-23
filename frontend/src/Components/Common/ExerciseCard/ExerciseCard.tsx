@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/Auth';
+import { authApi, type Exercise } from '@/Auth/authApi';
+import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
 
 interface ExerciseCardProps {
   id: string;
@@ -10,6 +14,7 @@ interface ExerciseCardProps {
   targetMuscles: string[];
   equipment?: string[];
   imageUrl?: string;
+  isFavorite?: boolean;
   onToggle?: (id: string) => void;
   onArrowClick?: (id: string) => void;
   isSelected?: boolean;
@@ -23,20 +28,49 @@ const ExerciseCard = ({
   targetMuscles,
   equipment = [],
   imageUrl,
+  isFavorite = false,
   onToggle,
   onArrowClick,
   isSelected = false,
   className
 }: ExerciseCardProps) => {
-  const [isLiked, setIsLiked] = useState(false);
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const callWithAuth = useAuthenticatedCall();
+  const [isLiked, setIsLiked] = useState<boolean>(!!isFavorite);
+  const [isPending, setIsPending] = useState(false);
 
   const handleCardClick = () => {
     onToggle?.(id);
   };
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLiked(prev => !prev);
+    if (isPending) return;
+
+    const next = !isLiked;
+    setIsLiked(next);
+    setIsPending(true);
+
+    const queryKey = ['exercises', user?.id];
+    queryClient.setQueryData<Exercise[]>(queryKey, (prev) =>
+      prev?.map((ex) => (ex.id === id ? { ...ex, is_favorite: next } : ex)),
+    );
+
+    try {
+      await callWithAuth((token) =>
+        next
+          ? authApi.addExerciseFavorite(token, id)
+          : authApi.removeExerciseFavorite(token, id),
+      );
+    } catch {
+      setIsLiked(!next);
+      queryClient.setQueryData<Exercise[]>(queryKey, (prev) =>
+        prev?.map((ex) => (ex.id === id ? { ...ex, is_favorite: !next } : ex)),
+      );
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const handleArrow = (e: React.MouseEvent) => {

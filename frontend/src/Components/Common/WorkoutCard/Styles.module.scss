@@ -7,10 +7,25 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  
+  border: 1px solid transparent;
+
   &:active {
     opacity: 0.8;
   }
+}
+
+.card_completed {
+  background: var(--Primary-trans, #9FDA1633);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.completedBadge {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--Primary-color, #9FDA16);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .cardContent {

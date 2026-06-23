@@ -1,5 +1,6 @@
 """Пакет репозиториев."""
 
+from app.repositories.exercise_favorite_repository import exercise_favorite_repository
 from app.repositories.exercise_repository import exercise_repository
 from app.repositories.guide_repository import guide_repository
 from app.repositories.notification_settings_repository import notification_settings_repository
@@ -22,6 +23,7 @@ __all__ = [
     "workout_notification_log_repository",
     "workout_repository",
     "exercise_repository",
+    "exercise_favorite_repository",
     "guide_repository",
     "workout_exercise_repository",
     "workout_exercise_target_set_repository",

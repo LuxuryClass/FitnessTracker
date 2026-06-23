@@ -17,6 +17,7 @@ import ExerciseSelectPage from '@/Components/Pages/AddPa/components/ExerciseSele
 import CreateExercisePage from '@/Components/Pages/CreateExercisePage/CreateExercisePage';
 import { SessionPreviewPage } from '@/Components/Pages/SessionPreviewPage/SessionPreviewPage';
 import SessionMainPage from '@/Components/Pages/SessionMainPage/SessionMainPage';
+import SessionAddExercisesPage from '@/Components/Pages/SessionAddExercisesPage/SessionAddExercisesPage';
 import { DesktopGate } from '@/Components/Common/DesktopGate/DesktopGate';
 import TemplatesPage from '@/Components/Pages/TemplatesPage/TemplatesPage';
 import TemplateInfoPage from '@/Components/Pages/TemplateInfoPage/TemplateInfoPage';
@@ -67,6 +68,7 @@ export function App() {
 
             <Route path="/workout/:workoutId" element={<SessionPreviewPage />} />
             <Route path="/session/:workoutId" element={<SessionMainPage />} />
+            <Route path="/session/:workoutId/add" element={<SessionAddExercisesPage />} />
 
           </Route>
         </Routes>

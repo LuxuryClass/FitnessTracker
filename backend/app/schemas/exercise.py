@@ -226,6 +226,7 @@ class ExerciseResponse(BaseModel):
     primary_muscle_groups: list[str]
     secondary_muscles: list[str]
     equipment: list[str]
+    is_favorite: bool
     media: list[ExerciseMediaItem] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime

@@ -35,7 +35,6 @@ interface ExerciseModalProps {
   editable?: boolean;
   showSettings?: boolean;
   showSaveButton?: boolean;
-  onDescriptionChange?: (value: string) => void;
   onConfirm?: (sets: ExerciseSet[], description: string) => void;
 }
 
@@ -77,7 +76,6 @@ const ExerciseModal = ({
   editable = true,
   showSettings = true,
   showSaveButton = false,
-  onDescriptionChange,
   onConfirm,
 }: ExerciseModalProps) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -337,25 +335,12 @@ const ExerciseModal = ({
             </div>
           )}
 
-          {(type === 'default' || (type === 'session' && localDescription)) && (
+          {localDescription && (
             <div className={styles.section}>
-              {type === 'default' ? (
-                <textarea
-                  className={styles.textarea}
-                  value={localDescription}
-                  onChange={e => {
-                    setLocalDescription(e.target.value);
-                    onDescriptionChange?.(e.target.value);
-                  }}
-                  placeholder="Добавьте описание (необязательно)"
-                  rows={3}
-                />
-              ) : (
-                <div className={styles.descriptionReadonly}>
-                  <span className={styles.sectionLabel}>Описание:</span>
-                  <p className={styles.descriptionText}>{localDescription}</p>
-                </div>
-              )}
+              <div className={styles.descriptionReadonly}>
+                <span className={styles.sectionLabel}>Описание:</span>
+                <p className={styles.descriptionText}>{localDescription}</p>
+              </div>
             </div>
           )}
 

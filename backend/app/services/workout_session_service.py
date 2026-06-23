@@ -157,6 +157,20 @@ class WorkoutSessionService:
         session = await self._get_session_for_user_or_raise(db, current_user, session_id)
         return await self._build_session_response(db, session)
 
+    async def get_completed_session_by_workout(
+        self,
+        db: AsyncSession,
+        current_user: User,
+        workout_id: UUID,
+    ) -> WorkoutSessionResponse | None:
+        await self._get_workout_for_user_or_raise(db, current_user, workout_id)
+        session = await workout_session_repository.get_completed_by_workout_id(
+            db, workout_id, current_user.id
+        )
+        if session is None:
+            return None
+        return await self._build_session_response(db, session)
+
     async def upsert_session_set(
         self,
         db: AsyncSession,

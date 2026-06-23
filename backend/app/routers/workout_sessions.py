@@ -38,6 +38,23 @@ async def get_active_workout_session(
     return await workout_session_service.get_active_session(db=db, current_user=current_user)
 
 
+@router.get(
+    "/by-workout/{workout_id}",
+    response_model=WorkoutSessionResponse | None,
+    status_code=status.HTTP_200_OK,
+)
+async def get_completed_session_by_workout(
+    workout_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> WorkoutSessionResponse | None:
+    return await workout_session_service.get_completed_session_by_workout(
+        db=db,
+        current_user=current_user,
+        workout_id=workout_id,
+    )
+
+
 @router.get("/{session_id}", response_model=WorkoutSessionResponse, status_code=status.HTTP_200_OK)
 async def get_workout_session(
     session_id: UUID,

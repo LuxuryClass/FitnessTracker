@@ -10,6 +10,8 @@ import { useExercisesQuery } from '@/hooks/useExercisesQuery';
 import { useCreateWorkoutMutation } from '@/hooks/useCreateWorkoutMutation';
 import { useCreateWorkoutsBatchMutation } from '@/hooks/useCreateWorkoutsBatchMutation';
 import { useCreateWorkoutTemplateMutation } from '@/hooks/useCreateWorkoutTemplateMutation';
+import { useAuthenticatedCall } from '@/hooks/useAuthenticatedCall';
+import { authApi } from '@/Auth/authApi';
 import type { Exercise, ExerciseSet, WorkoutCreatePayload, WorkoutBatchCreatePayload } from '@/Auth/authApi';
 import {
   toPlannedForIso,
@@ -79,6 +81,7 @@ const CreateWorkoutPage = () => {
   const createWorkoutMutation = useCreateWorkoutMutation();
   const createWorkoutsBatchMutation = useCreateWorkoutsBatchMutation();
   const createWorkoutTemplateMutation = useCreateWorkoutTemplateMutation();
+  const callWithAuth = useAuthenticatedCall();
 
   const exercisesSnapshotRef = useRef<Record<string, string[]> | null>(null);
   const exercisesSnapshot = (location.state as any)?.exercisesSnapshot as Record<string, string[]> | undefined;
@@ -371,6 +374,12 @@ useEffect(() => {
 
     try {
       if (formData.startType === 'now') {
+        const active = await callWithAuth(token => authApi.getActiveWorkoutSession(token));
+        if (active) {
+          alert('У вас уже есть активная тренировка. Завершите её перед запуском новой.');
+          return;
+        }
+
         const payload: WorkoutCreatePayload = {
           title: effectiveTitle,
           is_planned: false,

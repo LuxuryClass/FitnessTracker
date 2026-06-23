@@ -195,6 +195,8 @@ export const PreviewTab = ({
                 sets={setsByExerciseId[exercise.id] ?? []}
                 index={index}
                 showDrag={true}
+                showImage={true}
+                imageUrl={exercise.media.find(m => m.type === 'image')?.url}
                 isDragging={dragIndex === index}
                 isOver={overIndex === index}
                 onDragStart={() => handleDragStart(index)}
@@ -221,7 +223,7 @@ export const PreviewTab = ({
           targetMuscles={labelsForSecondaryList(modalExercise.secondary_muscles)}
           equipment={modalExercise.equipment}
           media={modalExercise.media}
-          description=""
+          description={modalExercise.description ?? ''}
           sets={setsByExerciseId[modalExercise.id] ?? []}
           editable={true}
           onConfirm={handleModalConfirm}

@@ -188,7 +188,7 @@ const resumeRest = () => {
     const planReps = sets[newIndex]?.reps !== undefined ? String(sets[newIndex].reps) : '';
 
     const newWeight = planWeight || lastUserWeight || '0';
-    const newReps = planReps || lastUserReps || '0';
+    const newReps = planReps || lastUserReps || '1';
 
     setSetValues(prev => [...prev, { weight: newWeight, reps: newReps }]);
     setCompletedSets(prev => [...prev, false]);

@@ -52,7 +52,7 @@ const ExitModalComponent = ({ isOpen, onClose, onFinish, onExit, isFinishing }: 
             {isFinishing ? 'Завершаем...' : 'Завершить тренировку'}
           </Button>
           <Button size="l" color="accent-2" onClick={onExit} className={styles.exitButton}>
-            Выйти без сохранения
+            Выйти в главное меню
           </Button>
         </div>
       </div>

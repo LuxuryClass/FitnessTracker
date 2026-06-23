@@ -23,6 +23,23 @@ class WorkoutSessionRepository:
         result = await db.execute(statement)
         return result.scalar_one_or_none()
 
+    async def get_completed_by_workout_id(
+        self, db: AsyncSession, workout_id: UUID, user_id: UUID
+    ) -> WorkoutSession | None:
+        # Самая свежая завершённая сессия тренировки
+        statement = (
+            select(WorkoutSession)
+            .where(
+                WorkoutSession.workout_id == workout_id,
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.status == "completed",
+                WorkoutSession.completed_at.is_not(None),
+            )
+            .order_by(desc(WorkoutSession.completed_at))
+        )
+        result = await db.execute(statement)
+        return result.scalars().first()
+
     async def create(self, db: AsyncSession, user_id: UUID, workout_id: UUID) -> WorkoutSession:
         session = WorkoutSession(user_id=user_id, workout_id=workout_id)
         db.add(session)

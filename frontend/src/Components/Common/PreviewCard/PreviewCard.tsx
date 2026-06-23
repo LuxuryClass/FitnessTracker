@@ -6,6 +6,7 @@ import cn from 'classnames';
 interface PreviewCardProps {
   title?: string;
   duration?: string;
+  completedTime?: string;
   totalWeight?: string;
   exercisesCount?: number;
   date?: string;
@@ -14,7 +15,6 @@ interface PreviewCardProps {
   muscleGroups?: string[];
   description?: string;
   type?: 'default' | 'sessionPreview';
-  onEdit?: () => void;
   className?: string;
 }
 
@@ -29,6 +29,7 @@ const formatDateDisplay = (dateStr: string): string => {
 const PreviewCardComponent = ({
   title = 'Новая тренировка',
   duration,
+  completedTime,
   totalWeight,
   exercisesCount,
   date,
@@ -37,7 +38,6 @@ const PreviewCardComponent = ({
   muscleGroups = [],
   description,
   type = 'default',
-  onEdit,
   className,
 }: PreviewCardProps) => {
   const displayDate = badge
@@ -52,7 +52,7 @@ const PreviewCardComponent = ({
         <h3 className={cn(styles.title, styles.title_detailed)}>{title}</h3>
 
         <div className={styles.metaDetailed}>
-          {duration && (
+          {!completedTime && duration && (
             <div className={styles.metaDetailedItem}>
               <img src="/icons/Clock.svg" />
               <span>~{duration} мин</span>
@@ -62,6 +62,12 @@ const PreviewCardComponent = ({
             <div className={styles.metaDetailedItem}>
               <img src="/icons/ExerciseCounter_White.svg"/>
               <span>{exercisesCount} упражнений</span>
+            </div>
+          )}
+          {completedTime && (
+            <div className={styles.metaDetailedItem}>
+              <img src="/icons/Clock.svg" />
+              <span>{completedTime}</span>
             </div>
           )}
         </div>
@@ -77,14 +83,6 @@ const PreviewCardComponent = ({
             <div className={styles.divider} />
             <p className={styles.description}>{description}</p>
           </>
-        )}
-
-        {onEdit && (
-          <button className={styles.editBtn} onClick={onEdit}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M15.2322 5.23223L18.7678 8.76777M16.7322 3.73223C17.7085 2.75592 19.2915 2.75592 20.2678 3.73223C21.2441 4.70854 21.2441 6.29146 20.2678 7.26777L6.5 21.0355H3V17.4645L16.7322 3.73223Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
         )}
       </div>
     );

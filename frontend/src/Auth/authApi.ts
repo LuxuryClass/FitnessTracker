@@ -205,6 +205,7 @@ export interface Exercise {
   primary_muscle_groups: string[];
   secondary_muscles: string[];
   equipment: string[];
+  is_favorite: boolean;
   media: ExerciseMediaItem[];
   created_at: string;
   updated_at: string;
@@ -505,6 +506,20 @@ export const authApi = {
     });
   },
 
+  async addExerciseFavorite(accessToken: string, exerciseId: string): Promise<void> {
+    return request<void>(`/exercises/${exerciseId}/favorite`, {
+      method: "POST",
+      accessToken,
+    });
+  },
+
+  async removeExerciseFavorite(accessToken: string, exerciseId: string): Promise<void> {
+    return request<void>(`/exercises/${exerciseId}/favorite`, {
+      method: "DELETE",
+      accessToken,
+    });
+  },
+
   async createWorkout(accessToken: string, payload: WorkoutCreatePayload): Promise<WorkoutCreateResponse> {
     return request<WorkoutCreateResponse>("/workouts", {
       method: "POST",
@@ -596,6 +611,20 @@ export const authApi = {
       method: "POST",
       accessToken,
       body: { workout_id: workoutId },
+    });
+  },
+
+  async getActiveWorkoutSession(accessToken: string): Promise<WorkoutSession | null> {
+    return request<WorkoutSession | null>("/workout-sessions/active", {
+      method: "GET",
+      accessToken,
+    });
+  },
+
+  async getCompletedSessionByWorkout(accessToken: string, workoutId: string): Promise<WorkoutSession | null> {
+    return request<WorkoutSession | null>(`/workout-sessions/by-workout/${workoutId}`, {
+      method: "GET",
+      accessToken,
     });
   },
 

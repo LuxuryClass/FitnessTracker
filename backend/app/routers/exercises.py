@@ -24,9 +24,9 @@ async def list_exercises(
 @router.get("/system", response_model=list[ExerciseResponse], status_code=status.HTTP_200_OK)
 async def list_system_exercises(
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[ExerciseResponse]:
-    return await exercise_service.list_system_exercises(db=db)
+    return await exercise_service.list_system_exercises(db=db, current_user=current_user)
 
 
 @router.get("/{exercise_id}", response_model=ExerciseResponse, status_code=status.HTTP_200_OK)
@@ -105,3 +105,31 @@ async def delete_exercise_media(
     )
     background_tasks.add_task(storage_service.delete_exercise_media, old_media_to_delete, ignore_missing=True)
     return exercise_response
+
+
+@router.post("/{exercise_id}/favorite", status_code=status.HTTP_204_NO_CONTENT)
+async def add_exercise_favorite(
+    exercise_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    await exercise_service.add_favorite(
+        db=db,
+        current_user=current_user,
+        exercise_id=exercise_id,
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete("/{exercise_id}/favorite", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_exercise_favorite(
+    exercise_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    await exercise_service.remove_favorite(
+        db=db,
+        current_user=current_user,
+        exercise_id=exercise_id,
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

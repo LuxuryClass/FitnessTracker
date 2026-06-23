@@ -24,6 +24,8 @@ interface ExercisesTabsProps {
   initialSearchQuery?: string;
   onSearchQueryChange?: (value: string) => void;
   browseMode?: boolean;
+  sessionMode?: boolean;
+  sessionWorkoutId?: string;
 }
 
 const ExercisesTabs = ({
@@ -34,6 +36,8 @@ const ExercisesTabs = ({
   initialSearchQuery = '',
   onSearchQueryChange,
   browseMode = false,
+  sessionMode = false,
+  sessionWorkoutId,
 }: ExercisesTabsProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
@@ -87,6 +91,19 @@ const handleCardClick = (group: MuscleGroup) => {
         muscleGroup: group,
         browseMode: true,
         exerciseSearchQuery: searchQuery,
+      }
+    });
+    return;
+  }
+  if (sessionMode) {
+    navigate(`/exercises/${group.id}`, {
+      state: {
+        muscleGroup: group,
+        currentSelectedExercises: selectedExercises,
+        currentExerciseSets: exerciseSets,
+        exerciseSearchQuery: searchQuery,
+        isSessionMode: true,
+        sessionWorkoutId,
       }
     });
     return;

@@ -84,6 +84,7 @@ const SchedulePage = () => {
                   exercisesCount={workout.exercises_count}
                   muscleGroups={labelsForPrimaryList(workout.muscle_groups)}
                   date={new Date(workout.date)}
+                  status={workout.status}
                   onClick={() => navigate(`/workout/${workout.id}`)}
                 />
               </div>

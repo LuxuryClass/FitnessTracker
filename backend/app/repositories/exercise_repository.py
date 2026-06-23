@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.exercise import Exercise
@@ -19,6 +19,19 @@ class ExerciseRepository:
         statement = select(Exercise).where(Exercise.id.in_(exercise_ids))
         result = await db.execute(statement)
         return list(result.scalars().all())
+
+    async def get_for_user(
+        self, db: AsyncSession, exercise_id: UUID, user_id: UUID
+    ) -> Exercise | None:
+        statement = select(Exercise).where(
+            Exercise.id == exercise_id,
+            or_(
+                Exercise.created_by_user_id == user_id,
+                Exercise.created_by_user_id.is_(None),
+            ),
+        )
+        result = await db.execute(statement)
+        return result.scalar_one_or_none()
 
     async def list_by_owner(self, db: AsyncSession, user_id: UUID) -> list[Exercise]:
         statement = (

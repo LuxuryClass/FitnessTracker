@@ -10,6 +10,7 @@ interface WorkoutCardProps {
   time?: string;
   exercisesCount?: number;
   muscleGroups?: string[];
+  status?: 'planned' | 'completed';
   onClick?: () => void;
   onArrowClick?: () => void;
   className?: string;
@@ -39,14 +40,16 @@ const WorkoutCardComponent = ({
   time,
   exercisesCount,
   muscleGroups,
+  status,
   className,
   onClick,
   onArrowClick,
 }: WorkoutCardProps) => {
   const displayDate = useMemo(() => formatDate(date || new Date()), [date]);
+  const isCompleted = status === 'completed';
 
   return (
-    <div className={cn(styles.card, className)} onClick={onClick}>
+    <div className={cn(styles.card, isCompleted && styles.card_completed, className)} onClick={onClick}>
       <div className={styles.cardContent}>
         <div className={styles.topRow}>
           <span className={styles.dateText}>{displayDate}</span>
@@ -68,7 +71,7 @@ const WorkoutCardComponent = ({
           )}
         </div>
       </div>
-
+      {isCompleted && <span className={styles.completedBadge}>✓ Завершена</span>}
       <div className={styles.arrow} onClick={onArrowClick}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
           <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

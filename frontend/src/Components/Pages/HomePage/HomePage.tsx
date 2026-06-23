@@ -160,6 +160,7 @@ const HomePage = () => {
                 time={workout.time ?? undefined}
                 exercisesCount={workout.exercises_count}
                 muscleGroups={labelsForPrimaryList(workout.muscle_groups)}
+                status={workout.status}
                 onClick={() => navigate(`/workout/${workout.id}`)}
               />
             ))}
