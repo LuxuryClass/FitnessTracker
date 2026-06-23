@@ -65,9 +65,49 @@ const SessionExerciseRowComponent = ({
     () => buildInitialRows().values
   );
   const [completedSets, setCompletedSets] = useState<boolean[]>(() => buildInitialRows().doneFlags);
+  
   const [restTimer, setRestTimer] = useState(0);
   const [isResting, setIsResting] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const restIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+const [showReset, setShowReset] = useState(false);
+
+const handleStart = () => {
+  startRest();
+  setShowReset(true);
+};
+
+const handleReset = () => {
+  setIsResting(false);
+  setIsPaused(false);
+  setRestTimer(0);
+  setShowReset(false);
+  if (restIntervalRef.current) clearInterval(restIntervalRef.current);
+};
+
+  useEffect(() => {
+  if (isResting && !isPaused) {
+    restIntervalRef.current = setInterval(() => setRestTimer(prev => prev + 1), 1000);
+  }
+  return () => { if (restIntervalRef.current) clearInterval(restIntervalRef.current); };
+}, [isResting, isPaused]);
+
+const startRest = () => {
+  setIsResting(true);
+  setIsPaused(false);
+  setRestTimer(0);
+};
+
+const pauseRest = () => {
+  setIsPaused(true);
+  if (restIntervalRef.current) clearInterval(restIntervalRef.current);
+};
+
+const resumeRest = () => {
+  setIsPaused(false);
+};
+
+
 
   const allSetsCompleted = completedSets.length > 0 && completedSets.every(Boolean);
   const [localCompleted, setLocalCompleted] = useState(completed);
@@ -98,29 +138,10 @@ const SessionExerciseRowComponent = ({
     }
   }, [isFocused]);
 
-  useEffect(() => {
-    if (isResting) {
-      restIntervalRef.current = setInterval(() => setRestTimer(prev => prev + 1), 1000);
-    }
-    return () => { if (restIntervalRef.current) clearInterval(restIntervalRef.current); };
-  }, [isResting]);
-
   const formatRest = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const getPlaceholder = (i: number, field: 'weight' | 'reps'): string => {
     return String(sets[i]?.[field] ?? '0');
-  };
-
-  const startRest = () => {
-    setRestTimer(0);
-    setIsResting(true);
-  };
-
-  const stopRest = () => {
-    setIsResting(false);
-    if (restIntervalRef.current) clearInterval(restIntervalRef.current);
-    // Фокус на первый невыполненный подход
-    setCurrentSetIndex(findFirstIncomplete());
   };
 
   const updateSetValue = (i: number, field: 'weight' | 'reps', value: string) => {
@@ -145,13 +166,7 @@ const SessionExerciseRowComponent = ({
     setCompletedSets(prev => {
       const next = [...prev];
       next[i] = !next[i];
-
-      // Фокус на первый невыполненный
-      const firstIncomplete = next.findIndex(done => !done);
-      if (firstIncomplete >= 0) {
-        setCurrentSetIndex(firstIncomplete);
-      }
-
+      setCurrentSetIndex(findFirstIncomplete());
       return next;
     });
   };
@@ -278,13 +293,32 @@ const SessionExerciseRowComponent = ({
 
           <button className={styles.addSetBtn} onClick={addSet}>+ Добавить подход</button>
 
-          <div className={cn(styles.restTimer, isResting && styles.restTimer_active)}>
-            <span className={styles.restLabel}>Отдых</span>
-            <span className={styles.restValue}>{formatRest(restTimer)}</span>
-            <button className={cn(styles.restBtn, isResting && styles.restBtn_stop)} onClick={isResting ? stopRest : startRest}>
-              {isResting ? 'Стоп' : 'Старт'}
-            </button>
-          </div>
+<div className={cn(styles.restTimer, isResting && styles.restTimer_active)}>
+  <span className={styles.restLabel}>Отдых</span>
+  <span className={styles.restValue}>{formatRest(restTimer)}</span>
+  
+  <div className={styles.restControls}>
+    {!isResting && (
+      <button className={styles.restBtn} onClick={handleStart}>Старт</button>
+    )}
+    {isResting && (
+      <>
+        <button 
+          className={cn(styles.restBtn, styles.restBtn_reset, showReset && styles.restBtn_show)} 
+          onClick={handleReset}
+        >
+          Очистить
+        </button>
+        <button 
+          className={cn(styles.restBtn, isPaused ? styles.restBtn_primary : styles.restBtn_stop)} 
+          onClick={isPaused ? resumeRest : pauseRest}
+        >
+          {isPaused ? 'Продолжить' : 'Стоп'}
+        </button>
+      </>
+    )}
+  </div>
+</div>
         </div>
       )}
     </div>

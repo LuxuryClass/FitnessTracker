@@ -279,21 +279,46 @@
   font-variant-numeric: tabular-nums;
 }
 
+.restControls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
 .restBtn {
   height: 36px;
   width: 50%;
   align-self: center;
   border-radius: 8px;
   border: none;
-  background: var(--Primary-color);
   color: #080A00;
-  @include text_h2();
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+  animation: fadeInScale 0.3s ease;
 
+  // Продолжить — зелёная заливка
+  background: var(--Primary-color);
+
+  // Стоп — обводка
   &_stop {
     background: transparent;
     border: 1px solid var(--Primary-color);
     color: var(--Primary-color);
   }
+
+  // Очистить — обводка
+  &_reset {
+    background: transparent;
+    border: 1px solid var(--Primary-color);
+    color: var(--Primary-color);
+    animation: fadeInScale 0.3s ease;
+  }
 }
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
