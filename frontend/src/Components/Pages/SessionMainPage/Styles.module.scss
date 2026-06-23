@@ -7,7 +7,6 @@
 
 .title {
   @include text_h1();
-  margin-bottom: 16px;
 }
 
 .stats {
@@ -107,34 +106,27 @@
 
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding-right: 8px;
-}
-
-.headerActions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+  margin-bottom: 16px;
+  position: relative;
+  gap: 24px;
 }
 
 .actionButton {
+  position: absolute;
+  top: 0;
+  right: 0;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 4px;
   display: flex;
-  align-items: center;
+  align-items: center; 
   justify-content: center;
-  opacity: 0.8;
+  justify-self: end;
   transition: opacity 0.2s;
 
-  &:hover {
-    opacity: 1;
-  }
-
   img {
-    width: 28px;
-    height: 28px;
+    width: 40px;
+    height: 40px;
   }
 }

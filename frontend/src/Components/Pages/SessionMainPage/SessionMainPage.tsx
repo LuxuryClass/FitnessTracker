@@ -295,15 +295,11 @@ const formatTime = (totalSeconds: number) => {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
+        <Button size="back" onClick={handleExit} />
         <h1 className={styles.title}>{workout.title}</h1>
-        <div className={styles.headerActions}>
-          <button className={styles.actionButton} onClick={handleAddExercise} disabled={isUpdating}>
-            <img src="/icons/AddExercise.svg" alt="Добавить упражнение" />
-          </button>
-          <button className={styles.actionButton} onClick={handleExit}>
-            <img src="/icons/Exit.svg" alt="Выйти" />
-          </button>
-        </div>
+        <button className={styles.actionButton} onClick={handleAddExercise} disabled={isUpdating}>
+          <img src="/icons/AddExercise.svg" alt="Добавить упражнение" />
+        </button>
       </div>
 
       {/* Timer + Progress */}
