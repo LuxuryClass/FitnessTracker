@@ -1,7 +1,6 @@
 import { memo, useMemo } from 'react';
 import { MuscleGroupBadge } from '@/Components/Common/MuscleGroupBadge/MuscleGroupBadge';
 import styles from './Styles.module.scss';
-import exercisesIcon from '/icons/ExerciseCounter_Grey.svg';
 import cn from 'classnames';
 
 interface WorkoutCardProps {
@@ -38,7 +37,6 @@ const WorkoutCardComponent = ({
   title,
   date,
   time,
-  exercisesCount,
   muscleGroups,
   status,
   className,
@@ -50,32 +48,29 @@ const WorkoutCardComponent = ({
 
   return (
     <div className={cn(styles.card, isCompleted && styles.card_completed, className)} onClick={onClick}>
-      <div className={styles.cardContent}>
-        <div className={styles.topRow}>
+      <div className={styles.topRow}>
+        <div className={styles.topRowLeft}>
           <span className={styles.dateText}>{displayDate}</span>
           {time && <span className={styles.time}>{time}</span>}
         </div>
-
-        <h3 className={styles.title}>{title}</h3>
-
-        <div className={styles.bottomRow}>
-          {exercisesCount !== undefined && exercisesCount > 0 && (
-            <span className={styles.count}>
-              <img src={exercisesIcon} alt="" className={styles.countIcon} />
-              {exercisesCount} упр
-            </span>
-          )}
-
-          {muscleGroups && muscleGroups.length > 0 && (
-            <MuscleGroupBadge groups={muscleGroups} />
-          )}
-        </div>
+        {isCompleted && <span className={styles.completedBadge}>✓ Завершена</span>}
       </div>
-      {isCompleted && <span className={styles.completedBadge}>✓ Завершена</span>}
-      <div className={styles.arrow} onClick={onArrowClick}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+
+      <div className={styles.cardBody}>
+        <div className={styles.cardContent}>
+          <h3 className={styles.title}>{title}</h3>
+          <div className={styles.bottomRow}>
+            {muscleGroups && muscleGroups.length > 0 && (
+              <MuscleGroupBadge groups={muscleGroups} type="block" />
+            )}
+          </div>
+        </div>
+
+        <div className={styles.arrow} onClick={onArrowClick}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
       </div>
     </div>
   );

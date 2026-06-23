@@ -1,12 +1,12 @@
 .card {
-  background: var(--Dark-grey-color, #1a1a1a);
+  background: var(--Dark-grey-color);
   border-radius: 16px;
   padding: 16px;
   cursor: pointer;
   transition: opacity 0.15s ease;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   border: 1px solid transparent;
 
   &:active {
@@ -15,40 +15,50 @@
 }
 
 .card_completed {
-  background: var(--Primary-trans, #9FDA1633);
+  background: var(--Primary-trans);
   border-color: rgba(255, 255, 255, 0.25);
-}
-
-.completedBadge {
-  margin-left: auto;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--Primary-color, #9FDA16);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.cardContent {
-  flex: 1;
-  min-width: 0;
 }
 
 .topRow {
   display: flex;
   align-items: baseline;
-  gap: 10px; 
-  margin-bottom: 4px;
+  justify-content: space-between;
+}
+
+.topRowLeft {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
 }
 
 .dateText {
   font-size: 14px;
-  color: var(--Accent-grey-color, #888);
+  color: var(--Accent-grey-color);
 }
 
 .time {
   font-size: 14px;
-  color: var(--Accent-grey-color, #888);
+  color: var(--Accent-grey-color);
   flex-shrink: 0;
+}
+
+.completedBadge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--Primary-color);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cardBody {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.cardContent {
+  min-width: 0;
 }
 
 .title {
@@ -71,21 +81,8 @@
 
 .arrow {
   flex-shrink: 0;
-  color: var(--Accent-grey-color, #888);
+  color: var(--Accent-grey-color);
   display: flex;
   align-items: center;
-}
-
-.count {
-  font-size: 14px;
-  color: var(--Accent-grey-color, #888);
-  white-space: nowrap;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.countIcon {
-  flex-shrink: 0;
+  justify-content: center;
 }
