@@ -50,9 +50,40 @@ const SessionMainPage = () => {
   const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-
+  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   // id серверных записей подходов по ключу "exerciseId:setIndex" — для DELETE при удалении строки
   const serverSetIdsRef = useRef<Map<string, string>>(new Map());
+
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+  
+  const handleDragStart = (index: number) => {
+    setExpandedExerciseId(null); // сворачиваем все
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setOverIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    if (dragIndex !== null && overIndex !== null && dragIndex !== overIndex) {
+      const newExercises = [...exercises];
+      const [removed] = newExercises.splice(dragIndex, 1);
+      newExercises.splice(overIndex, 0, removed);
+      // обновить на сервере
+      const payload = newExercises.map((ex, _) => ({
+        exercise_id: ex.exerciseId,
+        target_sets: workout?.exercises.find(we => we.exercise_id === ex.exerciseId)?.target_sets ?? [],
+      }));
+      callWithAuth(token => authApi.updateWorkout(token, workoutId!, { exercises: payload }))
+        .then(updated => queryClient.setQueryData(['workout', user?.id, workoutId], updated))
+        .catch(err => alert(err instanceof ApiError ? err.message : 'Не удалось изменить порядок'));
+    }
+    setDragIndex(null);
+    setOverIndex(null);
+  };
 
   useEffect(() => {
     if (!workoutId || isReturningFromAdd) return;
@@ -339,6 +370,16 @@ const formatTime = (totalSeconds: number) => {
               onSetsReindexed={(doneSets, previousRowCount) => handleSetsReindexed(exercise.exerciseId, doneSets, previousRowCount)}
               onImageClick={() => setModalExercise(catalogById.get(exercise.exerciseId) ?? null)}
               isCardio={catalogById.get(exercise.exerciseId)?.primary_muscle_groups?.includes('cardio')}
+              isExpanded={expandedExerciseId === exercise.exerciseId}
+              onExpand={() => setExpandedExerciseId(
+                expandedExerciseId === exercise.exerciseId ? null : exercise.exerciseId
+              )}
+              draggable
+              isDragging={dragIndex === index}
+              isOver={overIndex === index}
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragEnd={handleDragEnd}
             />
           ))}
         </div>

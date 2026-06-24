@@ -4,6 +4,7 @@
   border: 1px solid transparent;
   padding: 15px 12px;
   transition: all 0.3s ease;
+  
 
   &_expanded {
     border-color: rgba(159, 218, 22, 0.25);
@@ -368,4 +369,13 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
+}
+
+.card_dragging {
+  background-color: var(--Accent-2-color);
+}
+
+.card_over {
+  border-color: var(--Primary-color);
+  background: rgba(159, 218, 22, 0.1);
 }

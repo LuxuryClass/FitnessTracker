@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useEffect} from 'react';
+import { memo, useState, useRef, useEffect, } from 'react';
 import styles from './Styles.module.scss';
 import cn from 'classnames';
 
@@ -23,6 +23,14 @@ interface SessionExerciseRowProps {
   initialDoneSets?: DoneSet[];
   imageUrl?: string;
   isCardio?: boolean;
+  isExpanded?: boolean;
+  isDragging?: boolean;
+  isOver?: boolean;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
+  onExpand?: () => void;
   onComplete?: () => void;
   onImageClick?: () => void;
   onToggleComplete?: () => void;
@@ -39,6 +47,14 @@ const SessionExerciseRowComponent = ({
   initialDoneSets = [],
   imageUrl,
   isCardio = false,
+  isExpanded,
+  isDragging = false,
+  isOver = false,
+  draggable,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+  onExpand,
   onComplete,
   onImageClick,
   onToggleComplete,
@@ -58,7 +74,6 @@ const SessionExerciseRowComponent = ({
     return { values, doneFlags };
   };
 
-  const [expanded, setExpanded] = useState(false);
   const [currentSetIndex, setCurrentSetIndex] = useState(() => {
     const idx = buildInitialRows().doneFlags.findIndex(done => !done);
     return idx >= 0 ? idx : 0;
@@ -84,6 +99,8 @@ const SessionExerciseRowComponent = ({
   const allSetsCompleted = completedSets.length > 0 && completedSets.every(Boolean);
   const [localCompleted, setLocalCompleted] = useState(completed);
 
+  const expanded = !!isExpanded;
+
   useEffect(() => {
     setLocalCompleted(completed);
   }, [completed]);
@@ -100,7 +117,7 @@ const SessionExerciseRowComponent = ({
 
   useEffect(() => {
     if (isFocused && !expanded) {
-      setExpanded(true);
+      onExpand?.();
     }
   }, [isFocused]);
 
@@ -340,12 +357,20 @@ const handleManualComplete = (i: number) => {
   const isTimerActive = isTimerRunning || isTimerPaused;
 
   return (
-    <div className={cn(
-      styles.card,
-      expanded && styles.card_expanded,
-      localCompleted && styles.card_completed
-    )}>
-      <div className={styles.header} onClick={() => setExpanded(!expanded)}>
+    <div 
+      className={cn(
+        styles.card,
+        expanded && styles.card_expanded,
+        localCompleted && styles.card_completed,
+        isDragging && styles.card_dragging,
+        isOver && styles.card_over
+      )}
+      draggable={draggable}
+      onDragStart={draggable ? onDragStart : undefined}
+      onDragOver={draggable ? onDragOver : undefined}
+      onDragEnd={draggable ? onDragEnd : undefined}
+    >
+      <div className={styles.header} onClick={() => onExpand?.()}>
         <div className={styles.image} onClick={e => { e.stopPropagation(); onImageClick?.(); }}>
           {imageUrl ? (
             <img src={imageUrl} alt={name} />
